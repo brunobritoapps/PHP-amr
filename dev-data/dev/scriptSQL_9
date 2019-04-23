@@ -1,0 +1,273 @@
+USE[AMR_P00_PRODUCAO]
+------------------------------------------------------------------------------------------------------------------
+-- SELECT SOLICITACOES PARA O APROVADOR ------------------------TESTE 2 --------------------------------28/10/2018
+--------------------------------------------------------------------------------------------------------STATUS - OK
+
+-- PRIMEIRA CONSULTA DO GRUPO DO APROVADOR
+DECLARE @ID_APROVADOR int
+SET @ID_APROVADOR =1
+DECLARE @ID_GRUPO_APROVADOR int
+SELECT @ID_GRUPO_APROVADOR = u.id_grupo
+  FROM usuario AS u
+  WHERE u.id = @ID_APROVADOR
+
+-- USUARIO - 1:n
+DECLARE @ID_USUARIO int
+DECLARE @STATUS_REEMBOLSO int
+DECLARE @ID_REEMBOLSO int
+SET @ID_REEMBOLSO=61;
+SELECT @ID_USUARIO=r.id_usuario
+       ,@STATUS_REEMBOLSO=r.id_status
+      FROM reembolso_solicitacao AS r
+      WHERE id = @ID_REEMBOLSO
+
+      DECLARE @S int
+      DECLARE @N int
+      SET @S=1
+      SET @N=0
+      DECLARE @N_ORDEM int
+
+      DECLARE @ID_GRUPO_USUARIO int
+      SELECT @ID_GRUPO_USUARIO = u.id_grupo
+          FROM usuario AS u
+      WHERE u.id = @ID_USUARIO;
+
+      PRINT CONCAT('STATUS REEMBOLSO - ', @STATUS_REEMBOLSO)
+      -- AVALIA SE O APROVADOR E O USUARIO SOLICITANTE TEM VINCULO
+      IF
+      (SELECT COUNT (ga.ordem)
+          FROM reembolso_aprovador_usuario AS ga
+          LEFT JOIN reembolso_aprovador_grupo AS gp ON gp.id = ga.id_grupo
+      WHERE ga.id_usuario = @ID_APROVADOR AND gp.id=@ID_GRUPO_USUARIO)=1
+
+      BEGIN
+           PRINT 'ESTA SOLICITACAO ESTA NO SEU GRUPO DE APROVACAO'
+          -- SELECIONA ORDEM DO APROVADOR EM QUE O MESMO SE ENCONTRA NO GRUPO DO USUARIO SOLICITANTE 1:1
+          SELECT @N_ORDEM = ga.ordem
+              FROM reembolso_aprovador_usuario AS ga
+              LEFT JOIN reembolso_aprovador_grupo AS gp ON gp.id = ga.id_grupo
+          WHERE ga.id_usuario = @ID_APROVADOR AND gp.id=@ID_GRUPO_USUARIO
+
+          -- SETA POSICAO DO AVALIADOR -1 PARA VERIFICAR SE A SOLICITACAO ESTARA VISIVEL NO SEU PAINEL
+          DECLARE @ORDEM_APROVADOR int
+          SET @ORDEM_APROVADOR = @N_ORDEM-1
+
+          -- AVALIA SE A ORDEM DO APROVADOR E O STATUS DO REEMBOLSO ESTAO NA HORA DA APROVACAO
+          IF(@STATUS_REEMBOLSO = @ORDEM_APROVADOR )
+              BEGIN
+                  PRINT 'ESTA NA SUA HORA DE APROVAR'
+                  SELECT DISTINCT rs.id,rs.titulo_evento,d.descricao AS despesa,g.nome AS grupo,
+                      (SELECT SUM(CAST(ri.valor AS DECIMAL (18,2))) FROM reembolso_itens AS ri WHERE ri.id_reembolso_solicitacao=rs.id)AS total,
+                       u.nome,u.id AS usuario,e.Nome_Empresa AS empresa,rs.data_inclusao,rs.data_envio,
+                      (SELECT COUNT(id) AS n_item FROM reembolso_itens WHERE id_reembolso_solicitacao=rs.id)AS itens,
+                       CASE WHEN  rs.id_status<100 AND rs.id_status>0 THEN CAST(rs.id_status AS VARCHAR)+'-'+CAST((SELECT COUNT(id_grupo) AS n_aprov FROM reembolso_aprovador_usuario AS rau WHERE rau.id_grupo=u.id_grupo)AS VARCHAR ) ELSE '' END AS progresso,
+                       CASE id_status WHEN 100 THEN 'APROVADO' WHEN 200 THEN 'REPROVADO' WHEN 110 THEN 'PARA REVISAO' WHEN 0 THEN 'ENVIADO'  WHEN -1 THEN 'EDICAO' ELSE 'EM ANALISE' END AS status
+                FROM reembolso_solicitacao AS rs
+                LEFT JOIN usuario AS u ON u.id = rs.id_usuario
+                LEFT JOIN vwEmpresas AS e ON dbo.fRemoveZeros(e.Cod_Empresa,0)= rs.id_empresa
+                LEFT JOIN reembolso_tipo_despesa AS d ON d.id = rs.id_tipo_despesa
+                LEFT JOIN reembolso_aprovador_grupo AS g ON g.id = u.id_grupo
+                WHERE rs.id = @ID_REEMBOLSO
+                ORDER by rs.id
+              END
+          ELSE
+              BEGIN
+                  PRINT 'NAO ESTA NA SUA HORA'
+              END
+      END
+      ELSE
+          BEGIN
+               PRINT 'ESTA SOLICITACAO NAO E SUA'
+          END
+
+
+-------------------------------------------------------------------------------------------------------------------
+
+--SETANDO ID REEMBOLSO
+DECLARE @ID_REEMBOLSO VARCHAR(6)
+SET @ID_REEMBOLSO = 'RD1062'
+--SOMATORIA MES DE REEMBOLSOS DE UM DETERMINADO USUARIO ATRAVES DO MES-ANO BASE
+DECLARE @ID_USUARIO INT
+SET @ID_USUARIO = 1
+DECLARE @DT_BASE VARCHAR (7)
+SET @DT_BASE ='12-2018'
+DECLARE @TOTAL_MES DECIMAL (18,2)
+SELECT @TOTAL_MES=SUM(CAST(ri.total AS DECIMAL (18,2)))
+FROM reembolso_itens AS ri
+JOIN reembolso_solicitacao AS rs ON rs.id_format = ri.id_reembolso
+WHERE rs.id_usuario = @ID_USUARIO AND rs.data_base = @DT_BASE
+AND rs.id_status BETWEEN 0 AND 100
+
+--GRUPO DO USUARIO
+DECLARE @ID_GRUPO_USUARIO INT
+SELECT @ID_GRUPO_USUARIO = u.id_grupo
+FROM usuario u
+WHERE u.id = @ID_USUARIO
+
+--IDENTIFICANDO ORDEM DO ULTIMO USUARIO DE APROVACOES DE ACORDO COM AS ALCADAS DE VALORES
+DECLARE @ORDEM_ULTIMO_APROVADOR INT
+SELECT @ORDEM_ULTIMO_APROVADOR=ru.ordem
+FROM reembolso_aprovador_usuario AS ru
+WHERE ru.id_grupo=@ID_GRUPO_USUARIO AND @TOTAL_MES>=ru.alcada_inicio AND @TOTAL_MES<=ru.alcada_fim
+
+SELECT  @ID_REEMBOLSO AS id_reembolso
+        ,@ID_USUARIO AS id_usuario
+        ,@DT_BASE AS data_base
+        ,CONVERT(VARCHAR (10),GETDATE(),105) AS data_consulta
+        ,@TOTAL_MES AS total_mes
+        , 1 AS ordem_inicio
+        ,@ORDEM_ULTIMO_APROVADOR AS ordem_fim
+
+DELETE reembolso_resumo_aprovador
+WHERE id_reeembolso=@ID_REEMBOLSO
+
+INSERT INTO reembolso_resumo_aprovador(id_reeembolso, data_base, total_mes, inicio_aprov, fim_aprov, data_consulta )
+VALUES (@ID_REEMBOLSO,@DT_BASE,@TOTAL_MES,1,@ORDEM_ULTIMO_APROVADOR, GETDATE())
+
+SELECT * FROM reembolso_guia_aprovador
+
+
+
+
+SELECT DISTINCT rs.id,rs.id_format AS cod,rs.titulo_evento,d.descricao AS despesa,g.nome AS grupo,
+      (SELECT SUM(CAST(ri.valor AS DECIMAL (18,2))) FROM reembolso_itens AS ri WHERE ri.id_reembolso_solicitacao=rs.id)AS total,
+       u.nome,u.id AS usuario,REPLACE (LTRIM(e.Nome_Empresa),'AMERICA ','') AS empresa,rs.data_inclusao,rs.data_envio,
+      (SELECT COUNT(id) AS n_item FROM reembolso_itens WHERE id_reembolso_solicitacao=rs.id)AS itens,
+       CASE WHEN  rs.id_status<100 AND rs.id_status>0 THEN CAST(rs.id_status AS VARCHAR)+'-'+CAST((SELECT fim_aprov FROM reembolso_guia_aprovador AS gap WHERE gap.id_reeembolso=rs.id_format)AS VARCHAR ) ELSE '' END AS progresso,
+       CASE id_status WHEN 100 THEN 'APROVADO' WHEN 200 THEN 'REPROVADO' WHEN 0 THEN 'ENVIADO'  WHEN -1 THEN 'EDICAO' ELSE 'EM ANALISE' END AS status
+FROM reembolso_solicitacao AS rs
+LEFT JOIN usuario AS u ON u.id = rs.id_usuario
+LEFT JOIN vwEmpresas AS e ON e.Cod_Empresa = rs.id_empresa
+LEFT JOIN reembolso_tipo_despesa AS d ON d.id = rs.id_tipo_despesa
+LEFT JOIN reembolso_aprovador_grupo AS g ON g.id = u.id_grupo
+WHERE rs.id = 1062
+ORDER by rs.id
+
+
+
+
+
+DECLARE @REEMBOLSO VARCHAR(6)
+SET @REEMBOLSO=?
+
+DECLARE @ID_USUARIO int
+DECLARE @ID_GRUPO_USUARIO int
+
+SET @ID_USUARIO =?
+SELECT @ID_GRUPO_USUARIO = u.id_grupo
+FROM usuario AS u
+WHERE u.id = @ID_USUARIO;
+DECLARE @ID_APROVADOR int
+
+SET @ID_APROVADOR =?
+DECLARE @ID_GRUPO_APROVADOR int
+SELECT @ID_GRUPO_APROVADOR = u.id_grupo
+FROM usuario AS u
+INNER JOIN reembolso_aprovador_usuario AS au ON au.id_grupo = u.id_grupo
+WHERE u.id = @ID_APROVADOR
+
+IF
+    (SELECT COUNT (ga.ordem)
+    FROM reembolso_aprovador_usuario AS ga
+    LEFT JOIN reembolso_aprovador_grupo AS gp ON gp.id = ga.id_grupo
+    WHERE ga.id_usuario = @ID_APROVADOR AND gp.id=@ID_GRUPO_USUARIO)=1
+
+BEGIN
+    DECLARE @STATUS_REEMBOLSO int
+    SELECT @STATUS_REEMBOLSO=id_status
+      FROM reembolso_solicitacao
+      WHERE id_format = @REEMBOLSO
+
+    DECLARE @ULTIMO_ORDEM int
+    SELECT @ULTIMO_ORDEM=fim_aprov
+      FROM reembolso_guia_aprovador
+      WHERE id_reembolso = @REEMBOLSO
+
+    DECLARE @ID_ULTIMO_APROVADOR int
+    SELECT @ID_ULTIMO_APROVADOR=id_usuario
+      FROM reembolso_aprovador_usuario
+      WHERE id_grupo = @ID_GRUPO_USUARIO ordem = @ULTIMO_ORDEM
+
+    IF(@ID_ULTIMO_APROVADOR=@ID_APROVADOR)
+        BEGIN
+            UPDATE reembolso_solicitacao
+              SET id_status = 100
+            WHERE id_format = @REEMBOLSO
+        END
+    ELSE
+        BEGIN
+            UPDATE reembolso_solicitacao
+              SET id_status = @STATUS_REEMBOLSO+1
+            WHERE id_id_format = @REEMBOLSO
+        END
+END
+
+
+
+SELECT u.id
+      ,u.usuario
+      ,u.nome
+      ,u.sobrenome
+      ,u.cpf AS cpf
+      ,u.conta AS id_conta
+      ,u.ativo AS id_status
+      ,s.status
+      ,u.ativo AS id_status
+      ,c.nome AS conta
+      ,cc.Descricao AS ccusto
+      ,g.id AS id_grupo
+      ,g.nome AS grupo
+      ,(SELECT TOP 1 Nome_Empresa FROM usuario_ccusto AS cc1 LEFT JOIN vwEmpresas ON Cod_Empresa = SUBSTRING (cc1.id_ccusto,1,1) WHERE cc1.id_usuario=u.id) AS empresa
+      FROM usuario AS u
+      LEFT JOIN contas AS c ON c.id = u.conta
+      LEFT JOIN usuario_status AS s ON s.id = u.ativo
+      LEFT JOIN corporativo_vwCcustos AS cc ON cc.Codigo = (SELECT TOP 1 cc2.id_ccusto FROM usuario_ccusto AS cc2 WHERE cc2.id_usuario = 1)
+      LEFT JOIN reembolso_aprovador_grupo AS g ON g.id = u.id_grupo
+      WHERE u.id = 1
+
+
+
+SELECT u.id
+      ,u.usuario
+      ,u.nome
+      ,u.sobrenome
+      ,e.Nome_Empresa AS empresa
+       ,(SELECT TOP 1 d.descricao FROM usuario_ccusto AS cc2
+        LEFT JOIN corporativo_departamento AS d ON d.codigo = SUBSTRING (cc2.id_ccusto,4,3)
+        WHERE cc2.id_usuario = u.id ) AS departamento
+      ,cc.Descricao AS ccusto
+      ,cc.Codigo AS id_ccusto
+      ,apu.ordem
+      ,apu.alcada_inicio
+      ,apu.alcada_fim
+      ,g.nome AS grupo
+      ,g.descricao AS descricao_grupo
+  FROM reembolso_aprovador_usuario AS apu
+        LEFT JOIN reembolso_aprovador_grupo AS g ON g.id = apu.id_grupo
+        LEFT JOIN usuario AS u ON u.id = apu.id_usuario
+        LEFT JOIN corporativo_vwCcustos AS cc ON cc.Codigo = (SELECT TOP 1 cc1.id_ccusto FROM usuario_ccusto AS cc1 WHERE cc1.id_usuario = u.id)
+        LEFT JOIN corporativo_vwEmpresas AS e ON dbo.fRemoveZeros(e.Cod_Empresa,0) = SUBSTRING (cc.Codigo,1,1)
+  WHERE apu.id_grupo=1
+  ORDER BY apu.ordem
+
+
+
+  SELECT u.id
+                        ,u.usuario
+                        ,u.nome
+                        ,u.sobrenome
+                        ,u.cpf
+                        ,e.Nome_Empresa AS empresa
+                        ,(SELECT TOP 1 d.descricao FROM usuario_ccusto AS ucc
+                         LEFT JOIN corporativo_departamento AS d ON d.codigo = SUBSTRING (ucc.id_ccusto,4,3)
+                         WHERE ucc.id_usuario = u.id ) AS departamento
+                        FROM usuario AS u
+                        LEFT JOIN corporativo_vwCcustos AS cc ON cc.Codigo = (SELECT TOP 1 cc1.id_ccusto FROM usuario_ccusto AS cc1 WHERE cc1.id_usuario = u.id)
+                        LEFT JOIN corporativo_vwEmpresas AS e ON dbo.fRemoveZeros(e.Cod_Empresa,0) = SUBSTRING (cc.Codigo,1,1)
+                        WHERE u.ativo=1
+
+
+
+
+
+

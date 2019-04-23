@@ -1,0 +1,8 @@
+C:\Totvs\Microsiga\Protheus11\Protheus_Data\dirdoc\co01\shared
+C:\Totvs\Microsiga\Protheus11\Protheus_Data\dirdoc\co02\shared
+C:\Totvs\Microsiga\Protheus11\Protheus_Data\dirdoc\co03\shared
+C:\Totvs\Microsiga\Protheus11\Protheus_Data\dirdoc\co04\shared
+C:\Totvs\Microsiga\Protheus11\Protheus_Data\dirdoc\co05\shared
+C:\Totvs\Microsiga\Protheus11\Protheus_Data\dirdoc\co06\shared
+C:\Totvs\Microsiga\Protheus11\Protheus_Data\dirdoc\co07\shared
+C:\Totvs\Microsiga\Protheus11\Protheus_Data\dirdoc\co08\shared

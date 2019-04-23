@@ -1,0 +1,612 @@
+<!--START STYLE-PAGE-->
+<style type="text/css">
+    .formGrupo{
+        color: #8b8b8b;
+        background-color: rgba(255, 123, 56, 0);
+        border: 0 none;
+        outline: 0;
+        box-shadow: 0 0 0 0;
+    }
+</style>
+<!--END  STYLE-PAGE-->
+<script type="text/javascript">
+    var remote = new Remote('php/comunicacao.php', 'cadastro/reembolso','grupo');
+    var remote1 = new Remote('php/comunicacao.php', 'acesso','usuario_permissao');
+    var remote2 = new Remote('php/comunicacao.php', 'corporativo','departamento');
+    var remote3 = new Remote('php/comunicacao.php', 'email','email');
+    var remote4 = new Remote('php/comunicacao.php', 'log','log');
+
+    var oTable;
+    var defTable;
+
+    var arrUsuario=new Array();
+
+    function resultGetGrupo(dados) {
+        renderizaTabelaDefault(dados);
+    }
+
+    function resultGetUsuario(dados) {
+        var strTemp = "0";
+        $("#selUsuario_AddAprov").append("<option value='0'>Selecione</option>");
+        for (var i = 0; i < dados.length; i++) {
+            //strTemp += "," + dados[i].id_unico;
+            $("#selUsuario_AddAprov").append('<option value="' + dados[i].id + '">['+ dados[i].usuario +'],['+ dados[i].nome +' '+ dados[i].sobrenome +'],['+ dados[i].empresa +'],['+ dados[i].departamento +']</option>');
+        }
+        $("#selUsuario_AddAprov").selectpicker("refresh");
+    }
+
+    function resultGetDepartamento(dados) {
+        var strTemp = "0";
+        $("#selDepartamento_Edt").html('<option value=0>Selecione</option>');
+        for (var i = 0; i < dados.length; i++) {
+            //strTemp += "," + dados[i].id_unico;
+            $("#selDepartamento_Edt").append('<option value="' + dados[i].id + '">'+ dados[i].codigo+'-'+dados[i].descricao+ '</option>');
+        }
+        $("#selDepartamento_Edt").selectpicker("refresh");
+    }
+
+    function renderizaTabelaDefault(dados) {
+        if (oTable == null) {
+            defTable = $('#t_dados').html();
+        } else {
+            $('#t_dados').html(defTable);
+        }
+        var objDataTable = colunasDefaultDataTable($('#t_dados'), dados);
+        oTable = $('#t_dados').dataTable(objDataTable);
+
+        //APOS RENDERIZADO DADOS DA TABELA CENTRALIZANDO TITULOS
+        $('#t_dados th').css('text-align','center');//APOS RENDERIZADO DADOS DA TABELA CENTRALIZANDO TITULOS
+        $("#t_dados td:contains('Nenhum')").html('Você não possui grupos');
+        $("#t_dados th:contains('Informacao')").html('Informação');
+        $(window).resize();
+    }
+
+    function exibeDivPadrao(divPadrao) {
+        if (divPadrao == false) {
+            $("#divPadrao").show("fast");
+            $("#divEdicao").hide("fast");
+            $("#btnVol").hide();
+            $("#btnGra").hide();
+            $("#btnAdd").show();
+            $("#btnEdt").show();
+            $("#btnRem").show();
+        } else {
+            $("#divPadrao").hide("fast");
+            $("#divEdicao").show("fast");
+            $("#btnVol").show();
+            $("#btnGra").show();
+            $("#btnAdd").hide();
+            $("#btnEdt").hide();
+            $("#btnRem").hide();
+        }
+    }
+
+    function refreshDivEdit(){
+        $("#txtId_Edt").val('');
+        $("#txtNomeGrupo_Edt").val('');
+        $("#txtDescricaoGrupo_Edt").val('');
+        $("#selFunc_Valid_Edt").val("");
+        $("#selFunc_Valid_Edt").selectpicker("refresh");
+        $("#selFunc_Gest_Edt_Edt").val("");
+        $("#selFunc_Gest_Edt_Edt").selectpicker("refresh");
+        $("#selFunc_Fin_Edt_Edt").val("");
+        $("#selFunc_Fin_Edt_Edt").selectpicker("refresh");
+
+    }
+
+    function refreshInfoAprovadores(dados){
+        // VALIDACAO - RH
+        $("#txtId_Valid").val('');
+        $("#txtEmail_Valid").val('');
+        $("#txtNome_Valid").val('');
+        $("#txtSobrenome_Valid").val('');
+        $("#txtEmpresa_Valid").val('');
+        $("#txtDepartamento_Valid").val('');
+        $("#txtCcusto_Valid").val('');
+        //GESTOR AREA
+        $("#txtId_Gest").val('');
+        $("#txtEmail_Gest").val('');
+        $("#txtNome_Gest").val('');
+        $("#txtSobrenome_Gest").val('');
+        $("#txtEmpresa_Gest").val('');
+        $("#txtDepartamento_Gest").val('');
+        $("#txtCcusto_Gest").val('');
+        //GESTOR AREA
+        $("#txtId_Fin").val('');
+        $("#txtEmail_Fin").val('');
+        $("#txtNome_Fin").val('');
+        $("#txtSobrenome_Fin").val('');
+        $("#txtEmpresa_Fin").val('');
+        $("#txtDepartamento_Fin").val('');
+        $("#txtCcusto_Fin").val('');
+    }
+
+    function exibeDivAprovadores(DivAprovadores){
+        if(DivAprovadores==true){
+            refreshInfoAprovadores();
+            $("#pnlAprovadores").show();
+            $("#pnlAprovadores").show();
+            $("#btnView").hide();
+        }else{
+            $("#pnlAprovadores").hide();
+            $("#btnView").show();
+        }
+    }
+
+    function refreshBoxAprovadores() {
+        $("#txtNomeGrupo_list").val('');
+        $("#txtDepartamentoGrupo_list").val('');
+        $("#txtDescricaoGrupo_list").val('');
+        $("#contentGrupo_list").html('');
+    }
+
+
+
+
+    // FUNCAO RENDERIZA BOX APROVADORES DURANTE VIEW
+    function render_ViewAprov(dados) {
+        var conteudo='';
+        for (var i = 0; i < dados.length; i++) {
+            var rnd = Math.random();
+            conteudo += '<div class="col-md-4" style="padding-top: 20px">\n' +
+                '  <div class="panel panel-primary">\n'+
+                '      <div class="profile">\n'+
+                '          <div class="profile"><div class="profile-image"><img src="php/outros/loadimage.php?n=' + dados[i].id + '&c=' + rnd + '" class="foto_usuario" alt="Usuário"></div></div>\n'+
+                '              <div class="profile-data">\n' +
+                '                 <div class="profile-data-name ">' + dados[i].nome+' '+dados[i].sobrenome+'</div>\n' +
+                '                 <div class="profile-data-title ">' + dados[i].usuario+'</div>\n' +
+                '                 <div class="profile-data-title"> ' + dados[i].departamento + '</div>\n' +
+                '                 <div class="profile-data-title ">' + dados[i].empresa + '</div>\n' +
+                '             </div>\n' +
+                '         </div>\n' +
+                '     </div>\n' +
+                '      <div class="panel-footer">\n' +
+                '          <div class="profile-data">\n' +
+                '                 <div class="profile-data-title"> Alçada (De R$) - ' + dados[i].alcada_inicio + '</div>\n' +
+                '                 <div class="profile-data-title"> Alçada (Até R$) - ' + dados[i].alcada_fim + '</div>\n' +
+                '                 <div class="profile-data-title"> Ordem - ' + dados[i].ordem + '</div>\n' +
+                '             </div>\n' +
+                '       </div>\n' +
+                ' </div>';
+
+        }
+
+        $("#divViewAprov").html(conteudo);
+    }
+
+    function fillArray_Aprov(dados) {
+        arrUsuario = new Array();
+        for (var i = 0; i < dados.length; i++) {
+            var tempObj = {};
+            tempObj.id = dados[i].id;
+            tempObj.ordem = dados[i].ordem;
+            //tempObj.alcada_valores = dados[i].alcada_valores;
+            tempObj.alcada_de = dados[i].alcada_inicio;
+            tempObj.alcada_ate = dados[i].alcada_fim;
+            //
+            tempObj.nomeSobrenome = dados[i].nome+' '+dados[i].sobrenome;
+            tempObj.empresa = dados[i].empresa;
+            tempObj.departamento = dados[i].departamento;
+            //
+            arrUsuario.push(tempObj);
+        }
+    }
+
+    function refreshDivEdit() {
+        $("#txtId_Edt").val("");
+        $("#txtNomeGrupo_Edt").val('');
+        $("#selDepartamento_Edt").val('Selecione');
+        $("#selDepartamento_Edt").selectpicker("refresh");
+        $("#txtDescricaoGrupo_Edt").val('');
+        $("#divAddAprov").html('');
+    }
+
+    function refreshModalAddAprov(){
+        $("#txtIdAprov").val('');
+        $("#divNomeSobrenome_AddAprov").html('');
+        $("#divEmpresa_AddAprov").html('');
+        $("#divDepartamento_AddAprov").html('');
+        $("#selTipo_AddAprov").val("Selecione");
+        $("#selTipo_AddAprov").selectpicker("refresh");
+        $("#selUsuario_AddAprov").val("Selecione");
+        $("#selUsuario_AddAprov").selectpicker("refresh");
+        //
+        $("#txtAlcadaDe").val("");
+        $("#txtAlcadaAte").val("");
+
+        $("#selOrdem_AddAprov").val("Selecione");
+        $("#selOrdem_AddAprov").selectpicker("refresh");
+        $("#imgUser_AddAprov").html('<div class="profile-image"><img src="img/user/no-image.jpg" alt="Usuário"></div>');
+    }
+
+    function resultGetModalAprovador(dados){
+        $("#divNomeSobrenome_AddAprov").html(dados[0].nome+' '+dados[0].sobrenome);
+        $("#divEmpresa_AddAprov").html(dados[0].empresa);
+        $("#divDepartamento_AddAprov").html(dados[0].departamento);
+    }
+
+    function valida_TipoEntrada(dom,tipo){
+        switch(tipo){
+            case'num':var regex=/[A-Za-z]/g;break;
+            case'text':var regex=/\d/g;break;
+        }
+        dom.value=dom.value.replace(regex,'');
+    }
+
+    function valida_addAprov(){
+        var n = $("#txtNomeGrupo_Edt").val();
+        var d = $("#selDepartamento_Edt").val();
+        var dc = $("#txtDescricaoGrupo_Edt").val();
+
+
+        var valid_grupo=true;
+        if(n==''){
+            valid_grupo=false;
+            noty({
+                text: '<br/><b><p><span class="fa fa-exclamation-circle"></span><font size="2">   Faltam informações para o grupo</font></p></b><p>Campo (Nome do Grupo) não preenchido</p>',
+                type: 'warning',
+                layout: 'topCenter',
+                timeout: 4000
+            });
+        }
+
+        var valid_departamento = true;
+        if(d==0){
+            valid_departamento = false;
+            noty({
+                text: '<br/><b><p><span class="fa fa-exclamation-circle"></span><font size="2">   Faltam informações para o grupo</font></p></b><p>Campo (Departamento) não selecionado</p>',
+                type: 'warning',
+                layout: 'topCenter',
+                timeout: 4000
+            });
+        }
+
+        var valid_descricao = true;
+        if(dc==''){
+            valid_descricao = false;
+            noty({
+                text: '<br/><b><p><span class="fa fa-exclamation-circle"></span><font size="2">   Faltam informações para o grupo</font></p></b><p>Campo (Descrição) não selecionado</p>',
+                type: 'warning',
+                layout: 'topCenter',
+                timeout: 4000
+            });
+        }
+
+        if(valid_grupo==true & valid_departamento==true & valid_descricao==true){
+            return true;
+        }else{
+            return false;
+        }
+    }
+
+    function valida_savAprov(){
+        var de = parseFloat($("#txtAlcadaDe").val());
+        var  valida1;
+        //
+        var usr =$("#selUsuario_AddAprov option:selected").val();
+        var valida2;
+
+        if(usr=='0'){
+            noty({
+                text: '<br/><b><p><span class="fa fa-exclamation-circle"></span><font size="2">   Faltam informações para o aprovador</font></p></b><p>Campo (Usuario) não selecionado como aprovador</p>',
+                type: 'warning',
+                layout: 'topCenter',
+                timeout: 4000
+            });
+            valida2 = false;
+        }else{
+            valida2 = true;
+        }
+
+        if($("#txtAlcadaAte").val()==''){
+            noty({
+                text: '<br/><b><p><span class="fa fa-exclamation-circle"></span><font size="2">   Faltam informações para o aprovador</font></p></b><p>Valor de alçada (Até) deve ser preenchida</p>',
+                type: 'warning',
+                layout: 'topCenter',
+                timeout: 4000
+            });
+            valida1=false;
+        }else{
+            var ate = parseFloat($("#txtAlcadaAte").val());
+            if(ate<de){
+                noty({
+                    text: '<br/><b><p><span class="fa fa-exclamation-circle"></span><font size="2">   Alerta</font></p></b><p>Valor de alçada (Até) não pode ser menor que alçada(De)</p>',
+                    type: 'error',
+                    layout: 'topCenter',
+                    timeout: 4000
+                });
+                valida1=false;
+            }else{
+                valida1=true;
+            }
+        }
+
+
+
+        if(valida1==true & valida2==true){
+            return true;
+        }else{
+            return false;
+        }
+    }
+
+    function valida_arrUsuario(){
+        var valida1;
+        if(arrUsuario.length>0){
+            valida1 = true;
+            return valida1;
+        }else{
+            valida1 = false;
+            noty({
+                text: '<br/><b><p><span class="fa fa-exclamation-circle"></span><font size="2">   Faltam informações para o grupo</font></p></b><p>O Grupo deve conter no mínimo um usuario aprovador. Adicione usuarios aprovadores.</p>',
+                type: 'warning',
+                layout: 'topCenter',
+                timeout: 4000
+            });
+            //alert('O Grupo deve conter no mínimo um usuario aprovador. Adicione usuarios aprovadores.');
+            return valida1;
+        }
+    }
+
+    function resultSetGrupo(dados){
+        if(dados==0) {
+            noty({
+                text: '<br/><b><p><span class="fa fa-check-circle"></span><font size="2">   Erro</font></p></b><p>Erro ao enviar email para os usuários</p>',
+                type: 'error',
+                layout: 'topCenter',
+                timeout: 4000
+            });
+
+        }else{
+            noty({
+                text: '<br/><b><p><span class="fa fa-check-circle"></span><font size="2">   Sucesso</font></p></b><p>Grupo foi adicionado! </br> Um email foi enviado para todos os usuários participantes do grupo com um resumo do grupo.</p>',
+                type: 'success',
+                layout: 'topCenter',
+                timeout: 4000
+            });
+            exibeDivPadrao(false);
+            exibeDivAprovadores(false);
+            resultGeGrupo(dados);
+        }
+    }
+
+    $(document).ready(function () {
+
+        remote.executa("getGrupoAprovador", null, resultGetGrupo, $('#pnlGrupo'), erroPersonalizado);
+        remote1.executa("getResumoUsuario", null, resultGetUsuario, $('#divEdicao'), erroPersonalizado);
+        remote2.executa("getDepartamento", null, resultGetDepartamento, $('#divEdicao'), erroPersonalizado);
+
+
+
+        $("#btnView").on('click', function () {
+            refreshBoxAprovadores();
+            var objTemp = oTable.fnGetData(oTable.closest("table").find(".selected"));
+            if (objTemp != null) {
+                $("#txtNomeGrupo_list").val(objTemp.nome);
+                $("#txtDepartamentoGrupo_list").val(objTemp.departamento);
+                $("#txtDescricaoGrupo_list").val(objTemp.descricao);
+            }
+            remote.executa("getInfoAprovadores",{"idGrupo": objTemp.id}, render_ViewAprov, $('#modal_listAprovadores'));
+            $("#modal_listAprovadores").modal();
+        });
+
+
+    });
+
+
+</script>
+<!-- START BREADCRUMB -->
+<ul class="breadcrumb">
+</ul>
+<!-- END BREADCRUMB -->
+
+<!-- PAGE CONTENT WRAPPER -->
+<div class="page-content-wrap">
+    <div class="row">
+        <!--START GRUPOS-->
+        <div class="col-md-10 col-md-offset-1 ">
+            <div id="pnlGrupos" class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Meus Grupos</h3>
+                    <ul class="panel-controls">
+                        <li><a href="#" id="btnView" class="control-primary" data-acao="edt" title="Informações"><span class="fa fa-info"></span></a></li>
+                    </ul>
+                </div>
+                <div class="panel-body">
+                    <div id="divPadrao" class="row">
+                        <div class="col-md-12">
+                            <table id="t_dados" class="table table-striped table-bordered table-condensed">
+
+                            </table>
+                        </div>
+                    </div>
+                    <!--START EDICAO-->
+                    <div id="divEdicao" class="row" style="display: none;">
+                        <h4 id="lblTitulo"></h4>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Nome do Grupo*</label>
+                                <input id="txtId_Edt" type="hidden"/>
+                                <input id="txtNomeGrupo_Edt" type="text" class="form-control" maxlength="50" placeholder="Grupo">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label> Departamento*</label>
+                                <select id="selDepartamento_Edt" class="form-control" data-live-search="true" ></select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Descrição*</label>
+                                <input id="txtDescricaoGrupo_Edt" class="form-control" rows="5" placeholder="Este grupo destina-se ao Departamento 'x' nas situações ....">
+                            </div>
+                        </div>
+                    </div>
+                    <!--END EDICAO-->
+                </div>
+            </div>
+        </div>
+
+        <!--START PAINEL APROVADORES-->
+        <div class="col-md-10 col-md-offset-1 ">
+            <div id="pnlAprovadores" class="panel panel-default" style="display: none;">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Adicionar Aprovadores</h3>
+                    <ul class="panel-controls">
+                        <li><a href="#" id="btnAddAprov" class="control-primary" data-acao="edt" title="Adicionar aprovador"><span class="fa fa-user"></span></a></li>
+                    </ul>
+                </div>
+
+                <div id="divAddAprov" class="row">
+                    <!--CONTENT ADD APROV-->
+                </div>
+            </div>
+        </div>
+        <!--END PAINEL APROVADORES-->
+    </div>
+</div>
+
+
+<!--START DIV-MODAL LIST APROVADORES -->
+<div id="modal_listAprovadores" class="modal in"  tabindex="-1" role="dialog" aria-labelledby="smallModalHead" aria-hidden="true">
+    <div class="modal-dialog modal-lg ">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="smallModalHead">Lista de Aprovadores de Grupo</h4>
+            </div>
+            <div class="modal-body">
+                <div class="col-md-12">
+                    <div id="divViewAprov" class="row">
+                        <!--CONTENT VIEW APROV-->
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Nome do Grupo</label>
+                        <input id="txtNomeGrupo_list" type="text" style="color: rgba(12,16,33,0.5)" class="form-control formGrupo" maxlength="50"  disabled="disabled">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Departamento</label>
+                        <input id="txtDepartamentoGrupo_list" type="text" style="color: rgba(12,16,33,0.5)" class="form-control formGrupo" maxlength="50"  disabled="disabled">
+                    </div>
+                </div>
+
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <label>Descrição</label>
+                        <textarea id="txtDescricaoGrupo_list"  style="margin-bottom: 10px; color: rgba(12,16,33,0.5)" class="form-control formGrupo" rows="5" disabled="disabled"></textarea>
+                    </div>
+                </div>
+            </div>
+            <!--START - FOOTER PAINEL -ITEM -->
+            <div class="modal-footer">
+                <!--<button type="button" class="btn btn-default" data-dismiss="modal">Sair</button>-->
+            </div>
+            <!--END - PAINEL DE CONTROLES-->
+        </div>
+    </div>
+</div>
+<!--END DIV-MODAL LIST APROVADORAS -->
+
+
+
+
+<!--START DIV-MODAL ADD APROVADOR -->
+<div id="modal_AddAprovadores" class="modal"  tabindex="-1" role="dialog" aria-labelledby="smallModalHead" aria-hidden="true">
+    <div class="modal-dialog modal-sm ">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span
+                        class="sr-only">Close</span></button>
+                <h4 class="modal-title">Adicionar Aprovador</h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="profile">
+                            <div class="profile">
+                                <div id="imgUser_AddAprov">
+                                    <div class="profile-image"><img src="img/user/no-image.jpg" alt="Usuário"></div>
+                                </div>
+                            </div>
+                            <div class="profile-data">
+                                <div id="divNomeSobrenome_AddAprov" class="profile-data-name "></div>
+                                <div id="divEmpresa_AddAprov" class="profile-data-title "></div>
+                                <div id="divDepartamento_AddAprov" class="profile-data-title"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label>Ordem</label>
+                            <select id="selOrdem_AddAprov" class="form-control" data-live-search="true" disabled="disabled">
+                                <option value="0">Selecione</option>
+                                <option value="1">Aprovador-1</option>
+                                <option value="2">Aprovador-2</option>
+                                <option value="3">Aprovador-3</option>
+                                <option value="4">Aprovador-4</option>
+                                <option value="5">Aprovador-5</option>
+                                <option value="6">Aprovador-6</option>
+                                <option value="7">Aprovador-7</option>
+                                <option value="8">Aprovador-8</option>
+                                <option value="9">Aprovador-9</option>
+                                <option value="10">Aprovador-10</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <input id="txtIdAprov" type="hidden">
+                            <label> Usuario</label>
+                            <select id="selUsuario_AddAprov" class="form-control" data-live-search="true"></select>
+                        </div>
+                    </div>
+
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label> Alçada 'De' R$</label>
+                            <input id="txtAlcadaDe" type="text" class="form-control" value="0.0" maxlength="50"  readonly>
+                            <label> Alçada 'Até' R$</label>
+                            <input id="txtAlcadaAte" onkeyup="valida_TipoEntrada(this,'num');" type="text" class="form-control" value="0.0" maxlength="50" >
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!--START - FOOTER PAINEL -ITEM -->
+            <div class="modal-footer">
+                <div class="panel-body">
+                    <ul class="panel-controls">
+                        <li><a href="#" id="btnSaveAprov" class="control-primary" data-acao="edt" title="Salvar aprovador"><span class="fa fa-save"></span></a></li>
+                        <!--<li><a href="#" id="btnTeste" class="control-primary" data-acao="edt" title="Salvar aprovador"><span class="fa fa-save"></span></a></li>-->
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!--END DIV-MODAL ITEM SOLICITACAO -->
+
+
+
+
+<div class="modal" id="modal_small" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="defModalHead">Confirmação</h4>
+            </div>
+            <div class="modal-body">
+                Você tem certeza que deseja remover esse registro?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" data-dismiss="modal">Cancelar</button>
+                <button id="btnRemConf" type="button" class="btn btn-primary" data-dismiss="modal">Sim</button>
+            </div>
+        </div>
+    </div>
+</div>

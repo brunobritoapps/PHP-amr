@@ -1,0 +1,134 @@
+// APROVADOR
+
+USE [AMR_P00_PRODUCAO]
+SELECT rs.id
+      ,rs.id_format AS cod
+      ,rs.data_base AS mes
+      ,rs.titulo_evento
+      ,d.descricao AS despesa
+      ,g.nome AS grupo
+      ,(SELECT SUM(CAST(ri.valor AS DECIMAL (18,2))) FROM reembolso_itens AS ri WHERE ri.id_reembolso_solicitacao=rs.id)AS total
+      ,u.nome
+      ,u.id AS usuario
+      ,REPLACE (LTRIM(e.Nome_Empresa),'AMERICA ','') AS empresa
+      ,rs.data_inclusao
+      ,rs.data_envio
+      --,(SELECT COUNT(id) AS n_item FROM reembolso_itens WHERE id_reembolso_solicitacao=rs.id)AS itens
+      --,CASE WHEN  rs.id_status<100 AND rs.id_status>0 THEN CAST(rs.id_status AS VARCHAR)+'-'+CAST((SELECT fim_aprov FROM reembolso_guia_aprovador AS gap WHERE gap.id_reeembolso=rs.id_format)AS VARCHAR ) ELSE '' END AS progresso
+      --,CASE id_status WHEN -1 THEN 'EDICAO' WHEN 0 THEN 'ENVIADO' WHEN 100 THEN 'APROVADO'  WHEN 110 THEN 'EM ANALISE' WHEN 150 THEN 'INTEGRADO' WHEN 200 THEN 'REPROVADO' WHEN 210 THEN 'PARA REVISAO'  ELSE 'EM ANALISE' END AS status
+      --,rs.id_status
+FROM reembolso_solicitacao AS rs
+LEFT JOIN reembolso_aprovador_usuario AS rau ON rau.id_usuario = rs.id_usuario
+LEFT JOIN reembolso_aprovador_usuario AS rauAprovador ON rauAprovador.id_grupo = rau.id_grupo
+LEFT JOIN reembolso_tipo_despesa AS d ON d.id = rs.id_tipo_despesa
+LEFT JOIN usuario AS u ON u.id = rs.id_usuario
+LEFT JOIN reembolso_aprovador_grupo AS g ON g.id = u.id_grupo
+LEFT JOIN vwEmpresas AS e ON e.Cod_Empresa = rs.id_empresa
+WHERE rauAprovador.id_usuario = 93
+AND rs.id_status = rauAprovador.ordem-1
+ORDER BY rs.id
+
+
+
+// ACOMPANHAMENTO
+SELECT DISTINCT rs.id
+      ,rs.id_format AS cod
+      ,rs.data_base AS mes
+      ,rs.titulo_evento
+      ,d.descricao AS despesa
+      ,g.nome AS grupo
+      ,(SELECT SUM(CAST(ri.valor AS DECIMAL (18,2))) FROM reembolso_itens AS ri WHERE ri.id_reembolso_solicitacao=rs.id)AS total
+      ,u.nome
+      ,u.id AS usuario
+      ,REPLACE (LTRIM(e.Nome_Empresa),'AMERICA ','') AS empresa
+      ,rs.data_inclusao
+      ,rs.data_envio
+      ,(SELECT COUNT(id) AS n_item FROM reembolso_itens WHERE id_reembolso_solicitacao=rs.id)AS itens
+      ,CASE WHEN  rs.id_status<100 AND rs.id_status>0 THEN CAST(rs.id_status AS VARCHAR)+'-'+CAST((SELECT fim_aprov FROM reembolso_guia_aprovador AS gap WHERE gap.id_reeembolso=rs.id_format)AS VARCHAR ) ELSE '' END AS progresso
+      ,CASE id_status WHEN -1 THEN 'EDICAO' WHEN 0 THEN 'ENVIADO' WHEN 100 THEN 'APROVADO'  WHEN 110 THEN 'EM ANALISE' WHEN 150 THEN 'INTEGRADO' WHEN 200 THEN 'REPROVADO' WHEN 210 THEN 'PARA REVISAO'  ELSE 'EM ANALISE' END AS status
+FROM reembolso_solicitacao AS rs
+LEFT JOIN reembolso_aprovador_usuario AS rau ON rau.id_usuario = rs.id_usuario
+LEFT JOIN reembolso_aprovador_usuario AS rauAprovador ON rauAprovador.id_grupo = rau.id_grupo
+LEFT JOIN reembolso_tipo_despesa AS d ON d.id = rs.id_tipo_despesa
+LEFT JOIN usuario AS u ON u.id = rs.id_usuario
+LEFT JOIN reembolso_aprovador_grupo AS g ON g.id = u.id_grupo
+LEFT JOIN vwEmpresas AS e ON e.Cod_Empresa = rs.id_empresa
+WHERE rauAprovador.id_usuario = 92
+AND rs.id_status BETWEEN rauAprovador.ordem AND 99
+ORDER BY rs.id
+
+
+// HISTORICO
+SELECT DISTINCT rs.id
+      ,rs.id_format AS cod
+      ,rs.data_base AS mes
+      ,rs.titulo_evento
+      ,d.descricao AS despesa
+      ,g.nome AS grupo
+      --,(SELECT SUM(CAST(ri.valor AS DECIMAL (18,2))) FROM reembolso_itens AS ri WHERE ri.id_reembolso_solicitacao=rs.id)AS total
+      ,u.nome
+      ,u.id AS usuario
+      --,REPLACE (LTRIM(e.Nome_Empresa),'AMERICA ','') AS empresa
+      ,rs.data_inclusao
+      ,rs.data_envio
+--       ,CASE id_status WHEN 100 THEN (SELECT TOP 1 LEFT(CONVERT(VARCHAR, log.data, 105), 10) AS dt FROM log_reembolso_acao AS log WHERE log.id_reembolso=rs.id_format AND log.status_para=100 ORDER BY log.data DESC)
+--                                                         WHEN 150 THEN (SELECT TOP 1 LEFT(CONVERT(VARCHAR, log.data, 105), 10) AS dt FROM log_reembolso_acao AS log WHERE log.id_reembolso=rs.id_format AND log.status_para=100 ORDER BY log.data DESC)
+--                                                         WHEN 200 THEN (SELECT TOP 1 LEFT(CONVERT(VARCHAR, log.data, 105), 10) AS dt FROM log_reembolso_acao AS log WHERE log.id_reembolso=rs.id_format AND log.status_para=200 ORDER BY log.data DESC)
+--                                                         ELSE ''
+--                                                         END AS avaliado
+--       ,(SELECT COUNT(id) AS n_item FROM reembolso_itens WHERE id_reembolso_solicitacao=rs.id)AS itens
+--       ,CASE WHEN  rs.id_status<100 AND rs.id_status>0 THEN CAST(rs.id_status AS VARCHAR)+'-'+CAST((SELECT fim_aprov FROM reembolso_guia_aprovador AS gap WHERE gap.id_reeembolso=rs.id_format)AS VARCHAR ) ELSE '' END AS progresso
+--       ,CASE id_status WHEN -1 THEN 'EDICAO' WHEN 0 THEN 'ENVIADO' WHEN 100 THEN 'APROVADO'  WHEN 110 THEN 'EM ANALISE' WHEN 150 THEN 'INTEGRADO' WHEN 200 THEN 'REPROVADO' WHEN 210 THEN 'PARA REVISAO'  ELSE 'EM ANALISE' END AS status
+FROM reembolso_solicitacao AS rs
+LEFT JOIN reembolso_aprovador_usuario AS rau ON rau.id_usuario = rs.id_usuario
+LEFT JOIN reembolso_aprovador_usuario AS rauAprovador ON rauAprovador.id_grupo = rau.id_grupo
+LEFT JOIN reembolso_tipo_despesa AS d ON d.id = rs.id_tipo_despesa
+LEFT JOIN usuario AS u ON u.id = rs.id_usuario
+LEFT JOIN reembolso_aprovador_grupo AS g ON g.id = u.id_grupo
+--LEFT JOIN vwEmpresas AS e ON e.Cod_Empresa = rs.id_empresa
+WHERE rauAprovador.id_usuario =92
+AND rs.id_status IN(100,150,200)
+ORDER BY rs.id
+
+
+// REVISAO
+SELECT DISTINCT rs.id
+      ,rs.id_format AS cod
+      ,rs.data_base AS mes
+      ,rs.titulo_evento
+      ,d.descricao AS despesa
+      ,g.nome AS grupo
+      ,(SELECT SUM(CAST(ri.valor AS DECIMAL (18,2))) FROM reembolso_itens AS ri WHERE ri.id_reembolso_solicitacao=rs.id)AS total
+      ,u.nome
+      ,u.id AS usuario
+      ,REPLACE (LTRIM(e.Nome_Empresa),'AMERICA ','') AS empresa
+      ,rs.data_inclusao
+      ,rs.data_envio
+      ,(SELECT COUNT(id) AS n_item FROM reembolso_itens WHERE id_reembolso_solicitacao=rs.id)AS itens
+      ,CASE WHEN  rs.id_status<100 AND rs.id_status>0 THEN CAST(rs.id_status AS VARCHAR)+'-'+CAST((SELECT fim_aprov FROM reembolso_guia_aprovador AS gap WHERE gap.id_reeembolso=rs.id_format)AS VARCHAR ) ELSE '' END AS progresso
+      ,CASE id_status WHEN -1 THEN 'EDICAO' WHEN 0 THEN 'ENVIADO' WHEN 100 THEN 'APROVADO'  WHEN 110 THEN 'EM ANALISE' WHEN 150 THEN 'INTEGRADO' WHEN 200 THEN 'REPROVADO' WHEN 210 THEN 'PARA REVISAO'  ELSE 'EM ANALISE' END AS status
+FROM reembolso_solicitacao AS rs
+LEFT JOIN reembolso_aprovador_usuario AS rau ON rau.id_usuario = rs.id_usuario
+LEFT JOIN reembolso_aprovador_usuario AS rauAprovador ON rauAprovador.id_grupo = rau.id_grupo
+LEFT JOIN reembolso_tipo_despesa AS d ON d.id = rs.id_tipo_despesa
+LEFT JOIN usuario AS u ON u.id = rs.id_usuario
+LEFT JOIN reembolso_aprovador_grupo AS g ON g.id = u.id_grupo
+LEFT JOIN vwEmpresas AS e ON e.Cod_Empresa = rs.id_empresa
+WHERE rauAprovador.id_usuario = 26
+AND rs.id_status =110
+AND rauAprovador.ordem =1
+ORDER BY rs.id
+
+
+
+SELECT DISTINCT
+     g.id
+    ,g.nome
+    ,d.descricao AS departamento
+    ,g.descricao
+    ,(SELECT COUNT(id_grupo) AS n FROM reembolso_aprovador_usuario WHERE id_grupo=g.id)AS numero_aprovadores
+FROM reembolso_aprovador_grupo AS g
+LEFT JOIN corporativo_departamento AS d ON d.id = g.id_departamento
+LEFT JOIN reembolso_aprovador_usuario AS rau ON rau.id_grupo = g.id
+WHERE rau.id_usuario =1
+ORDER BY g.nome

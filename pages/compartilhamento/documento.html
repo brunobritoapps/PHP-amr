@@ -1,0 +1,616 @@
+<script type="text/javascript">
+    var remote = new Remote('php/comunicacao.php', 'acesso','usuario_permissao');
+    var remote1 = new Remote('php/comunicacao.php', 'compartilhamento','documento');
+    var remote2 = new Remote('php/comunicacao.php', 'configuracao','parametros');
+
+    var oTable;
+    var defTable;
+    var fileUpload;
+    var dir = "";
+
+    var arrUsuario=new Array();
+
+    function resultGetDocumento(dados) {
+        renderizaTabelaDefault(dados);
+    }
+
+    function renderizaTabelaDefault(dados) {
+        if (oTable == null) {
+            defTable = $('#t_dados').html();
+        } else {
+            $('#t_dados').html(defTable);
+        }
+        // var objDataTable = colunasDefaultDataTable($('#t_dados'), dados);
+        var objDataTable = colunasDefaultDataTable($('#t_dados'), dados, function (data) {
+            remote.executa("getInfoUsuario",{"idUsuario": data.find("td:nth-child(4)").text()}, render_InfoUsuario, $('#pnlInfoUsuario'));
+
+            //SET ELEMENTOS PARA PREVIEW
+            var name = data.find("td:nth-child(8)").text();
+            var file1 = dir+name;
+            $('#btnView').attr('href',file1);
+
+            //SET ELEMENTOS PARA DOWNLOAD
+            var href = 'php/services/colaborador/download.php?';
+            var file2 = href+'file='+name+'&dir='+dir;
+            $('#btnDown').attr('href',file2);
+            $('#btnDown').attr('target',"_blank");
+
+        });
+        oTable = $('#t_dados').dataTable(objDataTable);
+        $("#t_dados td:contains('Nenhum')").html('Nenhum documento compartilhado');
+        $("#t_dados th:contains('Informacao')").html('Informação');
+        $(window).resize();
+    }
+
+    function resultGetUsuario(dados) {
+        var strTemp = "0";
+        $("#selUsuario_AddUsuario").html('<option>Selecione</option>');
+        for (var i = 0; i < dados.length; i++) {
+            strTemp += "," + dados[i].id_unico
+            $("#selUsuario_AddUsuario").append('<option value="' + dados[i].id + '">['+ dados[i].usuario +'],['+ dados[i].nome +' '+ dados[i].sobrenome +'],['+ dados[i].empresa +'],['+ dados[i].departamento +'],['+ dados[i].cpf +']</option>');
+        }
+        $("#selUsuario_AddUsuario").selectpicker("refresh");
+    }
+
+    function resultGetModalUsuario(dados){
+        $("#txtId_AddUsuario").val(dados[0].id);
+        $("#divNomeSobrenome_AddUsuario").html(dados[0].nome+' '+dados[0].sobrenome);
+        $("#divEmpresa_AddUsuario").html(dados[0].empresa);
+        $("#divDepartamento_AddUsuario").html(dados[0].departamento);
+        $("#divCpf_AddUsuario").html('CPF:'+dados[0].cpf);
+    }
+
+    function render_InfoUsuario(dados) {
+        var conteudo='';
+
+        var rnd = Math.random();
+        conteudo += '<div class="col-md-12" style="padding-top: 20px">\n' +
+            '  <div class="panel panel-primary">\n'+
+            '      <div class="profile">\n'+
+            '          <div class="profile"><div class="profile-image"><img src="php/outros/loadimage.php?n=' + dados[0].id + '&c=' + rnd + '" class="foto_usuario" alt="Usuário"></div></div>\n'+
+            '              <div class="profile-data">\n' +
+            '                 <div class="profile-data-name ">' + dados[0].nome+' '+dados[0].sobrenome+'</div>\n' +
+            '                 <div class="profile-data-title ">' + dados[0].empresa + '</div>\n' +
+            // '                 <div class="profile-data-title"> ' + dados[0].departamento + '</div>\n' +
+            '                 <div class="profile-data-title"> CPF - ' + dados[0].cpf + '</div>\n' +
+            '             </div>\n' +
+            '         </div>\n' +
+            '     </div>\n' +
+            ' </div>';
+
+
+        $("#divInfoUsuario").html(conteudo);
+    }
+
+    // FUNCAO RENDERIZA BOX USUARIO
+    function render_AddUsuario() {
+        var conteudo='';
+        for (var i = 0; i < arrUsuario.length; i++) {
+            var rnd = Math.random();
+            conteudo += '<div class="col-md-12 ">\n' +
+                '  <div class="panel panel-primary">\n'+
+                '                          <div class="profile">\n'+
+                '                                <div class="profile "><div class="profile-image"><img src="php/outros/loadimage.php?n=' + arrUsuario[i].id + '&c=' + rnd + '" class="foto_usuario" alt="Usuário"></div></div>\n'+
+                '                                <div class="profile-data col-md-10">\n' +
+                '                                     <div class="profile-data-name ">' + arrUsuario[i].nomeSobrenome+'</div>\n' +
+                '                                     <div class="profile-data-title ">' + arrUsuario[i].empresa + '</div>\n' +
+                '                                     <div class="profile-data-title"> ' + arrUsuario[i].departamento + '</div>\n' +
+                '                                     <div class="profile-data-title"> ' + arrUsuario[i].cpf + '</div>\n' +
+                '                                </div>\n' +
+                '                          </div>\n' +
+                '                          <div class="panel-footer ">\n' +
+                '                              <div class="panel-body">\n' +
+                '                                  <ul class="panel-controls">\n' +
+                '                                     <li><a href="#" id="btnRem_Aprov" class="control-danger" data-acao="rem" data-remove-aprov="'+i+'" title="Excluir"><span class="fa fa-minus" ></span></a></li>\n' +
+                '                                 </ul>\n' +
+                '                           </div>\n' +
+                '                         </div>\n' +
+                '                        </div>\n' +
+                '                       </div>';
+            $("#divAddUsuario").html(conteudo);
+        }
+    }
+
+    function refreshModalAddUsuario(){
+        $("#divNomeSobrenome_AddUsuario").html('');
+        $("#divEmpresa_AddUsuario").html('');
+        $("#divDepartamento_AddUsuario").html('');
+        $("#divCpf_AddUsuario").html('');
+        $("#selUsuario_AddUsuario").val('Selecione');
+        $("#selUsuario_AddUsuario").selectpicker("refresh");
+        $("#imgUser_AddUsuario").html('<div class="profile-image"><img src="img/user/no-image.jpg" alt="Usuário"></div>');
+    }
+
+    function resultUpload(dados) {
+        $('#txtNameArquivo').val(dados);
+        var name = dados;
+        var file = dir+name;
+        //alert(file);
+        $('#refFile').attr('href',file);
+    }
+
+    function resultSetDocumento(dados){
+        if (dados ==0){
+            noty({
+                text: '<br/><b><p><span class="fa fa-exclamation-circle"></span><font size="2">   Erro</font></p></b><p>Erro ao compartilhar documento</p>',
+                type: 'error',
+                layout: 'topCenter',
+                timeout: 4000
+            });
+        } else{
+            noty({
+                text: '<br/><b><p><span class="fa fa-exclamation-circle"></span><font size="2">   Sucesso</font></p></b><p>Documento Compartilhado</p>',
+                type: 'success',
+                layout: 'topCenter',
+                timeout: 4000
+            });
+            resultGetDocumento(dados);
+            exibeDivPadrao(true);
+            arrUsuario = new Array();
+        }
+    }
+
+    function resultDiretorio(dados) {
+        dir = dados[0].dir;
+    }
+
+
+    $(document).ready(function () {
+        remote.executa("getResumoUsuario", null, resultGetUsuario, $('#divEdicao'), erroPersonalizado);
+        remote1.executa("getDocumento", null, resultGetDocumento, $('#divEdicao'), erroPersonalizado);
+        remote2.executa("getDiretorioCompartilhamentoDocumento",null, resultDiretorio, $('#divControles'), erroPersonalizado);
+
+        //scriptSql RELATORIO PERFORMANCE de upload
+        var uploader = new plupload.Uploader({
+            runtimes: 'gears,html5,flash,silverlight,browserplus',
+            browse_button: 'pickfiles',
+            drop_element: 'pickfiles',
+            container: 'container',
+            chunk_size: '5mb',
+            max_file_size: '200mb',
+            url: 'upload.php',
+            multi_selection: false,
+            unique_names: true,
+            flash_swf_url: 'theme/js/plugins/plupload/js/plupload.flash.swf',
+            silverlight_xap_url: 'theme/js/plugins/plupload/js/plupload.flash.swf',
+            filters: [
+                {title: "Imagem jpg", extensions: "jpg"},
+                {title: "Imagem png", extensions: "png"},
+                {title: "Arquivo de Texto", extensions: "txt"},
+                {title: "Arquivo pdf", extensions: "pdf"},
+                {title: "Arquivo Word", extensions: "doc"},
+                {title: "Arquivo Word", extensions: "docx"},
+                {title: "Planilha Excel", extensions: "xls"},
+                {title: "Planilha Excel", extensions: "xlsx"}
+            ]
+        });
+
+        uploader.bind('Init', function (up, params) {
+            $('#filelist').html("");
+        });
+
+        $('#uploadfiles').click(function (e) {
+            uploader.start();
+            $("#uploadfiles").hide();
+            // INCLUDE - PREVIEW
+            $("#btnPreview").show();
+            e.preventDefault();
+        });
+
+        uploader.init();
+
+        uploader.bind('FilesAdded', function (up, files) {
+            //console.log(files);
+
+            $.each(files, function (i, file) {
+                $('#filelist').html('<span> ' + file.name + ' (' + plupload.formatSize(file.size) + ') <span id="' + file.id + '"></span>');
+            });
+            $("#uploadfiles").show();
+            // INCLUDE - PREVIEW
+            $("#btnPreview").hide();
+            $("#preview").hide();
+            up.refresh(); // Reposition Flash/Silverlight
+
+        });
+        $("#btnPreview").on('click', function () {
+            $("#preview").show();
+        });
+        uploader.bind('UploadProgress', function (up, file) {
+            $('#filelist').html('<div class="progress-list"><div class="pull-left"><strong class="text-success">Progresso:</strong></div><div class="pull-right">' + plupload.formatSize(file.loaded) + 'MB/' + plupload.formatSize(file.size) + 'MB (' + file.percent + '%)</div><div class="progress progress-small progress-striped active"><div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="' + file.percent + '" aria-valuemin="0" aria-valuemax="100" style="width: ' + file.percent + '%;">' + file.percent + '%</div></div></div>');
+        });
+
+        uploader.bind('Error', function (up, err) {
+            $('#filelist').html("Error: " + err.code +
+                ", Message: " + err.message +
+                (err.file ? ", File: " + err.file.name : "")
+            );
+            up.refresh(); // Reposition Flash/Silverlight
+        });
+
+        uploader.bind('FileUploaded', function (up, file, info) {
+            $('#filelist').html('<span> ' + file.name + ' (' + plupload.formatSize(file.size) + ') </span><span class="fa fa-check" style="color: #95b75d"></span>');
+            var obj = JSON.parse(info.response);
+            fileUpload = obj.cleanFileName;
+            remote2.executa("getDiretorio",{id: 3}, resultDiretorio, $('#divControles'), erroPersonalizado);
+            remote1.executa("uploadDocumento",{id: $("#txtId_AddUsuario").val(),arquivo:obj.cleanFileName,tipo:$("#sel_tipo option:selected").text()}, resultUpload, $('#divControles'), erroPersonalizado);
+        });
+
+        $("#selUsuario_AddUsuario").change(function () {
+            var id = $("#selUsuario_AddUsuario").val();
+            var rnd = Math.random();
+            $("#imgUser_AddUsuario").html('<div class="profile"><div class="profile-image"><img src="php/outros/loadimage.php?n=' + id + '&c=' + rnd + '" class="foto_usuario" alt="Usuário"></div></div>');
+            remote.executa("getInfoUsuario",{idUsuario:id}, resultGetModalUsuario, $('#modal_AddUsuario'), erroPersonalizado);
+        });
+
+        $("#btnAddUser").on('click', function () {
+            refreshModalAddUsuario();
+            $("#modal_AddUsuario").modal();
+        });
+
+        $("#btnSave_AddUsuario").on("click",function () {
+            //
+            var tempObj = {};
+            tempObj.id = $("#selUsuario_AddUsuario").val();
+            //
+            tempObj.nomeSobrenome = $("#divNomeSobrenome_AddUsuario").text();
+            tempObj.empresa = $("#divEmpresa_AddUsuario").text();
+            tempObj.departamento = $("#divDepartamento_AddUsuario").text();
+            tempObj.cpf = $("#divCpf_AddUsuario").text();
+
+            if($("#txtIdUsuario").val() == ""){
+                arrUsuario.push(tempObj);
+            }else{
+                arrUsuario[$("#txtIdUsuario").val()] = tempObj;
+            }
+            $("#modal_AddUsuario").modal("hide");
+            render_AddUsuario();
+        })
+
+        //REMOVE USUARIO
+        $("#divAddUsuario").on("click", "[data-remove-aprov]", function () {
+            $this = $(this);
+            var tempPos = $this.attr("data-remove-aprov");
+            arrUsuario.splice(tempPos,1);
+            if (arrUsuario.length==0){
+                $("#divAddUsuario").html('');
+            }else{
+                render_AddUsuario();
+            }
+        });
+
+       $("#btnEnv").on('click', function () {
+           if(validaEnv()){
+               remote1.executa("setDocumento",{id: $("#txtId_AddUsuario").val(),arquivo:$('#txtNameArquivo').val(),tipo:$("#sel_tipo option:selected").text()}, resultSetDocumento, $('#pnlCompartilhamento'), erroPersonalizado);
+           }
+        });
+
+        $("#btnAdd").on('click', function () {
+            exibeDivPadrao(false);
+        });
+
+        $("#btnVol").on('click', function () {
+            exibeDivPadrao(true);
+        });
+
+
+        $("#btnRem").on('click', function () {
+            var objTemp = oTable.fnGetData(oTable.closest("table").find(".selected"));
+            if (objTemp != null) {
+                $("#txtId_Env").val(objTemp.id);
+                $("#modal_RemDocumento").modal();
+            }
+        });
+
+        $("#btnRemConf").on('click', function () {
+            remote1.executa("remDocumento", {id: $("#txtId_Env").val()}, resultGetDocumento, $('.panel'), erroPersonalizado);
+        });
+
+        $("#btnView").on('click', function () {
+            var objTemp = oTable.fnGetData(oTable.closest("table").find(".selected"));
+            if (objTemp != null) {
+                $("#documento_box_view").modal();
+            }
+        });
+    });
+
+
+    function exibeDivPadrao(chave) {
+        if(chave==false){
+            $("#pnlInfoUsuario").hide();
+            $("#divInfoUsuario").html('<div class="profile"><div class="profile-image"><img src="img/user/no-image.jpg" alt="Usuário"></div></div>');
+            $("#divMain" ).removeClass( "col-md-10 " ).addClass(  "col-md-8 col-md-offset-2");
+            $("#btnVol").show();
+            $("#btnEnv").show();
+            $("#divPadrao").hide();
+            $("#btnUser").hide();
+            $("#btnView").hide();
+            $("#btnRefresh").hide();
+            $("#btnAdd").hide();
+            $("#btnDown").hide();
+            $("#btnRem").hide();
+            //
+            $("#pnlUploadDocumento").show();
+            $("#btnPreview").hide();
+            $("#filelist").html('');
+            $("#preview").hide();
+
+        }else{
+            $("#pnlInfoUsuario").show();
+            $("#divInfoUsuario").html('<div class="profile"><div class="profile-image"><img src="img/user/no-image.jpg" alt="Usuário"></div></div>');
+            $("#divMain" ).removeClass( "col-md-8 col-md-offset-2" ).addClass(  "col-md-10 ");
+            $("#divPadrao").show();
+            $("#btnAdd").show();
+            $("#btnView").show();
+            $("#btnUser").show();
+            $("#btnRefresh").show();
+            $("#btnRem").show();
+            $("#btnDown").show();
+            $("#btnVol").hide();
+            $("#btnEnv").hide();
+            $("#pnlUploadDocumento").hide();
+            arrUsuario = new Array();
+            $("#divAddUsuario").html('');
+            $("#sel_tipo").val(0);
+            $("#sel_tipo").selectpicker("refresh");
+        }
+    }
+
+    function validaEnv(){
+        var tipo= $('#sel_tipo').find(":selected").val();
+        var nome = $('#txtNameArquivo').val();
+
+        var valid_usuario = true;
+        if(arrUsuario.length==0){
+            valid_usuario = false;
+            noty({
+                text: '<br/><b><p><span class="fa fa-exclamation-circle"></span><font size="2">   Faltam informações para o compartilhamento</font></p></b><p>Selecione o (Usuário remetente) que irá receber o documento</p>',
+                type: 'warning',
+                layout: 'topCenter',
+                timeout: 4000
+            });
+        }
+
+        var valid_tipo = true;
+        if(tipo==0){
+            valid_tipo = false;
+            noty({
+                text: '<br/><b><p><span class="fa fa-exclamation-circle"></span><font size="2">   Faltam informações para o compartilhamento</font></p></b><p>Selecione o (Tipo) de arquivo que deseja compartilhar</p>',
+                type: 'warning',
+                layout: 'topCenter',
+                timeout: 4000
+            });
+        }
+
+        var valid_nome = true;
+        if(nome ==''){
+            valid_nome = false;
+            noty({
+                text: '<br/><b><p><span class="fa fa-exclamation-circle"></span><font size="2">   Faltam informações para o compartilhamento</font></p></b><p>(Documento) não foi feito upload</p>',
+                type: 'warning',
+                layout: 'topCenter',
+                timeout: 4000
+            });
+        }
+
+
+        if(valid_usuario==true &  valid_tipo==true & valid_nome==true){
+            return true
+        }else {
+            return false
+        }
+    }
+
+</script>
+
+
+
+
+<!-- START BREADCRUMB -->
+<ul class="breadcrumb">
+</ul>
+
+<!-- PAGE CONTENT WRAPPER -->
+<div class="page-content-wrap">
+    <div class="row">
+        <div id="divMain" class="col-md-9">
+            <div id="pnlCompartilhamento" class="panel panel-default">
+
+                <!--PAINEL DE CONTROLES-->
+                <div class="panel-heading">
+                    <h3 class="panel-title">Compartilhamento de Documentos</h3>
+                    <ul class="panel-controls">
+                        <li><a href="" id="btnView" class="control-primary" data-acao="add" title="Ver documento" target="preview2"><span class="fa fa-picture-o"></span></a></li>
+                        <li><a href="" id="btnDown" class="control-primary" data-acao="add" title="Baixar documento"><span class="fa fa-arrow-circle-down"></span></a></li>
+                        <li><a href="#" id="btnAdd" class="control-info" data-acao="gra" title="Adicionar compartilhamento"  ><span class="fa fa-plus"></span></a></li>
+                        <li><a href="#" id="btnEnv" class="control-success" data-acao="gra" title="Confirmar envio" style="display: none;"><span class="fa fa-check"></span></a></li>
+                        <li><a href="#" id="btnRem" class="control-danger" data-acao="gra" title="Excluir envio" ><span class="fa fa-times"></span></a></li>
+                        <li><a href="#" id="btnVol" class="control-primary" data-acao="vol" title="Voltar" style="display: none;"><span class="fa fa-mail-reply"></span></a></li>
+                    </ul>
+                </div>
+
+                <!--START DIV TABELA-->
+                <div class="panel-body">
+                    <div id="divPadrao" class="row">
+                        <div class="col-md-12">
+                            <table id="t_dados" class="table table-striped table-bordered table-condensed">
+
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <!--END DIV TABELA-->
+
+                <!--START PAINEL USUARIO REMETENTE-->
+                <div id="pnlUploadDocumento" style="display: none;">
+                    <div class="col-md-3">
+                        <div class="panel panel-default">
+                            <!--PAINEL DE CONTROLES-USUARIO-->
+                            <div class="panel-heading">
+                                <h3 class="panel-title">Usuário remetente</h3>
+                                <ul class="panel-controls">
+                                    <li><a href="#" id="btnAddUser" class="control-primary" data-acao="add" title="Adicionar"><span class="fa fa-user"></span></a></li>
+                                </ul>
+                            </div>
+
+                            <!--START-TABELA-->
+                            <div class="panel-body">
+                                <div id="divAddUsuario">
+
+                                </div>
+                            </div>
+                            <!--END-TABELA-->
+
+                        </div>
+                    </div>
+                    <!--END PAINEL USUARIO REMETENTE--->
+
+                    <!--START-UPLOAD DE ARQUIVO-->
+                    <div class="col-md-9">
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <h3 class="panel-title">Upload</h3>
+                            </div>
+                            <div class="panel-body">
+                                <div class="form-group">
+                                    <div class="col-md-12">
+                                        <input id="txtId_Env" type="hidden"/>
+                                        <label>Tipo do Arquivo</label>
+                                        <select id="sel_tipo" class="form-control" data-live-search="true">
+                                            <option value="0">Selecione</option>
+                                            <option value="1">Holerite</option>
+                                            <option value="2">Adiantamento</option>
+                                            <option value="3">Formulario</option>
+                                            <option value="3">Outros</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="col-md-12">
+                                        <div id="container">
+                                            <label>Importar Arquivo</label></br>
+                                            <input id="txtNameArquivo" type="hidden"/>
+                                            <a id="pickfiles" href="#" class="btn btn-info" style="margin-top: 5px;">Browse</a>
+                                            <span id="filelist">Não foi possível fazer upload</span>
+                                            <button id="uploadfiles" class="btn btn-default" style="display: none;">Upload</button>
+                                            <button id="btnPreview" class="btn btn-default" style="display: none;"><a id="refFile" href="" target="preview">Preview</a></button>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <iframe id="preview" src="URL" name="preview" style="display: none;width: 100%; height: 500px"> </iframe>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!--END-UPLOAD DE ARQUIVO-->
+                </div>
+
+            </div>
+        </div>
+
+
+        <!--START DIV INFO USUARIO-->
+        <div class="col-md-3  ">
+            <div id="pnlInfoUsuario" class="panel panel-default">
+                <!--PAINEL DE CONTROLES-->
+                <div class="panel-heading">
+                    <h3 class="panel-title">Informações do Usuário</h3>
+                </div>
+                <div id="divInfoUsuario" class="panel-body">
+                    <div class="profile"><div class="profile-image"><img src="img/user/no-image.jpg" alt="Usuário"></div></div>
+                </div>
+            </div>
+        </div>
+        <!--END DIV INFO USUARIO-->
+
+
+
+    </div>
+</div>
+
+
+
+<!--START DIV-MODAL ADD USUARIO -->
+<div id="modal_AddUsuario" class="modal"  tabindex="-1" role="dialog" aria-labelledby="smallModalHead" aria-hidden="true">
+    <div class="modal-dialog modal-sm ">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title">Adicionar Usuário</h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="profile">
+                            <div class="profile">
+                                <div id="imgUser_AddUsuario">
+                                    <div class="profile-image"><img src="img/user/no-image.jpg" alt="Usuário"></div>
+                                </div>
+                            </div>
+                            <div class="profile-data">
+                                <input id="txtId_AddUsuario" type="hidden"/>
+                                <div id="divNomeSobrenome_AddUsuario" class="profile-data-name "></div>
+                                <div id="divEmpresa_AddUsuario" class="profile-data-title "></div>
+                                <div id="divDepartamento_AddUsuario" class="profile-data-title"></div>
+                                <div id="divCpf_AddUsuario" class="profile-data-title"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <input id="txtIdUsuario" type="hidden">
+                            <label> Usuario</label>
+                            <select id="selUsuario_AddUsuario" class="form-control" data-live-search="true"></select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!--START - FOOTER PAINEL -ITEM -->
+            <div class="modal-footer">
+                <div class="panel-body">
+                    <ul class="panel-controls">
+                        <li><a href="#" id="btnSave_AddUsuario" class="control-primary" data-acao="edt" title="Salvar aprovador"><span class="fa fa-save"></span></a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!--END DIV-MODAL ADD USUARIO -->
+
+<!--START DIV MODAL CONFIRMA EXCLUSAO DE DOCUMENTO-->
+<div id="modal_RemDocumento" class="modal" id="modal_small" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="defModalHead">Confirmação</h4>
+            </div>
+            <div class="modal-body">
+                Você tem certeza que deseja remover esse documento?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" data-dismiss="modal">Cancelar</button>
+                <button id="btnRemConf" type="button" class="btn btn-primary" data-dismiss="modal">Sim</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!--END DIV MODAL CONFIRMA EXCLUSAO DE DOCUMENTO-->
+
+<!--START DIV-MODAL VIEW DOCUMENTO -->
+<div class="modal in" id="documento_box_view" tabindex="-1" role="dialog" aria-labelledby="smallModalHead" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content ">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="smallModalHead3">View do Documento</h4>
+            </div>
+            <div class="modal-body">
+                <iframe id="preview2" src="URL" name="preview2" style="width: 100%; height: 600px"> </iframe>
+            </div>
+        </div>
+    </div>
+</div>
+<!--END DIV-MODAL VIEW DOCUMENTO -->
+
+

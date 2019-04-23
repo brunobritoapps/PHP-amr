@@ -1,0 +1,46 @@
+SELECT d.diretorio AS dir
+FROM configuracao_geral_diretorio AS d
+WHERE d.id= 3
+
+
+SELECT n.Codigo AS id, n.Descricao AS natureza, li.limite AS valor
+FROM reembolso_limites AS li
+LEFT JOIN corporativo_vwNaturezas AS n ON n.Codigo = li.id_natureza
+
+USE[AMR_P00_PRODUCAO]
+
+SELECT n.Codigo AS codigo
+,n.Descricao AS natureza
+,li.limite AS limite
+FROM reembolso_limites AS li
+LEFT JOIN corporativo_vwNaturezas AS n ON n.Codigo = li.id_natureza
+
+
+
+SELECT * FROM AMR_P00_PRODUCAO.dbo.processo_vwAprovaFinDoc
+WHERE Codigo = '017  000156521 NF 00003401'
+
+SELECT * FROM processo_vwAprovaFinCab
+
+SELECT * FROM AMR_P00_PRODUCAO.dbo.processo_vwAprovaFinIte
+WHERE Codigo='01TT1NUMTST002PNFE00107001'
+
+
+SELECT * FROM AMR_P00_PRODUCAO.dbo.processo_vwAprovaFinIte
+WHERE Codigo='01TT2NUMTST001PNFE00182101'
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,1576 @@
+<!--START STYLE-PAGE-->
+<style type="text/css">
+    .env{
+        color: #0000CC;
+    }
+    .edt{
+        color: rgba(83, 83, 83, 0.91);
+    }
+    .apr{
+        color: #4d9d4f;
+    }
+    .rep{
+        color: #ff000d;
+    }
+
+    .anl{
+        color: #ff7e05;
+    }
+
+</style>
+<!--END  STYLE-PAGE-->
+
+<script type="text/javascript">
+    var remote1 = new Remote('php/comunicacao.php', 'colaborador', 'reembolso');
+    var remote2 = new Remote('php/comunicacao.php', 'corporativo', 'empresa');
+    var remote3 = new Remote('php/comunicacao.php', 'corporativo', 'ccusto');
+    var remote4 = new Remote('php/comunicacao.php', 'cadastro/reembolso', 'limite');
+    var remote5 = new Remote('php/comunicacao.php', 'configuracao','parametros');
+    var remote6 = new Remote('php/comunicacao.php', 'email','email');
+
+    //TABELA PAINEL PRINCIPAL
+    var oTable;
+    var defTable;
+
+    //TABELA PAINEL HISTORICO
+    var oTable_hist;
+    var defTable_hist;
+
+    var arrItens=new Array();
+    var lim ;
+    var dir = "";
+    var dataItem;
+    var dataLim="";
+    var pagamentoPorKM = 0;
+    var natureza;
+
+    function resultGetReembolso(dados) {
+        renderizaTabelaDefault(dados);
+    }
+
+    function resultGetReembolsoHistorico(dados) {
+        renderizaTabelaHistorico(dados);
+    }
+
+    function resultGetDataEmissao_Reembolso(dados) {
+        $("#txt_data").val(dados);
+    }
+
+    function resultGetEmpresaUsuario(dados) {
+        var strTemp = "0";
+        $("#sel_empresa").html("<option value=0>Selecione</option>");
+        for (var i = 0; i < dados.length; i++) {
+            strTemp += "," + dados[i].id
+            $("#sel_empresa").append('<option value="' + dados[i].id + '">' + dados[i].empresa + '</option>');
+        }
+        $("#sel_empresa").selectpicker("refresh");
+    }
+
+    function resultGetDespesa(dados) {
+        var strTemp = "0";
+        $("#sel_despesa").html("<option value=0>Selecione</option>");
+        for (var i = 0; i < dados.length; i++) {
+            strTemp += "," + dados[i].id
+            $("#sel_despesa").append('<option value="' + dados[i].id + '">' + dados[i].despesa + '</option>');
+        }
+        $("#sel_despesa").selectpicker("refresh");
+    }
+
+    function resultGetCliente(dados) {
+        var strTemp = "0";
+        $("#sel_cliente").html("<option value=0>Selecione</option>");
+        for (var i = 0; i < dados.length; i++) {
+            strTemp += "," + dados[i].id
+            $("#sel_cliente").append('<option value="' + dados[i].id + '">' + dados[i].nome + '</option>');
+        }
+        $("#sel_cliente").selectpicker("refresh");
+    }
+
+    function resultGetNatureza(dados) {
+        var strTemp = "0";
+        $("#sel_natureza").html("<option value=0>Selecione</option>");
+        for (var i = 0; i < dados.length; i++) {
+            strTemp += "," + dados[i].id
+            $("#sel_natureza").append('<option value="' + dados[i].id + '">' + dados[i].natureza + '</option>');
+        }
+        $("#sel_natureza").selectpicker("refresh");
+    }
+
+    function resultGetCcustoUsuarioReembolso(dados) {
+        $("#txtIdCcustoItem").val(dados[0].id_ccusto);
+        //alert($("#txtIdCcustoItem").val());
+    }
+
+    function renderizaTabelaDefault(dados) {
+        if (oTable == null) {
+            defTable = $('#t_dados').html();
+        } else {
+            $('#t_dados').html(defTable);
+        }
+        //var objDataTable = colunasDefaultDataTable($('#t_dados'), dados);
+        var objDataTable = colunasDefaultDataTable($('#t_dados'), dados, function (data) {
+            var status = data.find("td:nth-child(11)").text();
+            if(status == 'ENVIADO' ){
+                $('#btnEnv').hide();
+                $('#btnRem').hide();
+                $('#btnEdt').show();
+                $('#btnMsgRev').hide();
+            }else if(status == 'PARA REVISAO' ) {
+                $('#btnRem').hide();
+                $('#btnEdt').show();
+                $('#btnEnv').hide();
+                $('#btnMsgRev').show();
+            }else if(status == 'EM ANALISE' ) {
+                $('#btnRem').hide();
+                $('#btnEdt').show();
+                $('#btnEnv').hide();
+                $('#btnMsgRev').hide();
+            }else if(status == 'EDICAO' ) {
+                $('#btnRem').show();
+                $('#btnEdt').show();
+                $('#btnEnv').show();
+                $('#btnMsgRev').hide();
+            }else {
+                $('#btnMsgRev').hide();
+            }
+            remote1.executa("getValidaDataLimite", {diaLimite:dataLim,dataBase:data.find("td:nth-child(2)").text()}, resultGetValidaDataLimite, $('#pnlReembolso'), erroPersonalizado);
+        });
+        oTable = $('#t_dados').dataTable(objDataTable);
+        for (var i=1; i< dados.length+1;i++){
+            var status =  $("#t_dados tr:nth-child("+i+") td:nth-child(11)").text();
+            //alert(result);
+            if (status=="EM ANALISE"){
+                $("#t_dados tbody").find("tr:nth-child("+i+")").removeClass("info").removeClass("active").addClass("warning");
+            }else if(status=="ENVIADO"){
+                $("#t_dados tbody").find("tr:nth-child("+i+")").removeClass("warning").removeClass("info").addClass("active");
+            }else if(status=="PARA REVISAO") {
+                $("#t_dados tbody").find("tr:nth-child("+i+")").removeClass("active").removeClass("warning").addClass("info");
+            }else {
+                $("#t_dados tbody").find("tr:nth-child("+i+")").removeClass("warning").removeClass("active").removeClass("info");
+
+            }
+        }
+        $("#t_dados td:contains('Nenhum')").html('Nenhum reembolso adicionado');
+        $("#t_dados th:contains('Informacao')").html('Informação');
+        $(window).resize();
+    }
+
+    function renderizaTabelaHistorico(dados) {
+        if (oTable_hist == null) {
+            defTable_hist = $('#t_dados_hist').html();
+        } else {
+            $('#t_dados_hist').html(defTable_hist);
+        }
+        //var objDataTable = colunasDefaultDataTable($('#t_dados'), dados);
+        var objDataTable = colunasDefaultDataTable($('#t_dados_hist'), dados, function (data) {
+            var status = data.find("td:nth-child(11)").text();
+            if(status == 'REPROVADO' ){
+                $('#btnMsgRep').show();
+            }else{
+                $('#btnMsgRep').hide();
+            }
+        });
+        oTable_hist = $('#t_dados_hist').dataTable(objDataTable);
+
+        for (var i=1; i< dados.length+1;i++){
+            var status =  $("#t_dados_hist tr:nth-child("+i+") td:nth-child(11)").text();
+            //alert(result);
+            if (status=="APROVADO"){
+                $("#t_dados_hist tbody").find("tr:nth-child("+i+")").removeClass("danger").removeClass("info").addClass("success");
+            }else if(status=="REPROVADO"){
+                $("#t_dados_hist tbody").find("tr:nth-child("+i+")").removeClass("success").removeClass("info").addClass("danger");
+            }else if(status=="INTEGRADO") {
+                $("#t_dados_hist tbody").find("tr:nth-child("+i+")").removeClass("success").removeClass("info").addClass("info");
+            }
+        }
+        $(window).resize();
+    }
+
+    function  resultGetDataSemana(dados) {
+        var a = dados[0].semana;
+        $("#txtDiaSemana").val(a);
+        if(a=='sabado'){
+            $("#txtDiaSemana").css("color","#ffbeb0");
+        }else if(a=='domingo'){
+            $("#txtDiaSemana").css("color","#ffbeb0");
+        }else{
+            $("#txtDiaSemana").css("color","#ccc");
+        }
+    }
+
+    // FUNCAO DE  RENDERIZA ITENS
+    function render_Item(){
+        var conteudo="";
+        for (var i=0; i< arrItens.length;i++){
+
+            conteudo += '<div class="col-md-3">' +
+                '           <div class="panel panel-primary">\n' +
+                '            <div class="panel-heading">\n' +
+                '                <h3 class="panel-title"><span class="fa fa-file"></span>Item'+(i+1)+'</h3>\n' +
+                '            </div>\n' +
+                '            <div class="panel-body">\n' +
+                '               <br><label>Data</label><br>'+arrItens[i].data+'\n' +
+                '               <br><label>Cliente</label><br>'+arrItens[i].cliente+'\n' +
+                '               <br><label>Natureza</label><br>'+arrItens[i].naturezaId+'\n' +
+                '               <br><label>Valor</label><br>'+arrItens[i].valor+'\n' +
+                '               <br><label>Desconto</label><br>'+arrItens[i].desconto+'\n' +
+                '               <br><label>Total</label><br>'+arrItens[i].total+'\n' +
+                '               <br><label>Observações</label><br>\n' +
+                '               <textarea  class="form-control" disabled="disabled">'+arrItens[i].observacao+'</textarea>\n'+
+                '               <br><label>Documento</label><br>'+arrItens[i].documento+'\n' +
+                '            </div>\n' +
+                '            <div class="panel-footer">\n' +
+                '               <div class="panel-body">\n' +
+                '                   <ul class="panel-controls">\n' +
+                '                       <li><a href="#" id="btnEdt_Item" class="control-warning" data-acao="edt" data-positem="'+i+'" data-cliente="'+arrItens[i].clienteId+'" data-ccusto="'+arrItens[i].ccusto+'" data-data="'+arrItens[i].data+'" data-ccusto="'+arrItens[i].natureza+'" data-valor="'+arrItens[i].valor+'" data-desconto="'+arrItens[i].desconto+'" data-total="'+arrItens[i].total+'" title="Editar"><span class="fa fa-pencil"></span></a></li>\n' +
+                '                        <li><a href="#" id="btnRem_Item" class="control-danger" data-acao="rem" data-removeitem="'+i+'" title="Excluir"><span class="fa fa-minus" ></span></a></li>\n' +
+                '                   </ul>\n' +
+                '               </div>\n' +
+                '            </div>\n' +
+                '           </div>\n' +
+                '       </div>\n';
+        }
+        $('#divItens').html(conteudo);
+    }
+
+    // FUNCAO DE  RENDERIZA ITENS
+    function render_ItemInfo(dados){
+        var conteudo="";
+        //SET ELEMENTOS DONWLOAD
+        var href = 'php/services/colaborador/download.php?';
+        var name = "";
+        var file ="";
+        var file2="";
+
+        for (var i=0; i< dados.length;i++){
+            //SET ELEMENTOS VIEW
+            name = dados[i].documento;
+            file = dir+name;
+            file2 = href+'file='+name+'&dir='+dir;
+
+            conteudo += '<div class="col-md-12">' +
+                '          <div class="panel panel-primary">\n' +
+                '           <div class="panel-heading">\n' +
+                '                <h3 class="panel-title"><span class="fa fa-file"></span>Item'+(i+1)+'</h3>\n' +
+                '            </div>\n' +
+                '            <div class="panel-body">\n' +
+                '               <br><label>Dia da Semana </label><br>'+dados[i].semana+'\n' +
+                '               <br><label>Data</label><br>'+dados[i].data+'\n' +
+                '               <br><label>Cliente</label><br>'+dados[i].cliente+'\n' +
+                '               <br><label>Natureza</label><br>'+dados[i].natureza+'\n' +
+                '               <br><label>Valor</label><br>'+dados[i].valor+'\n' +
+                '               <br><label>Desconto</label><br>'+dados[i].desconto+'\n' +
+                '               <br><label>Total</label><br>'+dados[i].total+'\n' +
+                '               <br><label>Observações</label><br>\n' +
+                '               <textarea  class="form-control" disabled="disabled">'+dados[i].observacao+'</textarea>\n'+
+                '               <br><label>Documento</label><br>'+dados[i].documento+'\n' +
+                '            </div>\n' +
+                '            <div class="panel-footer">\n' +
+                '               <div class="panel-body">\n' +
+                '                   <ul class="panel-controls">\n' +
+                '                       <li><a class="control-primarys" data-toggle="modal" href="'+file+'" target="preview2"  data-arquivo-v="'+dados[i].documento+'" title="Ver documento"><span class="fa fa-picture-o" ></span></a></li>\n' +
+                '                       <li><a href="'+file2+'"  class="control-primarys" data-acao="down" data-arquivo-d="'+dados[i].documento+'" title="Download"><span class="fa fa-arrow-down" ></span></a></li>\n' +
+                '                   </ul>\n' +
+                '               </div>\n' +
+                '            </div>\n' +
+                '          </div>\n' +
+                '       </div>\n';
+        }
+        $('#divItem_info').html(conteudo);
+    }
+
+    function exibeDivPadrao(divPadrao) {
+        if (divPadrao == false) {
+            $("#divPadrao").show("fast");
+            $("#divEdicao").hide("fast");
+            $("#divHist").hide("fast");
+            $("#divAddItens").hide("fast");
+            $("#btnVol").hide();
+            $("#btnGra").hide();
+            $("#btnMsgRev").hide();
+            $("#btnMsgRep").hide();
+            $("#btnViewHist").hide();
+            $("#btnAdd").show();
+            $("#btnEdt").show();
+            $("#btnRem").show();
+            $("#btnEnv").show();
+            $("#btnHist").show();
+            $("#btnView").show();
+            //
+            $("#t_dados tr.selected").removeClass("selected");
+            $("#t_dados_hist tr.selected").removeClass("selected");
+            //
+            $("#txtTituloPainel").html('Minhas solicitações de reembolso');
+        } else {
+            $("#divPadrao").hide("fast");
+            $("#divEdicao").show("fast");
+            $("#divAddItens").show("fast");
+            $("#btnVol").show();
+            $("#btnGra").show();
+            $("#btnAdd").hide();
+            $("#btnEdt").hide();
+            $("#btnRem").hide();
+            $("#btnEnv").hide();
+            $("#btnView").hide();
+            //
+            $("#btnHist").hide();
+            $("#btnMsgRev").hide();
+
+        }
+    }
+
+    function refreshModalDivItem(){
+        $("#txtIdItem").val("");
+        $("#dataItem").val('');
+        setMesCalendario();
+        $("#sel_cliente").val("");
+        $("#sel_cliente").selectpicker("refresh");
+        $("#sel_natureza").val("");
+        $("#sel_natureza").selectpicker("refresh");
+        $("#sel_ccusto").val("");
+        $("#sel_ccusto").selectpicker("refresh");
+        $("#txtValor").val("");
+        $("#txtValor").attr("readonly",false);
+        $("#txtDesconto").val("0.0");
+        $("#txtTotal").val("");
+
+        $("#txtObservacoes").val("");
+        $("#txtNameArquivo").val("");
+        // ELEMENTOS DONWLOAD
+        $("#filelist").html("");
+        $("#btnPreview").hide();
+
+        $("#btnAdicionarItem").show();
+    }
+
+    function resultGetEdit_Item(dados){
+        arrItens = new Array();
+        for (var i=0; i< dados.length;i++){
+            var tempObj = {};
+            tempObj.semana = dados[i].semana;
+            tempObj.data = dados[i].data;
+            tempObj.cliente = dados[i].cliente;
+            tempObj.clienteId = dados[i].cliente_id;
+            tempObj.natureza = dados[i].natureza_id;
+            tempObj.naturezaId = dados[i].natureza;
+            tempObj.ccusto = dados[i].ccusto_id;
+            tempObj.ccustoId = dados[i].ccusto;
+            tempObj.valor = dados[i].valor;
+            tempObj.desconto = dados[i].desconto;
+            tempObj.total = dados[i].total;
+            tempObj.observacao = dados[i].observacao;
+            tempObj.documento = dados[i].documento;
+            //
+            arrItens.push(tempObj);
+        }
+        render_Item();
+    }
+
+    function resultGetEdit_Reembolso(dados){
+        $("#txt_tituloEvento").val(dados[0].titulo);
+        $("#txt_data").val(dados[0].data);
+
+        $("#sel_dataBase").html("");
+        $("#sel_dataBase").append('<option value="' + dados[0].data_base + '">' + dados[0].data_base + '</option>');
+        $("#sel_dataBase").val(dados[0].data_base);
+        $("#sel_dataBase").selectpicker("refresh");
+
+        $("#sel_despesa").val(dados[0].despesa);
+        $("#sel_despesa").selectpicker("refresh");
+        $("#sel_empresa").val(dados[0].empresa_id);
+        $("#sel_empresa").selectpicker("refresh");
+    }
+
+    function refreshEdit(){
+        $("#txt_data").val("");
+        $("#txt_tituloEvento").val('');
+        $("#sel_empresa").val('');
+        $("#sel_empresa").selectpicker("refresh");
+        $("#sel_despesa").val('');
+        $("#sel_despesa").selectpicker("refresh");
+
+        arrItens = new Array();
+        render_Item();
+    }
+
+    function valida_TipoEntrada(dom,tipo){
+        switch(tipo){
+            case'num':var regex=/[A-Za-z]/g;break;
+            case'text':var regex=/\d/g;break;
+        }
+        dom.value=dom.value.replace(regex,'');
+    }
+
+    function valida_AddSolicitacaoCab() {
+        var dataBase = $('#sel_dataBase').find(":selected").val();
+        var tipo = $('#sel_despesa').find(":selected").val();
+        var empresa = $('#sel_empresa').find(":selected").val();
+        var tituloEvento = $('#txt_tituloEvento').val();
+
+        var valid_dataBase = true;
+        if(dataBase==0){
+            valid_dataBase = false;
+            noty({
+                text: '<br/><b><p><span class="fa fa-exclamation-circle"></span><font size="2">   Faltam para solicitação</font></p></b><p>Campo (Mes-ano-Base) não selecionado</p>',
+                type: 'warning',
+                layout: 'topCenter',
+                timeout: 4000
+            });
+        }
+
+        var valid_tipo = true;
+        if(tipo==0){
+            valid_tipo = false;
+            noty({
+                text: '<br/><b><p><span class="fa fa-exclamation-circle"></span><font size="2">   Faltam para solicitação</font></p></b><p>Campo (Tipo) não selecionado</p>',
+                type: 'warning',
+                layout: 'topCenter',
+                timeout: 4000
+            });
+        }
+
+        var valid_empresa = true;
+        if(empresa==0){
+            valid_empresa = false;
+            noty({
+                text: '<br/><b><p><span class="fa fa-exclamation-circle"></span><font size="2">   Faltam para solicitação</font></p></b><p>Campo (Empresa) não selecionado</p>',
+                type: 'warning',
+                layout: 'topCenter',
+                timeout: 4000
+            });
+        }
+
+        var valid_titulo = true;
+        if(tituloEvento==''){
+            valid_titulo = false;
+            noty({
+                text: '<br/><b><p><span class="fa fa-exclamation-circle"></span><font size="2">   Faltam para solicitação</font></p></b><p>Campo (Título do Evento) não selecionado</p>',
+                type: 'warning',
+                layout: 'topCenter',
+                timeout: 4000
+            });
+        }
+
+        if(valid_dataBase==true & valid_tipo==true & valid_empresa==true & valid_titulo==true ){
+            return true
+        }else {
+            return false
+        }
+    }
+
+    function resultGetValidaPeriodoDataItem(dados) {
+        //alert(dados[0].valida==0);
+        if(dados[0].valida==0){
+            noty({
+                text: '<br/><b><p><span class="fa fa-exclamation-circle"></span><font size="2">   Alerta</font></p></b><p>Data do item não corresponde ao </br> Mês-ano-base ('+$("#sel_dataBase").val()+') selecionado</p>',
+                type: 'error',
+                layout: 'topCenter',
+                timeout: 4000
+            });
+            dataLim = false;
+        }else{
+            dataLim = true;
+        }
+    }
+
+    function valida_DataItem() {
+        remote1.executa("getValidaPeriodoDataItem", {dataItem: $("#dataItem").val(), dataBase: $("#sel_dataBase").val() }, resultGetValidaPeriodoDataItem, $('#divEdicao'), erroPersonalizado);
+    }
+
+    function valida_SavItem() {
+        valida_DataItem();
+        var data = $('#dataItem').val();
+        var cliente = $('#sel_cliente').find(":selected").val();
+        var natureza = $('#sel_natureza').find(":selected").val();
+        var valor = $('#txtValor').val();
+        var total = $('#txtTotal').val();
+        var limite = -1;
+        var documento = $("#txtNameArquivo").val();
+        // CHAVES VALIDACOES
+        var valida_documento = true;
+
+        var valida_limite = true;
+        var valida_dataItem = dataLim;
+
+        var valid_data = true;
+        if (data ==''){
+            valid_data = false;
+            noty({
+                text: '<br/><b><p ><span class="fa fa-exclamation-circle"></span><font size="2">   Faltam informações para o item</font></p></b><p>Campo (Data/Item) não informado</p>',
+                type: 'warning',
+                layout: 'topCenter',
+                timeout: 4000
+            });
+        }
+
+        var valid_cliente = true;
+        if (cliente ==0){
+            var valid_cliente = false;
+            noty({
+                text: '<br/><b><p><span class="fa fa-exclamation-circle"></span><font size="2">   Faltam informações para o item</font></p></b><p>Campo (Cliente) não selecionado</p>',
+                type: 'warning',
+                layout: 'topCenter',
+                timeout: 4000
+            });
+        }
+        var valid_natureza = true;
+        if(natureza==0){
+            var valid_natureza = false;
+            noty({
+                text: '<br/><b><p><span class="fa fa-exclamation-circle"></span><font size="2">   Faltam informações para o item</font></p></b><p>Campo (Natureza) não selecionado</p>',
+                type: 'warning',
+                layout: 'topCenter',
+                timeout: 4000
+            });
+        }
+        var valid_valor = true;
+        if(valor==''){
+            var valid_valor = false;
+            noty({
+                text: '<br/><b><p><span class="fa fa-exclamation-circle"></span><font size="2">   Faltam informações para o item</font></p></b><p>Campo (Valor) não especificado</p>',
+                type: 'warning',
+                layout: 'topCenter',
+                timeout: 4000
+            });
+        }
+
+        if(documento==''){
+            var valida_documento = false;
+            noty({
+                text: '<br/><b><p><span class="fa fa-exclamation-circle"></span><font size="2">   Faltam informações para item</font></p></b><p>(Arquivo) não adicionado</p>',
+                type: 'warning',
+                layout: 'topCenter',
+                timeout: 4000
+            });
+        }
+
+        if (lim > -1) {
+            limite = lim;
+            if (total > limite) {
+                valida_limite = false;
+                noty({
+                    text: '<br/><b><p><span class="fa fa-exclamation-circle"></span><font size="2">   Alerta</font></p></b><p>Valor total do item ultrapassa o Limite da Natureza de R$'+lim+',00 </p>',
+                    type: 'error',
+                    layout: 'topCenter',
+                    timeout: 4000
+                });
+            }
+
+        }
+
+        if (valid_data==true & valida_dataItem == true & valid_cliente == true & valid_natureza == true & valid_valor == true  & valida_limite == true & valida_documento==true) {
+            return true
+        }
+    }
+
+    function valida_GraReembolso(){
+        var dataBase = $('#sel_dataBase').find(":selected").val();
+        var tipo = $('#sel_despesa').find(":selected").val();
+        var empresa = $('#sel_empresa').find(":selected").val();
+        var tituloEvento = $('#txt_tituloEvento').val();
+
+        var valid_dataBase = true;
+        if(dataBase==0){
+            valid_dataBase = false;
+            noty({
+                text: '<br/><b><p><span class="fa fa-exclamation-circle"></span><font size="2">   Faltam informações para solicitação</font></p></b><p>Campo (Mes-ano-Base) não selecionado</p>',
+                type: 'warning',
+                layout: 'topCenter',
+                timeout: 4000
+            });
+        }
+
+        var valid_tipo = true;
+        if(tipo==0){
+            valid_tipo = false;
+            noty({
+                text: '<br/><b><p><span class="fa fa-exclamation-circle"></span><font size="2">   Faltam informações para solicitação</font></p></b><p>Campo (Tipo) não selecionado</p>',
+                type: 'warning',
+                layout: 'topCenter',
+                timeout: 4000
+            });
+        }
+
+        var valid_empresa = true;
+        if(empresa==0){
+            valid_empresa = false;
+            noty({
+                text: '<br/><b><p><span class="fa fa-exclamation-circle"></span><font size="2">   Faltam informações para solicitação</font></p></b><p>Campo (Empresa) não selecionado</p>',
+                type: 'warning',
+                layout: 'topCenter',
+                timeout: 4000
+            });
+        }
+
+        var valid_titulo = true;
+        if(tituloEvento==''){
+            valid_titulo = false;
+            noty({
+                text: '<br/><b><p><span class="fa fa-exclamation-circle"></span><font size="2">   Faltam informações para solicitação</font></p></b><p>Campo (Título do Evento) não selecionado</p>',
+                type: 'warning',
+                layout: 'topCenter',
+                timeout: 4000
+            });
+        }
+
+        var valid_item = true;
+        if(arrItens.length==0){
+            valid_item = false;
+            noty({
+                text: '<br/><b><p><span class="fa fa-exclamation-circle"></span><font size="2">   Faltam informações para solicitação</font></p></b><p>Não adicionado (Itens) a solicitação</p>',
+                type: 'warning',
+                layout: 'topCenter',
+                timeout: 4000
+            });
+        }
+
+        if(valid_dataBase==true & valid_tipo==true & valid_empresa==true & valid_titulo==true & valid_item==true){
+            return true
+        }else {
+            return false
+        }
+    }
+
+    function valida_limiteNatureza(dados){
+        lim=dados[0].limite;
+    }
+
+    function resultUpload(dados) {
+        $('#txtNameArquivo').val(dados);
+        var name = dados;
+        var file = dir+name;
+        //alert(file);
+        $('#refFile').attr('href',file);
+    }
+
+    function resultDiretorio(dados) {
+        dir = dados[0].dir;
+    }
+
+    function resultGetDataLimite_reembolso(dados){
+        dataLim = dados[0].dataLimite;
+        remote1.executa("getDataBase",{data:dados[0].dataLimite}, resultGeDataBase, $('#divEdicao'), erroPersonalizado);
+    }
+
+    function resultGeDataBase(dados){
+        $("#sel_dataBase").html("<option value=0>Selecione</option>");
+        for (var i = 0; i < dados.length; i++) {
+            var valida = dados[i].valida;
+            if(valida ==2){
+                //alert (dados[i].valida);
+                $("#sel_dataBase").append('<option value="' + dados[i].dataMesCorrente + '">' + dados[i].dataMesCorrente + '</option>');
+                $("#sel_dataBase").append('<option value="' + dados[i].dataMesAnterior + '">' + dados[i].dataMesAnterior + '</option>');
+            }
+            if(valida ==1){
+                //alert (dados[i].valida);
+                $("#sel_dataBase").append('<option value="' + dados[i].dataMesCorrente + '">' + dados[i].dataMesCorrente + '</option>');
+            }
+            break;
+        }
+        $("#sel_dataBase").selectpicker("refresh");
+    }
+
+    function resultGetReembolsoMessagem(dados){
+        refreshModalMensagemReembolso();
+        setImagemUsuario('#divImagemDeMsg',dados[0].id);
+        $("#txtMensagem").html(dados[0].mensagem);
+        $("#txtDataAprov").val(dados[0].data);
+        $("#txtNomeAprov").val(dados[0].nome+' '+dados[0].sobrenome);
+        $("#txtEmailAprov").val(dados[0].usuario);
+    }
+
+    function refreshModalMensagemReembolso() {
+        $("#txtMensagem").html('');
+        $("#txtDataAprov").val('');
+        $("#txtNomeAprov").val('');
+        $("#txtEmailAprov").val('');
+    }
+
+    function resultGetValidaDataLimite(dados){
+        var valida = dados[0].valida;
+        //alert(valida);
+        if(valida==1){
+            dataItem = true;
+        }else{
+            dataItem = false;
+        }
+    }
+
+    function setMesCalendario(){
+        var dataBase = $("#sel_dataBase option:selected").val();
+        var mes = dataBase.substring(0,2);
+        var ano = dataBase.substring(3,7);
+        var dataMes = '01-'+mes+'-'+ano;
+        //alert(dataMes);
+        $("#dp-3").attr('data-date',dataMes);
+        // <!--data-date="05-07-2014"-->
+    }
+
+
+    function resultSetReembolsoStatusEnviado(dados){
+        if(dados.length>0){
+            noty({
+                text: '<br/><b><p><span class="fa fa-check-circle"></span><font size="2">   Sucesso</font></p></b><p>Solicitação de Reembolso enviada para avaliação</p>',
+                type: 'success',
+                layout: 'topCenter',
+                timeout: 6000
+            });
+            resultGetReembolso(dados);
+        }else{
+            noty({
+                text: '<br/><b><p><span class="fa fa-check-circle"></span><font size="2">   Erro</font></p></b><p>Erro ao enviar solicitação</p>',
+                type: 'error',
+                layout: 'topCenter',
+                timeout: 4000
+            });
+        }
+    }
+    function resultGetValorNaturezakm (dados){
+        pagamentoPorKM = dados[0].valor;
+        natureza = dados[0].id_natureza;
+        //alert(natureza);
+    }
+
+
+    function setImagemUsuario(div,id_usuario,){
+        var rnd = Math.random();
+        var conteudo ='';
+        conteudo= '<div class="profile"><div class=" profile-mini profile-image"><img  src="php/outros/loadimage.php?n=' + id_usuario + '&c=' + rnd + '" class="foto_usuario" alt="Usuário"></div></div>';
+        $(div).html(conteudo);
+    }
+
+    $(document).ready(function () {
+        remote1.executa("getReembolso", null, resultGetReembolso, $('#pnlReembolso'), erroPersonalizado);
+        remote1.executa("getReembolsoHistorico", null, resultGetReembolsoHistorico, $('#pnlReembolso'), erroPersonalizado);
+        remote1.executa("getDespesa", null, resultGetDespesa, $("#divEdicao"), erroPersonalizado);
+        remote2.executa("getEmpresaUsuario", {id:s.usuario}, resultGetEmpresaUsuario, $("#divEdicao"), erroPersonalizado);
+        remote1.executa("getCliente", null, resultGetCliente, $("#divItem"), erroPersonalizado);
+        remote1.executa("getNatureza", null, resultGetNatureza, $("#divItem"), erroPersonalizado);
+        remote1.executa("getValorNaturezakm", null, resultGetValorNaturezakm, $("#divItem"), erroPersonalizado);
+        remote5.executa("getDataLimite_reembolso",null, resultGetDataLimite_reembolso, $('#divControles'), erroPersonalizado);
+        remote5.executa("getDiretorioReembolso",null, resultDiretorio, $('#divControles'), erroPersonalizado);
+
+        // console.log(url);
+        // if(url.bbb >0){
+        //     console.log(url);
+        // }
+
+        //scriptSql RELATORIO PERFORMANCE de upload
+        var uploader = new plupload.Uploader({
+            runtimes: 'gears,html5,flash,silverlight,browserplus',
+            browse_button: 'pickfiles',
+            drop_element: 'pickfiles',
+            container: 'container',
+            chunk_size: '5mb',
+            max_file_size: '200mb',
+            url: 'upload.php',
+            multi_selection: false,
+            unique_names: true,
+            flash_swf_url: 'theme/js/plugins/plupload/js/plupload.flash.swf',
+            silverlight_xap_url: 'theme/js/plugins/plupload/js/plupload.flash.swf',
+            filters: [
+                {title: "Imagem jpg", extensions: "jpg"},
+                {title: "Imagem png", extensions: "png"},
+                {title: "Arquivo de Texto", extensions: "txt"},
+                {title: "Arquivo pdf", extensions: "pdf"},
+                {title: "Arquivo Word", extensions: "doc"},
+                {title: "Arquivo Word", extensions: "docx"},
+                {title: "Planilha Excel", extensions: "xls"},
+                {title: "Planilha Excel", extensions: "xlsx"}
+            ]
+        });
+
+        uploader.bind('Init', function (up, params) {
+            $('#filelist').html("");
+        });
+        $('#uploadfiles').click(function (e) {
+            uploader.start();
+            $("#uploadfiles").hide();
+            // INCLUDE - PREVIEW
+            $("#btnPreview").show();
+            e.preventDefault();
+
+        });
+
+        uploader.init();
+
+        uploader.bind('FilesAdded', function (up, files) {
+            $.each(files, function (i, file) {
+                $('#filelist').html('<span> ' + file.name + ' (' + plupload.formatSize(file.size) + ') <span id="' + file.id + '"></span>');
+            });
+            $("#uploadfiles").show();
+            // INCLUDE - PREVIEW
+            $("#btnPreview").hide();
+            //$("#preview").hide();
+            up.refresh(); // Reposition Flash/Silverlight
+        });
+
+        $("#btnPreview").on('click', function () {
+            $("#documento_box_view").modal();
+        });
+
+        uploader.bind('UploadProgress', function (up, file) {
+            $('#filelist').html('<div class="progress-list"><div class="pull-left"><strong class="text-success">Progresso:</strong></div><div class="pull-right">' + plupload.formatSize(file.loaded) + 'MB/' + plupload.formatSize(file.size) + 'MB (' + file.percent + '%)</div><div class="progress progress-small progress-striped active"><div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="' + file.percent + '" aria-valuemin="0" aria-valuemax="100" style="width: ' + file.percent + '%;">' + file.percent + '%</div></div></div>');
+        });
+
+        uploader.bind('Error', function (up, err) {
+            $('#filelist').html("Error: " + err.code +
+                ", Message: " + err.message +
+                (err.file ? ", File: " + err.file.name : "")
+            );
+
+            up.refresh(); // Reposition Flash/Silverlight
+        });
+        uploader.bind('FileUploaded', function (up, file, info) {
+            $('#filelist').html('<span> ' + file.name + ' (' + plupload.formatSize(file.size) + ') </span><span class="fa fa-check" style="color: #95b75d"></span>');
+            var obj = JSON.parse(info.response);
+            remote1.executa("uploadDocumento",{arquivo:obj.cleanFileName,idItem:$('#txtIdItem').val()}, resultUpload, $('#divControles'), erroPersonalizado);
+        });
+
+        $("#btnAdd").on('click', function () {
+            $("#lblTitulo").html("Adicionando...");
+            $("#txtId_Edt").val("");
+            // $("#sel_dataBase").prop('disabled',true);
+            refreshEdit();
+            exibeDivPadrao(true);
+            remote1.executa("getData",null,resultGetDataEmissao_Reembolso, $('#divEdicao'), erroPersonalizado);
+
+        });
+
+
+
+        $("#btnEdt").on('click', function (dados) {
+            var objTemp = oTable.fnGetData(oTable.closest("table").find(".selected"));
+
+            if (objTemp != null) {
+                $("#lblTitulo").html("Editando...");
+                $("#txtId_Edt").val(objTemp.cod);
+                remote1.executa("getReembolsoResumo", {id:objTemp.cod}, resultGetEdit_Reembolso, $('#pnlReembolso'), erroPersonalizado);
+                remote1.executa("getReembolsoItensReembolso", {id:objTemp.cod}, resultGetEdit_Item, $('#pnlReembolso'), erroPersonalizado);
+                exibeDivPadrao(true);
+            }
+        });
+
+        $("#btnVol").on('click', function () {
+            exibeDivPadrao(false);
+            refreshEdit();
+            remote1.executa("getReembolso", null, resultGetReembolso, $('#pnlReembolso'), erroPersonalizado);
+            remote5.executa("getDataLimite_reembolso",null, resultGetDataLimite_reembolso, $('#divControles'), erroPersonalizado);
+        });
+
+        $("#btnGra").on('click', function () {
+            if(valida_GraReembolso()){
+                var param = {
+                    id: $("#txtId_Edt").val(),
+                    data_inclusao: $("#txt_data").val(),
+                    despesa: $("#sel_despesa").val(),
+                    empresa: '0'+$("#sel_empresa").val(),
+                    titulo: $("#txt_tituloEvento").val(),
+                    data_base:$("#sel_dataBase").val(),
+                    itens: arrItens
+                };
+
+                remote1.executa("setReembolso", param, function (dados) {
+                    arrItens = new Array();
+                    refreshEdit();
+                    exibeDivPadrao(false);
+                    //resultGetReembolso(dados);
+                    location.reload();
+                }, $('#divEdicao'), erroPersonalizado);
+            }
+        });
+
+        $("#btnRem").on('click', function () {
+            var objTemp = oTable.fnGetData(oTable.closest("table").find(".selected"));
+            if (objTemp != null) {
+                $("#txtId_Edt").val(objTemp.cod);
+                $("#modal_small_confirm_Rem").modal();
+            }
+        });
+
+        $("#btnRemConf_Rem").on('click', function () {
+            remote1.executa("remReembolso", {id: $("#txtId_Edt").val()}, resultGetReembolso, $('#pnlReembolso'), erroPersonalizado);
+            location.reload();
+        });
+
+        //EVENTOS MODAL
+        $("#btnAdicionarItem").on("click",function () {
+            if (valida_AddSolicitacaoCab()){
+                refreshModalDivItem();
+                // Exibe Box Item
+                $("#item_box_Add").modal('show');
+            }
+        });
+
+        //EVENTOS MODAL
+        $("#btnEnv").on("click",function () {
+            //alert(dataItem);
+            var objTemp = oTable.fnGetData(oTable.closest("table").find(".selected"));
+            if(dataItem==true){
+                if (objTemp != null) {
+                    $("#txtId_Edt").val(objTemp.cod);
+                    $("#modal_small_confirm_Env").modal();
+                }
+            }else {
+                noty({
+                    text: '<br/><b><p><span class="fa fa-exclamation-circle"></span><font size="2">   Alerta</font></p></b><p>Solicitação de data base ('+objTemp.data_base+') ultrapassou data limite para envio</p>',
+                    type: 'error',
+                    layout: 'topCenter',
+                    timeout: 4000
+                });
+                //alert("Solicitação de data base ("+objTemp.data_base+") ultrapassou data limite para envio.");
+            }
+        });
+
+        $("#btnRemConf_Env").on('click', function () {
+            var objTemp = oTable.fnGetData(oTable.closest("table").find(".selected"));
+            if (objTemp != null) {
+                remote1.executa("setReembolsoStatusEnviado", {id_reembolso: $("#txtId_Edt").val()}, resultSetReembolsoStatusEnviado, $('#pnlSolicitacao'), erroPersonalizado);
+            }
+        });
+
+        //EVENTO ADD ITEM
+        $("#btnSavItem").on("click",function () {
+            //remote1.executa("getValidaPeriodoDataItem", {"dataItem": dataItem,"dataRef": dataRef}, resultGetValidaPeriodoDataItem, $('#pnlReembolso'), erroPersonalizado);
+
+            if(valida_SavItem()){
+                var tempObj = {};
+                tempObj.data = $("#dataItem").val();
+                tempObj.clienteId = $("#sel_cliente").val();
+                tempObj.cliente = $("#sel_cliente option:selected").text();
+                tempObj.naturezaId = $("#sel_natureza option:selected").text();
+                tempObj.natureza = $("#sel_natureza").val();
+                tempObj.ccusto = $("#txtIdCcustoItem").val();
+                tempObj.valor = $("#txtValor").val();
+                tempObj.desconto = $("#txtDesconto").val();
+                tempObj.total = $("#txtTotal").val();
+                tempObj.observacao = $("#txtObservacoes").val();
+                tempObj.documento = $("#txtNameArquivo").val();
+
+                if($("#txtIdItem").val() == ""){
+                    arrItens.push(tempObj);
+                    $("#sel_dataBase").attr('disabled',true);
+                }else{
+                    arrItens[$("#txtIdItem").val()] = tempObj;
+                }
+                if (arrItens.length==0){
+                    $("#divItens").html('');
+                    $("#sel_dataBase").attr('disabled',false);
+                } else{
+                    render_Item();
+                }
+                $("#item_box_Add").modal("hide");
+            }
+
+        });
+
+        //EDITA ITEM
+        $("#divItens").on("click", "[data-positem]", function () {
+            $this = $(this);
+            var i = $this.attr("data-positem");
+            $("#txtIdItem").val($this.attr("data-positem"));
+            $("#dataItem").val(arrItens[i].data);
+            remote1.executa("getDataSemana", {dataItem: $("#dataItem").val()}, resultGetDataSemana, $('#item_box_Add'), erroPersonalizado);
+            $("#sel_cliente").val(arrItens[i].clienteId);
+            $("#sel_cliente").selectpicker("refresh");
+            $("#sel_natureza").val(arrItens[i].natureza);
+            $("#sel_natureza").selectpicker("refresh");
+            $("#txtIdCcustoItem").val($this.attr("data-ccusto"));
+            $("#txtValor").val($this.attr("data-valor"));
+            $("#txtDesconto").val($this.attr("data-desconto"));
+            $("#txtTotal").val($this.attr("data-total"));
+            //
+            var valor = parseFloat($this.attr("data-valor"));
+            if(arrItens[i].natureza.toString().trim()==natureza.toString().trim()){
+                $("#divKm").show();
+                $("#txtKm").val(valor/parseFloat(pagamentoPorKM));
+                $("#txtValor").attr("readonly",true);
+                $("#divValor").removeClass("col-md-4").addClass("col-md-3");
+                $("#divDesconto").removeClass("col-md-4").addClass("col-md-3");
+                $("#divTotal").removeClass("col-md-4").addClass("col-md-3");
+            }else{
+                $("#divKm").hide();
+                $("#txtValor").attr("readonly", false);
+                $("#divValor").removeClass("col-md-3").addClass("col-md-4");
+                $("#divDesconto").removeClass("col-md-3").addClass("col-md-4");
+                $("#divTotal").removeClass("col-md-3").addClass("col-md-4");
+            }
+            $("#txtObservacoes").val(arrItens[i].observacao);
+            //
+            $("#filelist").html(arrItens[i].documento);
+            $("#filelist").show();
+            $("#btnPreview").show();
+            resultUpload(arrItens[i].documento);
+            //
+            $("#item_box_Add").modal();
+        });
+
+        //REMOVE ITEM
+        $("#divItens").on("click", "[data-removeitem]", function () {
+            $this = $(this);
+            var tempPos = $this.attr("data-removeitem");
+            arrItens.splice(tempPos,1);
+            //
+            render_Item();
+        });
+
+
+        //EVENTOS- CONTROLES ITEM
+        $("#btnAddItem").on('click', function () {
+            $("#t_dadosItens").dataTable('destroy');
+            $("#t_dadosItens tbody").append("<tr><td>"+$("#dp-2").val() +
+                "</td><td>"+$("#sel_cliente").val() +
+                "</td><td>"+$("#sel_natureza").val() +
+                "</td><td>"+$("#sel_ccusto").val() +
+                "</td><td>"+$("#txtValor").val() +
+                "</td><td>"+$("#txtObservacoes").val() +
+                "</td><td>"+$("#1538433932785").val() +
+                "</td></tr>")
+            $("#txtValor").val("");
+            $("#txtKm").val("");
+            $("#txtObservacoes").val("");
+            $("#dp-2").val("");
+            $("#sel_empresa").val("");
+            $("#sel_empresa").selectpicker("refresh");
+            $("#sel_despesa").val("");
+            $("#sel_despesa").selectpicker("refresh");
+            $("#sel_ccusto").val("");
+            $("#sel_ccusto").selectpicker("refresh");
+            $("#sel_natureza").val("");
+            $("#sel_natureza").selectpicker("refresh");
+            $("#sel_cliente").val("");
+            $("#sel_cliente").selectpicker("refresh");
+        });
+
+        $('#txtValor').on('input', function() {
+            atualizaTotal();
+        });
+
+
+        $('#txtKm').on('input', function() {
+            $("#txtValor").val($('#txtKm').val() * pagamentoPorKM);
+            atualizaTotal();
+        });
+
+
+
+        $('#txtDesconto').on('input', function() {
+            var val = $(this).val().replace(',','.');
+            $(this).val(val);
+            var v = $('#txtValor').val();
+            var d = $('#txtDesconto').val();
+            var t = v-d;
+            $('#txtTotal').val(t);
+        });
+
+        $("#btnView").on('click', function () {
+            var objTemp = oTable.fnGetData(oTable.closest("table").find(".selected"));
+            if (objTemp != null) {
+                remote1.executa("getReembolsoItens", {id: objTemp.cod}, render_ItemInfo, $('#item_box_info'), erroPersonalizado);
+                $("#item_box_info").modal('show');
+            }
+        });
+
+        $("#btnViewHist").on('click', function () {
+            var objTemp = oTable_hist.fnGetData(oTable_hist.closest("table").find(".selected"));
+            if (objTemp != null) {
+                remote1.executa("getReembolsoItens", {id: objTemp.cod}, render_ItemInfo, $('#item_box_info'), erroPersonalizado);
+                $("#item_box_info").modal('show');
+            }
+        });
+
+
+
+        $( "#sel_empresa" ).change(function() {
+            remote3.executa("getCcustoUsuarioReembolso", {empresa:$( "#sel_empresa" ).val()}, resultGetCcustoUsuarioReembolso, $('#divEdicao'), erroPersonalizado);
+        });
+
+        $('#dataItem').on('change', function() {
+            remote1.executa("getDataSemana", {dataItem: $("#dataItem").val()}, resultGetDataSemana, $('#item_box_Add'), erroPersonalizado);
+            //ADD VALIDACAO DATA BASE
+        });
+
+        $("#sel_natureza").on('change', function(e){
+            //alert($(this).val())
+            remote4.executa("getLimite", {idNatureza: $(this).val()}, valida_limiteNatureza, $("#divEdicao"), erroPersonalizado);
+        });
+
+        $("#divItem_info").on("click", "[data-arquivo-v]", function () {
+            $("#item_box_info").modal('hide');
+            $("#documento_box_view2").modal();
+        });
+
+        $("#btnClose_preview2").on("click", function () {
+            $("#documento_box_view2").modal('hide');
+            $("#item_box_info").modal('show');
+        });
+
+        $("#btnHist").on("click", function () {
+            $("#divPadrao").hide();
+            //
+
+            $("#txtTituloPainel").html('Meu histórico de reembolsos');
+            $("#divHist").show();
+            //
+            $("#btnVol").show();
+            $("#btnGra").hide();
+            $("#btnAdd").hide();
+            $("#btnEdt").hide();
+            $("#btnRem").hide();
+            $("#btnEnv").hide();
+            $("#btnMsgRev").hide();
+            $("#btnHist").hide();
+            $("#btnView").hide();
+            $("#btnViewHist").show();
+            //
+            $("#t_dados tr.selected").removeClass("selected");
+            $("#t_dados_hist tr.selected").removeClass("selected");
+        });
+
+        $("#btnMsgRev").on("click", function () {
+            var objTemp = oTable.fnGetData(oTable.closest("table").find(".selected"));
+            if (objTemp != null) {
+                //alert(objTemp.cod);
+                $("#txtAcaoMsg").val('Revisão');
+                $("#txtAcaoMsg").css("color","#061519");
+                $("#txtAcaoMsg").css("background-color","#00C4FF");
+                remote1.executa("getReembolsoMensagemRevisao", {id: objTemp.cod}, resultGetReembolsoMessagem, $('#item_box_info'), erroPersonalizado);
+                $("#msg_box").modal('show');
+            }
+        });
+
+        $("#btnMsgRep").on("click", function () {
+            var objTemp = oTable_hist.fnGetData(oTable_hist.closest("table").find(".selected"));
+            if (objTemp != null) {
+                //alert(objTemp.cod);
+                $("#txtAcaoMsg").val('Reprovação');
+                $("#txtAcaoMsg").css("color","#061519");
+                $("#txtAcaoMsg").css("background-color","#c02716");
+                remote1.executa("getReembolsoMensagemReprovado", {id: objTemp.cod}, resultGetReembolsoMessagem, $('#item_box_info'), erroPersonalizado);
+                $("#msg_box").modal('show');
+            }
+        });
+
+        $("#pickfiles").on("click", function () {
+            $("#btnPreview").hide();
+        });
+
+        $("#sel_natureza").on("change", function () {
+            var natureza = $("#sel_natureza option:selected").val();
+            if(natureza==20002){
+                $("#divKm").find('label').html('Km (R$ '+pagamentoPorKM+'/km)');
+                $("#divKm").show();
+                $("#txtKm").val('');
+                $("#txtKm").focus();
+                $("#txtValor").val('');
+                $("#txtValor").attr("readonly",true);
+                $("#divValor").removeClass("col-md-4").addClass("col-md-3");
+                $("#divDesconto").removeClass("col-md-4").addClass("col-md-3");
+                $("#divTotal").removeClass("col-md-4").addClass("col-md-3");
+            }else{
+                $("#divKm").hide();
+                $("#txtValor").val('');
+                $("#txtValor").focus();
+                $("#txtValor").attr("readonly", false);
+                $("#divValor").removeClass("col-md-3").addClass("col-md-4");
+                $("#divDesconto").removeClass("col-md-3").addClass("col-md-4");
+                $("#divTotal").removeClass("col-md-3").addClass("col-md-4");
+            }
+        });
+
+
+
+    });
+
+    function atualizaTotal(){
+        $("#txtValor").val($("#txtValor").val().replace(',','.'));
+
+        var v = $('#txtValor').val();
+        var d = $('#txtDesconto').val();
+        var t = v-d;
+        $('#txtTotal').val(t);
+    }
+    <!-- END SCRIPT - PAGE -->
+
+
+
+</script>
+<!--START SCRIPT-PAGE-->
+<!-- START BREADCRUMB -->
+<ul class="breadcrumb">
+</ul>
+<!-- END BREADCRUMB -->
+
+<!-- PAGE CONTENT WRAPPER -->
+<div class="page-content-wrap">
+    <div class="row">
+        <div class="col-md-10 col-md-offset-1 ">
+            <div id="pnlSolicitacao" class="panel panel-default">
+                <!--PAINEL DE CONTROLES-->
+                <div class="panel-heading">
+                    <h3 id='txtTituloPainel' class="panel-title">Minhas solicitações de reembolso de despesa</h3>
+                    <ul class="panel-controls">
+                        <li><a href="#" id="btnHist" class="control-primary" data-acao="add" title="Histórico" ><span class="glyphicon glyphicon-time"></span></a></li>
+                        <li><a href="#" id="btnMsgRev" class="control-primary" data-acao="add" title="Mensagem"  style="display: none;"><span class="fa fa-comment"></span></a></li>
+                        <li><a href="#" id="btnMsgRep" class="control-primary" data-acao="add" title="Mensagem Rep"  style="display: none;"><span class="fa fa-comment"></span></a></li>
+                        <li><a href="#" id="btnView" class="control-primary" data-acao="add" title="Informações"><span class="fa fa-info"></span></a></li>
+                        <li><a href="#" id="btnViewHist" class="control-primary" data-acao="add" title="Informações" style="display: none;"><span class="fa fa-info"></span></a></li>
+                        <li><a href="#" id="btnAdd" class="control-info" data-acao="add" title="Adicionar"><span class="fa fa-plus"></span></a></li>
+                        <li><a href="#" id="btnEdt" class="control-warning" data-acao="edt" title="Editar"><span class="fa fa-pencil"></span></a></li>
+                        <li><a href="#" id="btnRem" class="control-danger" data-acao="rem" title="Excluir"><span class="fa fa-minus"></span></a></li>
+                        <li><a href="#" id="btnGra" class="control-success" data-acao="gra" title="Confirmar/Salvar" style="display: none;"><span class="fa fa-check"></span></a></li>
+                        <li><a href="#" id="btnEnv" class="control-success" data-acao="env" title="Enviar" ><span class="fa fa-mail-forward"></span></a></li>
+                        <li><a href="#" id="btnVol" class="control-primary" data-acao="vol" title="Voltar" style="display: none;"><span class="fa fa-mail-reply"></span></a></li>
+                    </ul>
+                </div>
+                <!--START DIV TABELA-->
+                <div class="panel-body">
+                    <!--PAINEL DE EDICAO E ACOMPANHAMENTO-->
+                    <div id="divPadrao" class="row">
+                        <div class="col-md-12">
+                            <table id="t_dados" class="table table-bordered table-condensed">
+
+                            </table>
+                        </div>
+                    </div>
+                     <!--END PAINEL DE EDICAO E ACOMPANHAMENTO-->
+
+                    <!--PAINEL DE HISTORICO-->
+                    <div id="divHist" class="row" style="display: none;">
+                        <div class="col-md-12">
+                            <table id="t_dados_hist" class="table table-bordered table-condensed">
+
+                            </table>
+                        </div>
+                    </div>
+                    <!--END PAINEL DE HISTORICO-->
+
+                     <!--START DIV ABERTURA SOLICITACAO - EDICAO-->
+                    <div id="divEdicao" class="row" style="display: none;">
+                        <h4 id="lblTitulo"></h4>
+                        <div class="col-md-2">
+                            <input id="txtId_Edt" type="hidden"/>
+                            <label>Data/Inclusão</label>
+                            <div class="input-group date" id="dp-1"  data-date-format="dd-mm-yyyy" >
+                                <input id="txt_data"  type="text" class="datepicker form-control" readonly >
+                                <span class="input-group-addon add-on"><span class="glyphicon glyphicon-calendar"></span></span>
+                            </div>
+                        </div>
+
+                        <div id='div_sel_dataBase'class="col-md-2">
+                            <label>Mês-ano base*</label>
+                            <select id="sel_dataBase" class="form-control" data-live-search="true" >
+                            </select>
+                        </div>
+
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label>Tipo*</label>
+                                <select id="sel_despesa" class="form-control" data-live-search="true"  ></select>
+                            </div>
+                        </div>
+
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label>Empresa*</label>
+                                <select id="sel_empresa" class="form-control" data-live-search="true" ></select>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Título do Evento*</label>
+                                <input id="txt_tituloEvento" type="text" class="form-control" maxlength="50" placeholder="">
+                            </div>
+                        </div>
+                     </div>
+                </div>
+                <!--END DIV ABERTURA SOLICITACAO - EDICAO-->
+            </div>
+        </div>
+        <!--START DIV ADD ITEM A SOLICITACAO-->
+        <div class="col-md-10 col-md-offset-1 ">
+            <div id="divAddItens" class="panel panel-default" style="display: none;">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Adicionar Itens</h3>
+                    <!--START - PAINEL DE CONTROLES-->
+                    <ul class="panel-controls">
+                        <ul class="panel-controls">
+                            <li><a href="#" id="btnAdicionarItem" class="control-primary" data-acao="add" title="Adicionar Item"><span class="fa fa-plus"></span></a></li>
+                        </ul>
+                    </ul>
+                    <!--END PAINEL DE CONTROLES-->
+                </div>
+
+                <div id="divItens" class="row">
+                    <!--CONTENT ADD ITENS-->
+                </div>
+            </div>
+        </div>
+        <!--END DIV ADD ITEM DA SOLICITACAO-->
+    </div>
+</div>
+
+
+<!--START DIV-MODAL ITEM SOLICITACAO -->
+<div class="modal" id="item_box_Add" tabindex="-1" role="dialog" aria-labelledby="smallModalHead" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="smallModalHead">Item da Solicitação</h4>
+            </div>
+            <div class="modal-body">
+                <div id="divItem" class="row">
+                    <input id="txtIdItem" type="hidden">
+                    <input id="txtIdCcustoItem" type="hidden">
+                    <h4 id="lblTitulo3"></h4>
+                    <div class="col-md-6">
+                        <label>Data/Item*</label>
+                        <!--data-date="05-07-2014"-->
+                        <div class="input-group date" id="dp-3"  data-date-format="dd-mm-yyyy">
+                            <input id="dataItem"type="text" class="datepicker form-control"  readonly>
+                            <span class="input-group-addon add-on"><span class="glyphicon glyphicon-calendar"></span></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Dia/Semana</label>
+                            <input id="txtDiaSemana" type="text" class="form-control" maxlength="50" placeholder="segunda-feira" readonly="">
+                        </div>
+                    </div>
+
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label>Cliente*</label>
+                            <select id="sel_cliente" class="form-control" data-live-search="true"></select>
+                        </div>
+                    </div>
+
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label>Natureza da Dispesa*</label>
+                            <select id="sel_natureza" class="form-control" data-live-search="true"></select>
+                        </div>
+                    </div>
+                    <div id="divKm" class="col-md-3" style="display: none;">
+                        <div class="form-group">
+                            <label for="txtKm"></label>
+                            <input id="txtKm" onkeyup="valida_TipoEntrada(this,'num');"  type="text" class="form-control"  value="0.0" maxlength="20">
+                        </div>
+                    </div>
+                    <div id="divValor" class="col-md-4">
+                        <div class="form-group">
+                            <label>Valor*</label>
+                            <input id="txtValor" onkeyup="valida_TipoEntrada(this,'num');"  type="text" class="form-control"  value="0.0" maxlength="20" placeholder="50.00 R$" readonly>
+                        </div>
+                    </div>
+                    <div id="divDesconto"class="col-md-4">
+                        <div class="form-group">
+                            <label>Desconto</label>
+                            <input id="txtDesconto" onkeyup="valida_TipoEntrada(this,'num');" type="text" class="form-control" value="0.0" maxlength="20" placeholder="10.00 R$">
+                        </div>
+                    </div>
+
+                    <div id="divTotal" class="col-md-4">
+                        <div class="form-group">
+                            <label>Total</label>
+                            <input id="txtTotal" type="number" class="form-control" maxlength="50" placeholder="50,00 R$" readonly="">
+                        </div>
+                    </div>
+
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label>Observações do Item</label>
+                            <textarea id ='txtObservacoes' class="form-control"></textarea>
+                        </div>
+                    </div>
+                    <div class="col-md-12">
+                        <div id="container">
+                            <label>Importar Arquivo*</label></br>
+                            <input id="txtNameArquivo" type="hidden"/>
+                            <a id="pickfiles" href="#" class="btn btn-info" style="margin-top: 5px;">Browse</a>
+                            <span id="filelist">Não foi possível fazer upload</span>
+                            <button id="uploadfiles" class="btn btn-default" style="display: none;">Upload</button>
+                            <button id="btnPreview" class="btn btn-default" style="display: none;"><a id="refFile" href="" target="preview">Preview</a></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!--START - FOOTER PAINEL -ITEM -->
+            <div class="modal-footer">
+                <!--START - PAINEL DE CONTROLES-->
+                <div class="panel-body">
+                    <ul class="panel-controls">
+                        <li><a href="#" id="btnSavItem" class="control-primary" data-acao="gra" title="Salvar"><span class="fa fa-save"></span></a></li>
+                    </ul>
+                </div>
+                <!--END - PAINEL DE CONTROLES-->
+            </div>
+            <!--END - FOOTER PAINEL -ITEM -->
+        </div>
+    </div>
+</div>
+<!--END DIV-MODAL ITEM SOLICITACAO -->
+
+
+<!--START DIV-MODAL VIEW DOCUMENTO I-->
+<div class="modal" id="documento_box_view" tabindex="-1" role="dialog" aria-labelledby="smallModalHead" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content ">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" data-toggle="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="smallModalHead4">View do documento</h4>
+            </div>
+            <div class="modal-body">
+                <iframe id="preview" src="URL" name="preview" style="width: 100%; height: 600px"> </iframe>
+            </div>
+        </div>
+    </div>
+</div>
+<!--END DIV-MODAL VIEW DOCUMENTO -->
+
+<!--START DIV-MODAL VIEW DOCUMENTO II -->
+<div class="modal" id="documento_box_view2" tabindex="-1" role="dialog" aria-labelledby="smallModalHead" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content ">
+            <div class="modal-header">
+                <button id="btnClose_preview2" type="button" class="close" data-dismiss="modal" data-toggle="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="smallModalHead5">View do documento</h4>
+            </div>
+            <div class="modal-body">
+                <iframe id="preview2" src="URL" name="preview2" style="width: 100%; height: 600px"> </iframe>
+            </div>
+        </div>
+    </div>
+</div>
+<!--END DIV-MODAL VIEW DOCUMENTO -->
+
+<!--START DIV-MODAL VIEW ITEM SOLICITACAO -->
+<div class="modal" id="item_box_info" tabindex="-1" role="dialog" aria-labelledby="smallModalHead" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content ">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="smallModalHead3">Itens da Solicitação</h4>
+            </div>
+            <div class="modal-body">
+                <div id="divItem_info" class="row">
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!--END DIV-MODAL VIEW ITEM SOLICITACAO -->
+
+<!--START DIV-MODAL MENSAGEM DO REEMBOLSO - VIEW -->
+<div class="modal" id="msg_box" tabindex="-1" role="dialog" aria-labelledby="smallModalHead" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content ">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" >Mensagem</h4>
+            </div>
+            <div class="modal-body">
+                <!--ADD IMAGEM-->
+                <div id="divImagemDeMsg"></div>
+                <!---->
+                <div class="form-group">
+                    <div class="form-group">
+                        <label>Nome do aprovador</label>
+                        <input id="txtNomeAprov" type="text" class="form-control" maxlength="50" placeholder="" readonly>
+                        <label>Email do aprovador</label>
+                        <input id="txtEmailAprov" type="text" class="form-control" maxlength="50" placeholder="" readonly>
+
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Mensagem</label>
+                    <textarea id="txtMensagem" class="form-control" rows="10" disabled="disabled" ></textarea>
+                </div>
+                <div class="form-group">
+                    <p>Para mais informações contatar o aprovador responsável pela mensagem.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Ação</label>
+                        <input id="txtAcaoMsg" style="margin-bottom: 10px; text-align: center; color: rgba(12,16,33,0.5);" class="form-control formFooterMsg" disabled="disabled">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Data</label>
+                        <input id="txtDataAprov" type="text" class="form-control" maxlength="50" placeholder="" readonly>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+<!--END DIV-MODAL MENSAGEM DO REEMBOLSO - VIEW -->
+
+<!--START - PAINEL DE CONFIRMACAO DE DELETE DE REGISTRO -->
+<div class="modal" id="modal_small_confirm_Rem" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="defModalHead">Confirmação</h4>
+            </div>
+            <div class="modal-body">
+                Você tem certeza que deseja remover esse registro?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" data-dismiss="modal">Cancelar</button>
+                <button id="btnRemConf_Rem" type="button" class="btn btn-primary" data-dismiss="modal">Sim</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!--END - PAINEL DE CONFIRMACAO DE DELETE DE REGISTRO -->
+
+<!--START - PAINEL DE CONFIRMACAO DE ENVIO REGISTRO -->
+<div class="modal" id="modal_small_confirm_Env" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="defModalHead1">Confirmação</h4>
+            </div>
+            <div class="modal-body">
+                Confirma enviar essa solicitação de reembolso para análise de aprovação?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" data-dismiss="modal">Cancelar</button>
+                <button id="btnRemConf_Env" type="button" class="btn btn-primary" data-dismiss="modal">Sim</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!--END - PAINEL DE CONFIRMACAO DE ENVIO REGISTRO -->
+
+<!--START - PAINEL DE CONFIRMACAO DE ENVIO REGISTRO -->
+<div class="modal" id="modal_small_confirm_Edt" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="defModalHead2">Confirmação</h4>
+            </div>
+            <div class="modal-body">
+                Confirma Edição desta solicitação?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-dismiss="modal">Cancelar</button>
+                <button id="btnRemConf_Edt" type="button" class="btn btn-primary" data-dismiss="modal">Sim</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!--END - PAINEL DE CONFIRMACAO DE ENVIO REGISTRO -->
+

@@ -1,0 +1,1047 @@
+<!--START STYLE-PAGE-->
+<style type="text/css" xmlns="http://www.w3.org/1999/html">
+    input[type="text"]:disabled{
+        color: #8b8b8b;
+        background-color: rgba(255, 123, 56, 0);
+        border: 0 none;
+        outline: 0;
+        box-shadow: 0 0 0 0;
+    }
+    .linhaSelecionada{
+        /*background: #dff0d8 !important;*/
+        font-weight: bold;
+    }
+
+    /*.table-striped > tbody > tr:nth-child(odd).linhaSelecionada > td, .table-striped > tbody > tr:nth-child(odd) > th {*/
+        /*background: #92f07b;*/
+    /*}*/
+
+</style>
+<!--END  STYLE-PAGE-->
+
+<!--START SCRIPT-PAGE-->
+<script type="text/javascript">
+    var remote = new Remote('php/comunicacao.php', 'processo/financeiro', 'aprovacao');
+    var remote1 = new Remote('php/comunicacao.php', 'configuracao', 'parametros');
+
+    var oTable;
+    var defTable;
+    var oTable_aprov;
+    var defTable_aprov;
+    var cabecAprovacao = new Array();
+    var cabecItens = new Array();
+    var cabecDocumentos = new Array();
+    var cabecHistorico = new Array();
+    var dir='';
+
+    cabecAprovacao= ["Pagadora","Beneficiário", "Tipo","Valor R$", "Emissao","Vencimento","Observação"];
+    cabecItens = ["Item","Numero","Produto","Valor R$"];
+    cabecDocumentos = ["Codigo","Tipo","Documento"];
+    cabecHistorico = ["Pagadora","Beneficiário","Tipo","Tipo","Valor R$","Natureza","Observações"];
+    cabecResumo = ["Pagadora","Beneficiário","Valor","Vencimento","Código","Status"];
+    cabecMaisDetalhes = ["Pagadora","Beneficiário","Valor","Emissao","Vencimento","Código"];
+
+    function resultGetTitulosParaAprovar(dados) {
+        renderizaTabelaDefault(dados);
+    }
+
+    function resultGetTitulosAprovados(dados){
+        renderizaTabelaAprovados(dados);
+    }
+
+    function render_TabelasDetalhesTitulo() {
+        $("#cabecDetalheParaAprovar").html('');
+        for (var i = 0; i < cabecAprovacao.length; i++) {
+             $("#cabecDetalheParaAprovar").append('<th>' + cabecAprovacao[i] + '</th>');
+
+        }
+        $("#cabecDetalheItem").html('');
+        for (var i = 0; i < cabecItens.length; i++) {
+            $("#cabecDetalheItem").append('<th>' + cabecItens[i] + '</th>');
+        }
+        $("#cabecDetalheDocumento").html('');
+        for (var i = 0; i < cabecDocumentos.length; i++) {
+            if(cabecDocumentos[i]=='Download' || cabecDocumentos[i]=='View' ){
+                $("#cabecDetalheDocumento").append('<th align="center">' + cabecDocumentos[i] + '</th>');
+            }else{
+                $("#cabecDetalheDocumento").append('<th>' + cabecDocumentos[i] + '</th>');
+            }
+        }
+        $("#cabecHistoricoBeneficiario").html('');
+        for (var i = 0; i < cabecHistorico.length; i++) {
+            $("#cabecHistoricoBeneficiario").append('<th>' + cabecHistorico[i] + '</th>');
+        }
+        $("#cabecResumoAprovar").html('');
+        for (var i = 0; i < cabecResumo.length; i++) {
+            $("#cabecResumoAprovar").append('<th>' + cabecResumo[i] + '</th>');
+        }
+        $("#cabecMaisDetalhes").html('');
+        for (var i = 0; i < cabecMaisDetalhes.length; i++) {
+            $("#cabecMaisDetalhes").append('<th>' + cabecMaisDetalhes[i] + '</th>');
+        }
+
+    }
+    function render_DetalhesTitulo(dados) {
+        //Renderiza Cabecalhos e estruturas de tabelas
+        render_TabelasDetalhesTitulo();
+        //Info Solicitacao
+
+        $('#dadosDetalheParaAprovar').html('');
+        $('#dadosDetalheParaAprovar').append('' +
+            '<td>'+dados.find("td:nth-child(1)").text()+'</td>'+
+            '<td>'+dados.find("td:nth-child(2)").text()+'</td>'+
+            '<td>'+dados.find("td:nth-child(3)").text()+'</td>'+
+            '<td>'+dados.find("td:nth-child(4)").text()+'</td>'+
+            '<td>'+dados.find("td:nth-child(5)").text()+'</td>'+
+            '<td>'+dados.find("td:nth-child(6)").text()+'</td>'+
+            '<td>'+dados.find("td:nth-child(8)").text()+'</td>'
+        );
+    }
+
+    function resultGetDetalhesItens(dados){
+        var conteudo='';
+        for (var i = 0; i < dados.length; i++) {
+            conteudo+='<tr>'+
+                      '<td>' + dados[i].item + '</td>'+
+                      '<td>' + dados[i].numero + '</td>'+
+                      '<td>' + dados[i].produto + '</td>'+
+                      '<td>' + dados[i].valor + '</td>'+
+                      '</tr>';
+        }
+        $("#dadosDetalheItem").html('');
+        $("#dadosDetalheItem").html(conteudo);
+    }
+
+    function resultGetDetalhesDocumentos(dados){
+        var conteudo='';
+        for (var i = 0; i < dados.length; i++) {
+            conteudo+='<tr>'+
+                '<td>' + dados[i].item + '</td>'+
+                '<td>' + dados[i].documento + '</td>'+
+                '<td><span class="fa fa-cloud-download"></span></td>'+
+                '<td><span class="glyphicon glyphicon-eye-open"></span></td>'+
+                '</tr>';
+        }
+        $("#dadosDetalheDocumento").html('');
+        $("#dadosDetalheDocumento").html(conteudo);
+    }
+    function resultGetHistoricoBeneficiario(dados) {
+        //alert(dados.length);
+        //alert(dados[0].empresa);
+        //cabecHistorico = ["Data","Beneficiario","Item","Produto","Descrição","Valor R$","Código"];
+        var conteudo='';
+        for (var i = 0; i < dados.length; i++) {
+            conteudo+='<tr>'+
+                '<td>' + dados[i].emissao+ '</td>'+
+                '<td>' + dados[i].beneficiario + '</td>'+
+                '<td>' + dados[i].item + '</td>'+
+                '<td>' + dados[i].produto + '</td>'+
+                '<td>' + dados[i].descricao + '</td>'+
+                '<td>' + dados[i].valor + '</td>'+
+                '<td>' + dados[i].codigo + '</td>'+
+                '</tr>';
+        }
+
+        $("#dadosHistoricoBeneficiario").html('');
+        $("#dadosHistoricoBeneficiario").html(conteudo);
+
+        $("#dadosHistoricoBeneficiario ").find('th:nth-child(8)').hide();
+        $("#dadosHistoricoBeneficiario ").find('td:nth-child(8)').hide();
+    }
+
+
+    function renderizaTabelaDefault(dados) {
+        if (oTable == null) {
+            defTable = $('#t_dados_ParaAprovar').html();
+        } else {
+            $('#t_dados_ParaAprovar').html(defTable);
+        }
+        for($i=0; $i<dados.length;$i++){
+         dados[$i].selecao = '<div style="width: 100%; text-align: center;"><input type="checkbox" data-id="'+dados[$i].id+'"></div>';
+        }
+        var objDataTable = colunasDefaultDataTable($('#t_dados_ParaAprovar'), dados, function (data) {
+            render_DetalhesTitulo(data);
+            remote.executa("getTituloItens", {idTitulo:data.find("td:nth-child(7)").text()}, resultGetDetalhesItens, $("#divDetalhe"), erroPersonalizado);
+            if(data.find("td:nth-child(9)").text()=='PARA ANALISE'){
+                $("#btnMsgDet").show();
+                //$("#btnNeg").hide();
+            }else{
+                $("#btnMsgDet").hide();
+                //$("#btnNeg").show();
+            }
+            remote1.executa("getDiretorioFinanceiro", {idTitulo:data.find("td:nth-child(7)").text()}, resultGetDiretorio, $("#divDetalhe"), erroPersonalizado);
+            remote.executa("getHistoricoBeneficiario", {idTitulo:data.find("td:nth-child(7)").text()}, resultGetHistoricoBeneficiario, $("#pnlAprovacao"), erroPersonalizado);
+            remote.executa("getTituloDocumentos", {idTitulo:data.find("td:nth-child(7)").text()}, resultGetDetalhesDocumentos, $("#divDetalhe"), erroPersonalizado);
+        });
+
+        oTable = $('#t_dados_ParaAprovar').dataTable(objDataTable);
+        //
+        //HIDE CAMPOS DE CONSULTA
+        for (var i=11; i< 22;i++){
+            //$("#t_dados_ParaAprovar thead").closest('tr').find("td:nth-child("+i+")").hide();
+            $("#t_dados_ParaAprovar ").find('th:nth-child('+i+')').hide();
+            $("#t_dados_ParaAprovar ").find('td:nth-child('+i+')').hide();
+        }
+        //
+        for (var i=1; i< dados.length+1;i++){
+            var status =  $("#t_dados_ParaAprovar tr:nth-child("+i+") td:nth-child(9)").text();
+            //alert(result);
+            if (status=="PARA ANALISE"){
+                $("#t_dados_ParaAprovar tbody").find("tr:nth-child("+i+")").removeClass("danger").addClass("active");
+            }else if(status=="PARA APROVAR"){
+                $("#t_dados_ParaAprovar tbody").find("tr:nth-child("+i+")").removeClass("active").addClass("danger");
+            }
+        }
+        $('#t_dados_ParaAprovar th').css('text-align','center');
+        $("#t_dados_ParaAprovar td:contains('Nenhum')").html('Nenhum Titulo para aprovar');
+        $(window).resize();
+    }
+
+    function resultGetDiretorio(dados) {
+        if(dados.length>0){
+           console.log(dados[0].diretorio);
+        }
+    }
+
+    function renderizaTabelaAprovados(dados) {
+        if (oTable_aprov == null) {
+            defTable_aprov = $('#t_dados_Aprovados').html();
+        } else {
+            $('#t_dados_Aprovados').html(defTable_aprov);
+        }
+
+        var objDataTable = colunasDefaultDataTable($('#t_dados_Aprovados'), dados, function (data) {
+        //
+        });
+
+        oTable_aprov = $('#t_dados_Aprovados').dataTable(objDataTable);
+        //
+        for (var i=1; i< dados.length+1;i++){
+            var status =  $("#t_dados_Aprovados tr:nth-child("+i+") td:nth-child(10)").text();
+            //alert(result);
+            if (status=="APROVADO"){
+                $("#t_dados_Aprovados tbody").find("tr:nth-child("+i+")").addClass("success");
+            }
+        }
+        $('#t_dados_Aprovados th').css('text-align','center');
+        $(window).resize();
+    }
+
+
+    function resultGetTitulosInfo(dados) {
+        //alert(dados[0].num);
+        var txt ='';
+        if(dados[0].num==0){
+            txt='titulos';
+        }else if(dados[0].num>1){
+            txt='titulos';
+        }else{
+            txt='titulo';
+        }
+        $('#txtNumTitulos').val(dados[0].num+' '+txt);
+        $('#txtDataDe').val(dados[0].dataDe);
+        $('#txtDataAte').val(dados[0].dataAte);
+        $('#txtTotalTitulos').val(dados[0].valTotal);
+        $('#txtValorMin').val(dados[0].valMin);
+        $('#txtValorMax').val(dados[0].valMax);
+    }
+
+    function resultGetTitulosPagadora(dados) {
+        var txt = '';
+        var separador ='   ';
+        var cont= dados.length;
+        for (var i = 0; i < dados.length; i++) {
+
+            txt+=dados[i].pagadora.trim()+' ( '+dados[i].numTitulos+' titulos ) '+dados[i].totalPagadora+separador;
+        }
+        $('#txtPagadoras').val(txt);
+    }
+    function resultGetTitulosTipos(dados) {
+        //alert(dados[0].numTitulos);
+        var txt = '';
+        var separador ='   ';
+        var cont= dados.length;
+        for (var i = 0; i < dados.length; i++) {
+            txt+=dados[i].tipo.trim()+' ( '+dados[i].numTitulos+' titulos ) '+dados[i].totalTipo+separador;
+        }
+        $('#txtTipos').val(txt);
+    }
+
+
+    function exibeDivPadrao() {
+            $("#lblTitulo").html('Titulos para aprovação');
+            $("#t_dados_ParaAprovar tr.selected").removeClass("selected");
+            $("#divInfoGeral").show("fast");
+            $("#divParaAprovar").show();
+            $("#btnMsgDet").hide();
+            $("#divAprovados").hide();
+            $("#divDetalhe").hide();
+            $("#btnDet").show();
+            $("#btnHist").show();
+            $("#btnVolAprovados").hide();
+            $("#btnVolDetail").hide();
+            $("#btnAprov").show();
+            $("#btnNeg").show();
+    }
+
+    function exibeDivDetalhes(valid) {
+        if (valid == false) {
+            $("#divPadrao").show("fast");
+            $("#divInfoGeral").show("fast");
+            $("#divAprovados").hide("fast");
+            $("#divEdicao").hide("fast");
+            $("#btnVolEdt").hide();
+            $("#btnGraEdt").hide();
+            $("#btnMsgDet").hide();
+            $("#btnGraAtv").hide();
+            $("#btnAdd").show();
+            $("#btnRem").show();
+        } else {
+            $("#divInfoGeral").hide("fast");
+            $("#divParaAprovar").hide("fast");
+            $("#divDetalhe").show("fast");
+            $("#btnDet").hide();
+            $("#btnMsgDet").hide();
+            $("#btnHist").hide();
+            $("#btnVolAprovados").hide();
+            $("#btnVolDetail").show();
+            $("#btnAprov").hide();
+            $("#btnNeg").hide();
+
+        }
+    }
+
+    function exibeDivHistorico(valid) {
+        if (valid == true) {
+            $("#lblTitulo").html('Histórico de Aprovação');
+            $("#divAprovados").show("fast");
+            $("#btnVolAprovados").show();
+            $("#divPadrao").hide("fast");
+            $("#divParaAprovar").hide("fast");
+            $("#divInfoGeral").hide("fast");
+            $("#btnDet").hide();
+            $("#btnHist").hide();
+            $("#btnMsgDet").hide();
+            $("#btnVolDetail").hide();
+            $("#btnAprov").hide();
+            $("#btnNeg").hide();
+        } else {
+            exibeDivPadrao();
+        }
+    }
+
+    function refreshModalMensagem_env() {
+        $("#txtCodReembolso").val('');
+        $("#txtEventoReembolso").val('');
+        $("#txtMensagem_env").val('');
+    }
+
+    function resultGetFinanceiroInfoMensagemDetalhes(dados){
+        $("#txtId_De").val(dados[0].id_de);
+        setImagemUsuario('#divImagemDe',dados[0].id_de);
+        $("#txtUsuarioNomeDe").val(dados[0].nome_de+' '+dados[0].sobrenome_de);
+        $("#txtUsuarioEmailDe").val(dados[0].email_de);
+        $("#txtId_Para").val(dados[0].id_para);
+        setImagemUsuario('#divImagemPara',dados[0].id_para);
+        $("#txtUsuarioNomePara").val(dados[0].nome_para+' '+dados[0].sobrenome_para);
+        $("#txtUsuarioEmailPara").val(dados[0].email_para);
+    }
+
+    function setImagemUsuario(div,id_usuario,){
+        var rnd = Math.random();
+        var conteudo ='';
+        conteudo= '<div class="profile"><div class=" profile-mini profile-image"><img  src="php/outros/loadimage.php?n=' + id_usuario + '&c=' + rnd + '" class="foto_usuario" alt="Usuário"></div></div>';
+        $(div).html(conteudo);
+    }
+
+    function valida_mensagem(){
+        var msg = $("#txtMensagem_env").val();
+        if(msg!='' & msg.length>50){
+            return true;
+        }else{
+            noty({
+                text: '<br/><b><p><span class="fa fa-exclamation-circle"></span><font size="2">   Faltam dados para envio da mensagem</font></p></b><p>Preencha a mensagem com as observações ao mínimo com 50 caracteres de instrução</p>',
+                type: 'warning',
+                layout: 'topCenter',
+                timeout: 6000
+            });
+            return false;
+        }
+    }
+
+    function resultSetFinanceiroStatusAprovadorAprovado(dados){
+        //alert(dados);
+        if(dados==0){
+            $("#msg_box_lista_aprov").modal('hide');
+            $("#t_dados_ParaAprovar tr.selected").removeClass("selected");
+            $('.linhaSelecionada').removeClass('linhaSelecionada');
+            $($("[data-id]:checked")).attr("checked", false);
+            noty({
+                text: '<br/><b><p><span class="fa fa-exclamation-circle"></span><font size="2">   Erro</font></p></b><p>Erro ao aprovar os títulos selecionados</p>',
+                type: 'error',
+                layout: 'topCenter',
+                timeout: 4000
+            });
+            setTimeout(function(){
+                location.reload();
+            }, 2000);
+        }else{
+            $("#t_dados_ParaAprovar tr.selected").removeClass("selected");
+            $('.linhaSelecionada').removeClass('linhaSelecionada');
+            $($("[data-id]:checked")).attr("checked", false);
+            $("#msg_box_lista_aprov").modal('hide');
+            noty({
+                text: '<br/><b><p><span class="fa fa-exclamation-circle"></span><font size="2">   Aprovação conluida</font></p></b><p>Títulos aprovados. Um email com o resumo da aprocação foi encaminhado ao colaborador financeiro e você foi copiado</p>',
+                type: 'success',
+                layout: 'topCenter',
+                timeout: 4000
+            });
+            setTimeout(function(){
+                location.reload();
+            }, 2000);
+        }
+
+    }
+
+    function resultSetFinanceiroStatusMaisDetalhes(dados){
+        //alert(dados);
+        if(dados==0){
+            $("#msg_box_env").modal('hide');
+            $("#t_dados_ParaAprovar tr.selected").removeClass("selected");
+            $('.linhaSelecionada').removeClass('linhaSelecionada');
+            $($("[data-id]:checked")).attr("checked", false);
+            noty({
+                text: '<br/><b><p><span class="fa fa-exclamation-circle"></span><font size="2">   Erro</font></p></b><p>Erro ao solicitar mais detalhes</p>',
+                type: 'error',
+                layout: 'topCenter',
+                timeout: 4000
+            });
+            setTimeout(function(){
+                location.reload();
+            }, 2000);
+        }else{
+            $("#msg_box_env").modal('hide');
+            $("#t_dados_ParaAprovar tr.selected").removeClass("selected");
+            $('.linhaSelecionada').removeClass('linhaSelecionada');
+            $($("[data-id]:checked")).attr("checked", false);
+            noty({
+                text: '<br/><b><p><span class="fa fa-exclamation-circle"></span><font size="2">   Solicitação de detalhes conluida</font></p></b><p>Um email com o resumo da aprocação foi encaminhado ao colaborador financeiro para a análise e as demais comunicações e exclarescimentos podem ser feitas externamente ao portal via email.</p>',
+                type: 'success',
+                layout: 'topCenter',
+                timeout: 4000
+            });
+            setTimeout(function(){
+                location.reload();
+            }, 2000);
+        }
+    }
+
+    function resultGetMessagemMaisDetalhes(dados){
+        refreshModalMensagemMaisDetalhes();
+        setImagemUsuario('#divImagemDeMsg',dados[0].id);
+        $("#txtMensagem").html(dados[0].mensagem);
+        $("#txtDataAprov").val(dados[0].data);
+        $("#txtNomeAprov").val(dados[0].nome+' '+dados[0].sobrenome);
+        $("#txtEmailAprov").val(dados[0].usuario);
+    }
+    function refreshModalMensagemMaisDetalhes() {
+        $("#txtMensagem").html('');
+        $("#txtDataAprov").val('');
+        $("#txtNomeAprov").val('');
+        $("#txtEmailAprov").val('');
+    }
+
+    $(document).ready(function () {
+        remote.executa("getTitulosParaAprovar", null, resultGetTitulosParaAprovar, $('#pnlAprovacao'), erroPersonalizado);
+        remote.executa("getTitulosParaAprovar", null, resultGetTitulosParaAprovar, $('#pnlAprovacao'), erroPersonalizado);
+        remote.executa("getTitulosInfo", null, resultGetTitulosInfo, $("#pnlAprovacao"), erroPersonalizado);
+        remote.executa("getTitulosPagadora", null, resultGetTitulosPagadora, $("#pnlAprovacao"), erroPersonalizado);
+        remote.executa("getTitulosTipos", null, resultGetTitulosTipos, $("#pnlAprovacao"), erroPersonalizado);
+        remote.executa("getTitulosAprovados", null, resultGetTitulosAprovados, $("#pnlAprovacao"), erroPersonalizado);
+
+
+
+        $('#btnDet').on('click', function () {
+            var objTemp = oTable.fnGetData(oTable.closest("table").find(".selected"));
+            if (objTemp != null) {
+                //var dadosAprov = $("[data-id]:checked").closest('tr').find('td:nth-child(7)').map(function(){ return $(this).html();}).get();
+                //if(dadosAprov.length==1) {
+                    exibeDivDetalhes(true);
+                //}else if(dadosAprov.length==0) {
+                //     noty({
+                //         text: '<br/><b><p><span class="fa fa-exclamation-circle"></span><font size="2">   Erro de seleção</font></p></b><p>Marque a  coluna seleção para o título que deseja ver mais detalhes</p>',
+                //         type: 'warning',
+                //         layout: 'topCenter',
+                //         timeout: 6000
+                //     });
+                }else {
+                    noty({
+                        text: '<br/><b><p><span class="fa fa-exclamation-circle"></span><font size="2">   Erro de seleção</font></p></b><p>Selecione a linha da tabela na qual deseja ver mais detalhes do título</p>',
+                        type: 'warning',
+                        layout: 'topCenter',
+                        timeout: 6000
+                    });
+                }
+        });
+
+        $('#btnVolDetail').on('click', function () {
+            exibeDivPadrao();
+        });
+
+        $('#btnVolAprovados').on('click', function () {
+            $('.linhaSelecionada').removeClass('linhaSelecionada');
+            $($("[data-id]:checked")).attr("checked", false);
+            exibeDivPadrao();
+        });
+
+        $("#t_dados_ParaAprovar").on('change', '[data-id]', function(){
+            $('.linhaSelecionada').removeClass('linhaSelecionada');
+            $("[data-id]:checked").closest('tr').addClass('linhaSelecionada');
+            var dados = $("[data-id]:checked").closest('tr').find('td:nth-child(7)').map(function(){ return $(this).html();}).get();
+            if(dados.length>1){
+                $("#btnNeg").hide();
+            }else if (dados.length==0){
+                $("#t_dados_ParaAprovar tr.selected").removeClass("selected");
+            }else {
+                $("#btnNeg").show();
+                $("#btnMsgDet").hide();
+            }
+
+        });
+
+        $('#btnHist').on('click', function () {
+            exibeDivHistorico(true);
+        });
+
+        $("body").dblclick(function(){
+            $("#t_dados_ParaAprovar tr.selected").removeClass("selected");
+            $('.linhaSelecionada').removeClass('linhaSelecionada');
+            $($("[data-id]:checked")).attr("checked", false);
+            exibeDivPadrao();
+        });
+
+        $('#btnNeg').on('click', function () {
+            var objTemp = oTable.fnGetData(oTable.closest("table").find(".selected"));
+            if (objTemp != null) {
+                // GET DADOS SELECIONADOS COLUNA nth-child(1)
+                var dadosAprov = $("[data-id]:checked").closest('tr').find('td:nth-child(7)').map(function(){ return $(this).html();}).get();
+                if(dadosAprov.length==1){
+                    verificadorMsg=1;
+                    //
+                    $("#lblNomeDe").html("De aprovador financeiro");
+                    $("#lblEmailDe").html("E-mail do aprovador financeiro");
+                    $("#lblNomePara").html("Para colaborador financeiro");
+                    $("#lblEmailPara").html("E-mail do colaborador financeiro");
+                    //
+                    remote.executa("getFinanceiroInfoParaMensagemDetalhes",null,resultGetFinanceiroInfoMensagemDetalhes, $('#divPadrao'), erroPersonalizado);
+                    //
+                    $("#txt_titulo_msg").html("Mensagem - Solicitação de mais detalhes");
+                    //
+                    refreshModalMensagem_env();
+                    //
+                    var conteudo ='';
+                    conteudo+='<tr class="danger">'+
+                        '<td>' + objTemp.pagadora + '</td>'+
+                        '<td>' + objTemp.beneficiario + '</td>'+
+                        '<td>' + objTemp.valor + '</td>'+
+                        '<td>' + objTemp.emissao + '</td>'+
+                        '<td>' + objTemp.vencimento + '</td>'+
+                        '<td>' + objTemp.codigo + '</td>'+
+                        '</tr>';
+
+                    $("#dadosMaisDetalhes").html('');
+                    $("#dadosMaisDetalhes").html(conteudo);
+
+                    $("#msg_box_env").modal();
+                }else if(dadosAprov.length==0) {
+                    noty({
+                        text: '<br/><b><p><span class="fa fa-exclamation-circle"></span><font size="2">   Erro de seleção</font></p></b><p>Marque a  coluna seleção para o título que deseja solicitar mais detalhes</p>',
+                        type: 'warning',
+                        layout: 'topCenter',
+                        timeout: 6000
+                    });
+                }else {
+                    noty({
+                        text: '<br/><b><p><span class="fa fa-exclamation-circle"></span><font size="2">   Erro de seleção</font></p></b><p>Não é possível solicitar detalhes para mais de um título. Selecione um por vez e descreva sua mensagem ao colaborador financeiro</p>',
+                        type: 'warning',
+                        layout: 'topCenter',
+                        timeout: 6000
+                    });
+                }
+            }
+        });
+
+        $('#btnAprov').on('click', function () {
+            var objTemp = oTable.fnGetData(oTable.closest("table").find(".selected"));
+            if (objTemp != null) {
+
+                // GET DADOS SELECIONADOS COLUNA nth-child(1)
+                var arr_CodAprov = $("[data-id]:checked").closest('tr').find('td:nth-child(7)').map(function(){ return $(this).html();}).get();
+                var arr_BeneAprov = $("[data-id]:checked").closest('tr').find('td:nth-child(2)').map(function(){ return $(this).html();}).get();
+                var arr_ValAprov = $("[data-id]:checked").closest('tr').find('td:nth-child(4)').map(function(){ return $(this).html();}).get();
+                var arr_VencAprov = $("[data-id]:checked").closest('tr').find('td:nth-child(6)').map(function(){ return $(this).html();}).get();
+                var arr_StatAprov = $("[data-id]:checked").closest('tr').find('td:nth-child(9)').map(function(){ return $(this).html();}).get();
+                var arr_PagaAprov = $("[data-id]:checked").closest('tr').find('td:nth-child(1)').map(function(){ return $(this).html();}).get();
+
+                if(arr_CodAprov.length>0){
+                    //
+                    var conteudo='';
+                    for (var i = 0; i < arr_CodAprov.length; i++) {
+                        if (arr_StatAprov[i]=="PARA APROVAR"){
+                            conteudo+='<tr class="danger">';
+                        }else if(arr_StatAprov[i]=="PARA ANALISE"){
+                            conteudo+='<tr class="active">';
+                        }
+                        conteudo+='<td>' + arr_PagaAprov[i] + '</td>'+
+                                  '<td>' + arr_BeneAprov[i] + '</td>'+
+                                  '<td>' + arr_ValAprov[i] + '</td>'+
+                                  '<td>' + arr_VencAprov[i] + '</td>'+
+                                  '<td>' + arr_CodAprov[i] + '</td>'+
+                                  '<td>' + arr_StatAprov[i] + '</td>'+
+                                  '</tr>';
+                    }
+                    $("#dadosResumoAprovar").html('');
+                    $("#dadosResumoAprovar").html(conteudo);
+                    $("#msg_box_lista_aprov").modal();
+
+                }else if(arr_CodAprov.length==0) {
+                    noty({
+                        text: '<br/><b><p><span class="fa fa-exclamation-circle"></span><font size="2">   Erro de seleção</font></p></b><p>Marque a  coluna seleção para os títulos que deseja aprovar</p>',
+                        type: 'warning',
+                        layout: 'topCenter',
+                        timeout: 6000
+                    });
+                }
+            }else{
+                noty({
+                    text: '<br/><b><p><span class="fa fa-exclamation-circle"></span><font size="2">   Erro de seleção</font></p></b><p>Marque os títulos que deseja aprovar na coluna seleção</p>',
+                    type: 'warning',
+                    layout: 'topCenter',
+                    timeout: 6000
+                });
+            }
+        });
+
+
+
+        $("#btnConf_envio").on('click', function () {
+            if(valida_mensagem()){
+                var objTemp = oTable.fnGetData(oTable.closest("table").find(".selected"));
+                if (objTemp != null) {
+                    var param ={
+                        codigo:objTemp.codigo,
+                        pagadora:objTemp.pagadora,
+                        beneficiario:objTemp.beneficiario,
+                        valor:objTemp.valor,
+                        emissao:objTemp.emissao,
+                        vencimento:objTemp.vencimento,
+                        mensagem:$("#txtMensagem_env").val()
+                    };
+                    remote.executa("setFinanceiroStatusAprovadorMaisDetalhes",param , resultSetFinanceiroStatusMaisDetalhes, $('#msg_box_env'), erroPersonalizado);
+                }
+            }
+        });
+
+        $("#btnConf_aprov").on('click', function () {
+
+            var arr_CodAprov = $("[data-id]:checked").closest('tr').find('td:nth-child(7)').map(function(){ return $(this).html();}).get();
+            var arr_BeneAprov = $("[data-id]:checked").closest('tr').find('td:nth-child(2)').map(function(){ return $(this).html();}).get();
+            var arr_ValAprov = $("[data-id]:checked").closest('tr').find('td:nth-child(4)').map(function(){ return $(this).html();}).get();
+            var arr_VencAprov = $("[data-id]:checked").closest('tr').find('td:nth-child(6)').map(function(){ return $(this).html();}).get();
+            var arr_PagaAprov = $("[data-id]:checked").closest('tr').find('td:nth-child(1)').map(function(){ return $(this).html();}).get();
+
+            var arrTitulo = new Array();
+            for (var i=0; i< arr_CodAprov.length;i++){
+                var tempObj = {};
+                tempObj.pagadora = arr_PagaAprov[i];
+                tempObj.beneficiario = arr_BeneAprov[i];
+                tempObj.valor = arr_ValAprov[i];
+                tempObj.vencimento = arr_VencAprov[i];
+                tempObj.codigo = arr_CodAprov[i];
+                //
+                arrTitulo.push(tempObj);
+            }
+
+            remote.executa("setFinanceiroStatusAprovadorAprovado", {arrTitulo:arrTitulo},resultSetFinanceiroStatusAprovadorAprovado ,$('#msg_box_lista_aprov'), erroPersonalizado);
+
+        });
+
+        $("#btnMsgDet").on("click", function () {
+            var objTemp = oTable.fnGetData(oTable.closest("table").find(".selected"));
+            if (objTemp != null) {
+                //alert(objTemp.codigo);
+                $("#txtAcaoMsg").val('Solicitado Mais detalhes');
+                $("#txtAcaoMsg").css("color","#061519");
+                $("#txtAcaoMsg").css("background-color","#dbdbdb");
+                remote.executa("getMensagemMaisDetalhes", {id: objTemp.codigo}, resultGetMessagemMaisDetalhes, $('#msg_box_view'), erroPersonalizado);
+                $("#msg_box_view").modal('show');
+            }
+        });
+
+
+    });
+
+
+</script>
+
+<!-- START BREADCRUMB -->
+<ul class="breadcrumb">
+</ul>
+
+<!-- PAGE CONTENT WRAPPER -->
+<div class="page-content-wrap">
+    <div class="row">
+        <div id="divMain" class="col-md-12 col-md-offset-0">
+            <!-- START PANEL GERAL -->
+            <div id="pnlGeral" class="panel panel-primary">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Painel geral</h3>
+                    <ul class="panel-controls">
+                        <li><a href="#" class="panel-collapse"><span class="fa fa-angle-down"></span></a></li>
+                    </ul>
+                </div>
+                <div class="panel-body">
+                    <form role="form">
+                        <div class="form-group">
+                            <div class="col-md-2">
+                                <label class="control-label"><span class="fa fa-th"></span>  Titulos a aprovar</label>
+                                <input id='txtNumTitulos' type="text"  class="form-control" disabled="disabled"/>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="control-label"><span class="fa fa-dollar"></span>  Total(Geral) R$</label>
+                                <input id='txtTotalTitulos' type="text"  class="form-control"  disabled="disabled"/>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="control-label"><span class="fa fa-dollar"></span>  Valor(Min)R$</label>
+                                <input id='txtValorMin' type="text"  class="form-control" disabled="disabled"/>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="control-label"><span class="fa fa-dollar"></span>  Valor(Max)R$</label>
+                                <input id='txtValorMax' type="text"  class="form-control" disabled="disabled"/>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="control-label"><span class="fa fa-calendar"></span>  Vencimento(Min) </label>
+                                <input id='txtDataDe' type="text"  class="form-control"  disabled="disabled"/>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="control-label"><span class="fa fa-calendar"></span>  Vencimento(Max)</label>
+                                <input id='txtDataAte' type="text"  class="form-control"  disabled="disabled"/>
+                            </div>
+
+                            <div class="col-md-12">
+                                <label class="control-label"><span class="fa fa-filter"></span>  Pagadora(Num Títulos)R$Total</label>
+                                <input id='txtPagadoras' type="text"  class="form-control" disabled="disabled"/>
+                            </div>
+                            <div class="col-md-12">
+                                <label class="control-label"><span class="fa fa-filter"></span>  Tipo(Num Títulos)R$Total</label>
+                                <input id='txtTipos' type="text"  class="form-control"  disabled="disabled"/>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <!-- START PANEL LEGENDAS -->
+                <div class="panel-footer">
+                    <h3 class="panel-title">Legendas</h3>
+                    <div class="panel-body">
+                        <form role="form">
+                           <!-- INCLUIR LEGENDAS-->
+                        </form>
+                    </div>
+                </div>
+                <!-- END PANEL LEGENDAS -->
+            </div>
+            <!-- END PANEL GERAL -->
+
+            <!--START PANEL APROVACOES-->
+            <div id="pnlAprovacao" class="panel panel-default">
+                <!--START PAINEL DE CONTROLES-->
+                <div class="panel-heading">
+                    <h3 id='lblTitulo' class=" panel-title">Títulos para aprovação</h3>
+                    <ul class="panel-controls">
+                        <li><a href="#" id="btnDet" class="control-primary" data-acao="edt" title="Detalhes" ><span class="fa fa-sitemap"  ></span></a></li>
+                        <li><a href="#" id="btnHist" class="control-primary" data-acao="edt" title="Histórico" ><span class="glyphicon glyphicon-time"  ></span></a></li>
+                        <li><a href="#" id="btnAprov" class="control-success" data-acao="aprov" title="Aprovar" ><span class="fa fa-thumbs-up"></span></a></li>
+                        <li><a href="#" id="btnMsgDet" class="control-primary" data-acao="neg" title="Ver mensagem" style="display: none;" ><span class="fa fa-comment"></span></a></li>
+                        <li><a href="#" id="btnNeg" class="control-warning" data-acao="neg" title="Solicitar mais detalhes" ><span class="fa fa-thumbs-down"></span></a></li>
+                        <li><a href="#" id="btnVolDetail" class="control-primary" data-acao="vol" title="Voltar" style="display: none;"><span class="fa fa-mail-reply"></span></a></li>
+                        <li><a href="#" id="btnVolAprovados" class="control-primary" data-acao="vol" title="Voltar" style="display: none;"><span class="fa fa-mail-reply"></span></a></li>
+                    </ul>
+                </div>
+                <!--END PAINEL DE CONTROLES-->
+
+                <!--START FORMULARIOS-VIEWS-TABELAS-->
+                <div class="panel-body">
+                    <!--START TABELA-->
+                    <div id="divParaAprovar" class="row">
+                        <div class="col-md-12">
+                            <table id="t_dados_ParaAprovar" class="table table-bordered table-condensed">
+
+                            </table>
+                        </div>
+                    </div>
+                    <!--END TABELA-->
+
+                    <!--START TABELA-->
+                    <div id="divAprovados" class="row" style="display: none;">
+                        <div class="col-md-12" style="overflow-x: auto;">
+                            <table id="t_dados_Aprovados" class="table  table-bordered table-condensed">
+
+                            </table>
+                        </div>
+                    </div>
+                    <!--END TABELA-->
+
+                    <!--START FORMULARIO DE DETALHES-->
+                    <div id="divDetalhe" class="row" style="display: none;">
+                        <h4 id="lblTitulo_Edt"></h4>
+                        <div class="col-md-12 panel-body">
+                            <table class="table table-striped table-bordered table-condensed" >
+                                <thead>
+                                <tr id="cabecDetalheParaAprovar">
+                                    <!--ADD CABECALHO-->
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr id="dadosDetalheParaAprovar">
+                                   <!--ADD DADOS SOLICITACAO-->
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="col-md-8">
+                            <!-- START TABS -->
+                            <div class="panel panel-default tabs">
+                                <ul class="nav nav-tabs" role="tablist">
+                                    <li class="active"><a href="#tab-first" role="tab" data-toggle="tab"><span class="fa fa-list-ul"></span>   Itens</a></li>
+                                    <li class=""><a href="#tab-second" role="tab" data-toggle="tab"><span class="fa fa-files-o"></span>   Arquivos</a></li>
+                                    <li class=""><a href="#tab-third" role="tab" data-toggle="tab"><span class="glyphicon glyphicon-time"></span>   Histórico de pagamentos</a></li>
+                                </ul>
+                                <div class="panel-body tab-content">
+                                    <!--FIRST TAB- ITENS-->
+                                    <div class="active tab-pane" id="tab-first">
+                                        <table class="table">
+                                            <thead>
+                                            <tr id="cabecDetalheItem">
+                                                <!--ADD CABECALHO ITEM-->
+                                            </tr>
+                                            </thead>
+
+                                            <tbody id="dadosDetalheItem">
+                                            <!--ADD DADOS ITENS DA SOLICITACAO-->
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    <!--SECUND TAB- ITENS-->
+                                    <div class="tab-pane " id="tab-second">
+                                        <div class="panel-heading">
+                                            <ul class="panel-controls">
+                                                <li><a href="#" id="btnViewDoc" class="control-primary" data-acao="edt" title="Ver o documento" ><span class="fa fa-picture-o"  ></span></a></li>
+                                                <li><a href="#" id="btnDownDoc" class="control-primary" data-acao="edt" title="Baixar o documento" ><span class="fa fa-arrow-circle-down"  ></span></a></li>
+                                            </ul>
+                                        </div>
+                                        <table class=" table">
+                                            <thead>
+                                            <tr id="cabecDetalheDocumento">
+                                            <!--ADD CABECALHO DOCUMENTO-->
+                                            </tr>
+                                            </thead>
+                                            <tbody id="dadosDetalheDocumento">
+                                            <!--ADD DADOS DOCUMENTO-->
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    <!--THIRD TAB- ITENS-->
+                                    <div class="tab-pane" id="tab-third">
+                                        <table class=" table">
+                                            <thead>
+                                            <tr id="cabecHistoricoBeneficiario">
+                                                <!--ADD CABECALHO DOCUMENTO-->
+                                            </tr>
+                                            </thead>
+                                            <tbody id="dadosHistoricoBeneficiario">
+                                            <!--ADD DADOS DOCUMENTO-->
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                </div>
+                            </div>
+                            <!-- END TABS -->
+                        </div>
+                    </div>
+                    <!--END FORMULARIO DE DETALHES-->
+
+                </div>
+            </div>
+            <!--END PANEL APROVACOES-->
+
+        </div>
+        <!-- END INFO PROFILE USER-->
+    </div>
+</div>
+
+
+<!--START DIV-MODAL ENVIO MENSAGEM MAIS DETALHES -->
+<div class="modal" id="msg_box_env" tabindex="0" role="dialog" aria-labelledby="smallModalHead" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content ">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 id="txt_titulo_msg" class="modal-title" ><span class="fa fa-thumbs-o-down"></span>  Mensagem</h4>
+            </div>
+            <div class="modal-body row">
+                <div class="col-md-12">
+                    <div id="divMaisDetalhes" class="row">
+                        <div class="col-md-12">
+                            <table id="t_dados_MaisDetalhes" class="table table-bordered table-condensed">
+                                <thead>
+                                <tr id="cabecMaisDetalhes">
+                                    <!--ADD CABECALHO RESUMO-->
+                                </tr>
+                                </thead>
+                                <tbody id="dadosMaisDetalhes">
+                                <!--ADD DADOS RESUMO-->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div id="divImagemDe" class="col-md-12"></div>
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <input id="txtId_De" type="hidden"/>
+                            <label id="lblNomeDe"></label>
+                            <input id="txtUsuarioNomeDe" class="form-control formItensMsg" disabled="disabled">
+                        </div>
+                    </div>
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label id="lblEmailDe"></label>
+                            <input id="txtUsuarioEmailDe" class="form-control formItensMsg" disabled="disabled">
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div id="divImagemPara"class="col-md-12">
+
+                    </div>
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <input id="txtId_Para" type="hidden"/>
+                            <label id="lblNomePara"></label>
+                            <input id="txtUsuarioNomePara" class="form-control formItensMsg" disabled="disabled">
+                        </div>
+                    </div>
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label id="lblEmailPara"></label>
+                            <input id="txtUsuarioEmailPara" class="form-control formItensMsg" disabled="disabled">
+                        </div>
+                    </div>
+
+                </div>
+                <div class="col-md-12">
+                    <div id="div_msg_neg" class="col-md-12">
+                        <div class="form-group">
+                            <label>Mensagem</label>
+                            <textarea id="txtMensagem_env"  spellcheck="false" class="form-control formMsg" rows="10" ></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div class="col-md-12">
+                    <button id="btnConf_envio"   type="button" class="btn btn-primary" >Enviar mensagem</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!--END DIV-MODAL ENVIO MENSAGEM MAIS DETALHES -->
+
+
+<!--START DIV-MODAL RESUMO DE APROVACAO DE TITULOS -->
+<div class="modal" id="msg_box_lista_aprov" tabindex="0" role="dialog" aria-labelledby="smallModalHead" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content ">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 id="txt_titulo_lista_aprov" class="modal-title" ><span class="fa fa-thumbs-o-up"></span>  Resumo da Aprovação</h4>
+            </div>
+            <div class="modal-body row">
+                <div id="divResumoAprovar" class="row">
+                    <div class="col-md-12">
+                        <table id="t_dados_ResumoAprovar" class="table table-bordered table-condensed">
+                            <thead>
+                            <tr id="cabecResumoAprovar">
+                                <!--ADD CABECALHO RESUMO-->
+                            </tr>
+                            </thead>
+                            <tbody id="dadosResumoAprovar">
+                            <!--ADD DADOS RESUMO-->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div class="col-md-12">
+                    <button id="btnConf_aprov"   type="button" class="btn btn-primary" >Confirmar Aprovação</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!--END DIV-MODAL RESUMO DE APROVACAO DE TITULOS -->
+
+
+<!--START DIV-MODAL MENSAGEM DE DETALHES - VIEW -->
+<div class="modal" id="msg_box_view" tabindex="-1" role="dialog" aria-labelledby="smallModalHead" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content ">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" >Mensagem</h4>
+            </div>
+            <div class="modal-body">
+                <!--ADD IMAGEM-->
+                <div id="divImagemDeMsg"></div>
+                <!---->
+                <div class="form-group">
+                    <div class="form-group">
+                        <label>Nome do aprovador</label>
+                        <input id="txtNomeAprov" type="text" class="form-control" maxlength="50" placeholder="" readonly>
+                        <label>Email do aprovador</label>
+                        <input id="txtEmailAprov" type="text" class="form-control" maxlength="50" placeholder="" readonly>
+
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Mensagem</label>
+                    <textarea id="txtMensagem" class="form-control" rows="10" disabled="disabled" ></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Ação</label>
+                        <input id="txtAcaoMsg" style="margin-bottom: 10px; text-align: center; color: rgba(12,16,33,0.5);" class="form-control formFooterMsg" disabled="disabled">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Data</label>
+                        <input id="txtDataAprov" type="text" class="form-control" maxlength="50" placeholder="" readonly>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+<!--END DIV-MODAL MENSAGEM DE DETALHES - VIEW -->

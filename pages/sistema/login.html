@@ -1,0 +1,459 @@
+<!--START STYLE-PAGE-->
+<style type="text/css">
+    .splash {
+        background: url(img/background.png) no-repeat center top;
+        margin-top: 0px;
+        padding-top: 0px;
+        text-align: center;
+        background-attachment: fixed;
+        background-position: center top;
+        min-height: 350px;
+        width: 100%;
+        -webkit-background-size: 100%;
+        -moz-background-size: 100%;
+        -o-background-size: 100%;
+        background-size: 100%;
+        -webkit-background-size: cover;
+        -moz-background-size: cover;
+        -o-background-size: cover;
+        background-size: cover;
+    }
+
+    .title-hsr{
+        color: #FFFFFF;
+        font-size: 50px;
+        font-family: sans-serif;
+        font-weight: 100;
+    }
+
+    .subtitle-hsr{
+        color: #FFFFFF;
+        font-size: 50px;
+        font-family: sans-serif;
+        font-weight: 100;
+    }
+</style>
+<!--END  STYLE-PAGE-->
+
+<!--START SCRIPTS-PAGE-->
+<!--END SCRIPTS-PAGE-->
+<script type='text/javascript'>
+
+    /*START NOTA: PROTOCOLO HTTPS*/
+    /*
+    if(window.location.protocol == "http:"){
+        var novaUrl = window.location.href.replace("http://", "https://");        
+        window.location = novaUrl;
+    }
+    */
+    /*END NOTA: PROTOCOLO HTTPS*/
+
+    var remote = new Remote('php/comunicacao.php', 'geral', 'login');
+
+    //START - FUNCTIONS
+    function entrar() {
+        remote.executa("logar", {usuario: $("#username").val(), senha: $("#password").val()}, resultLogar, $("#login_box"), erroPersonalizado);
+    }
+    function validar() {
+        remote.executa("validaCpf", {cpf: $("#txtCpf").val().toString().replace(/\D/g,"")}, resultValida, $("#form_registro"), erroPersonalizado);
+    }
+    function registrar() {
+        var param = {
+            usuario: $("#txtUsuario").val(),
+            nome: $("#txtNome").val(),
+            sobrenome: $("#txtSobrenome").val(),
+            cpf: $("#txtCpf").val().toString().replace(/\D/g,""),
+            senha: $("#txtPassword").val()
+        }
+        remote.executa("setUsuarioRegistro", param, resultRegistrar, $("#registre_box"), erroPersonalizado);
+    }
+    function registro(){
+        if ($("#txtNome").val()!="" && $("#txtSobrenome").val()!="" && $("#txtCpf").val()!="" && $("#txtPassword").val()!="" ) {
+            registrar();
+
+        }
+    }
+    function resultLogar(dados) {
+        if (dados == 1) {
+            $('#form_login').submit();
+        } else {
+            $(".form-horizontal").effect("shake", {distance: 10, times: 5}, 700);
+            $("#msgLogin").html("Usuário/Senha incorreto");
+            $("#msgLogin").show(300);
+            $('#username').focus();
+        }
+    }
+    function resultValida(dados) {
+        if (dados ==1 ) {
+            $("#txtCpf").css("border","1px solid green");
+            $("#msgRegistre").removeClass('label-danger');
+            $("#msgRegistre").addClass('label-success');
+            $("#msgRegistre").hide(300);
+        } else {
+            $(".form-horizontal").effect("shake", {distance: 10, times: 5}, 700);
+            $("#message-regitro-cpf-invalido").show(300);
+            $("#txtCpf").css("border","1px solid red");
+        }
+    }
+
+    function resultRegistrar(dados) {
+        if (dados==1 ) {
+            refreshForm(false);
+            $("#message-regitro-sucesso").show(300);
+            $("#msgRegistre").hide(300);
+        }else{
+            $("#message-registro-existe").show(300);
+            $("#msgRegistre").hide(300);
+        }
+    }
+
+    function setMask(objeto,mascara) {
+        obj=objeto
+        masc=mascara
+        setTimeout("fMascEx()",1)
+    }
+    function fMascEx() {
+        obj.value=masc(obj.value)
+    }
+    function cpf(cpf){
+        cpf=cpf.replace(/\D/g,"")
+        cpf=cpf.replace(/(\d{3})(\d)/,"$1.$2")
+        cpf=cpf.replace(/(\d{3})(\d)/,"$1.$2")
+        cpf=cpf.replace(/(\d{3})(\d{1,2})$/,"$1-$2")
+        return cpf
+    }
+    function refreshForm(message){
+        $("#txtUsuario").val("");
+        $("#txtNome").val("");
+        $("#txtSobrenome").val("");
+        $("#txtCpf").css("border","0px ");
+        $("#txtCpf").val("");
+        $("#txtPassword").val("");
+        $("#txtPasswordConfirm").val("");
+        if (message==true){
+            $("#msgRegistre").hide(300);
+        }
+    }
+    function refreshFormLogin() {
+        $("#username").val("");
+        $("#password").val("");
+    }
+
+    function atualizaTamanho() {
+        var valor = $(window).innerHeight() - $(".login-box").innerHeight() - 15 + "px";
+        // $("#imgLogo").css("padding-top", $(".login-box").innerHeight() - 100 + "px");
+        $(".splash").css("min-height", valor);
+    }
+    //END - FUNCTIONS
+
+    //START - DOCUMENT READY
+    $(document).ready(function () {
+        $('html').addClass("body-full-height");
+
+        $('#username').focus();
+
+        $(window).keydown(function (event) {
+            if (event.keyCode == 13) {
+                event.preventDefault();
+                return false;
+            }
+        });
+
+        $('#username').keyup(function (e) {
+            if (e.keyCode == 13) {
+                $('#password').focus();
+            }
+        });
+
+        $("#btnLogin").on("click", function (e) {
+            e.preventDefault();
+            if ($("#username").val() != "" && $("#password").val() != "") {
+                entrar();
+            }
+        });
+
+        $('#password').keyup(function (e) {
+            if (e.keyCode == 13) {
+                entrar();
+            }
+        });
+
+        if (url.hasOwnProperty("ses") || url.hasOwnProperty("page")) {
+            $("#msgLogin").html("Usuário não logado/Sessão expirou");
+            $("#msgLogin").show(300);
+        }
+
+        if (url.hasOwnProperty("sair")) {
+            $("#msgLogin").html("Logoff efetuado com sucesso!");
+            $("#msgLogin").show(300);
+        }
+
+        if (url.hasOwnProperty("man")) {
+            $("#msgLogin").html("Sistema em manutenção!");
+            $("#msgLogin").show(300);
+        }
+
+        $("#linkRegistre").on('click', function(){
+            refreshForm();
+            refreshFormLogin();
+            $("#login_box").hide("fast");
+            $("#registre_box").show("fast");
+            // $("#msg").hide(300);
+            $('html, body').animate({scrollTop: $('#btnRegistrar').offset().top},2000);
+            $('#email').focus();
+        });
+        $("#btnCancelar").on('click', function(){
+            $("#login_box").show("fast");
+            $("#registre_box").hide("fast");
+            $('#username').focus();
+            $("#txtCpf").css("border","0px ");
+            $("#msgRegistre").hide(300);
+            refreshForm(true);
+        });
+
+        $("#btnCloseMsgRegistro").on('click', function(){
+            $("#message-regitro-sucesso").hide(300);
+        });
+
+        $("#txtCpf").keydown(function(){
+            setMask( this, cpf );
+        });
+
+        $("#txtCpf").on('change',function(){
+            var s= $("#txtCpf").val().toString().replace(/\D/g,"");
+            var x = s.length;
+            if(x < 11 || x >11){
+                $("#msgRegistre").removeClass('label-success');
+                $("#msgRegistre").addClass('label-danger');
+                $("#msgRegistre").html("CPF fora do formato(000.000.000.-00).Corrija e tente novamente");
+                $("#msgRegistre").show(300);
+                $("#txtCpf").css("border","1px solid red");
+            }else if (x==11){
+                validar();
+            }
+        });
+
+        $("#txtCpf").on('input',function(){
+            $("#txtCpf").css("border","0px ");
+            $("#msgLogin").hide(300);
+        });
+
+        $(window).resize(function () {
+            atualizaTamanho();
+        });
+        atualizaTamanho();
+//        $("#msg").show();
+
+    });
+
+</script>
+
+<!--START-PAGE-->
+<body>
+    <!--GERAL CONTAINER -->
+    <div class="login-container">
+        <div id="banner" class="splash">
+        </div>
+        <div style="float: left; margin: 20px;">
+            <img id="imgLogo" src="img/logo.png"/>
+        </div>
+        <!--START CONTAINER LOGIN-->
+        <div  id="login_box" class="login-box animated fadeInDown">
+            <div class="login-body">
+                <div class="login-title"><strong>Bem vindo</strong>, Faça login para acessar</div>
+                <form id="form_login" action="index.php" class="form-horizontal" method="post">
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <input id="username" name="username" type="text" class="form-control" placeholder="Usuário"/>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <input id="password" name="password" type="password" class="form-control" placeholder="Senha"/>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-6">
+                            <input type="submit" name="btnLogin" id="btnLogin" class="btn btn-info btn-block" value="Login"/>
+                        </div>
+                        <div class="col-md-6">
+                            <a id="linkRegistre" href="#" class="btn btn-link btn-block">Registre-se</a>
+                            <!--<a href="#" class="btn btn-link btn-block">Esqueceu sua senha?</a>-->
+                        </div>
+                    </div>
+                </form>                
+            </div>
+            <!--START FOOTER LOGIN-->
+            <div class="login-footer">
+                <div class="pull-left">
+                    &copy; 2018 Portal America 1.0
+                </div>
+                <div class="pull-right">
+                    <span id="msgLogin" class="center label label-danger label-form" style="display: none;">Sistema em manutenção!</span>
+                </div>
+            </div>
+            <!--START FOOTER LOGIN-->
+
+        </div>
+        <!--END CONTAINER LOGIN-->
+
+        <!--START CONTAINER REGISTRAR-SE-->
+        <div id="registre_box" class="login-box animated fadeInDown" style="display: none" >
+            <div class="login-body">
+                <div class="login-title">Faça seu registro para validar seu acesso.</div>
+                <!--action="javascript:alert('Form #validate2 submited');"-->
+                <form  id="form_registro" role="form" class="form-horizontal" action="javascript:registro()">
+                        <div class="form-group">
+                            <div class="col-md-12">
+                                <input id="txtUsuario" type="text" value="" name="usuario" class="form-control" placeholder="E mail corporativo"/>
+                                <span class="help-block">Exemplo: pedro.alves@americaenergia.com.br</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-md-12">
+                                <input id="txtNome" type="text" class="form-control" name="nome" placeholder="Primeiro nome"/>
+                                <span class="help-block">Exemplo: Pedro </span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-md-12">
+                                <input id="txtSobrenome" type="text" class="form-control" name="sobrenome" placeholder="Sobrenome"/>
+                                <span class="help-block">Exemplo: Alvez </span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-md-12">
+                                <input id="txtCpf" type="text" class="form-control" name="cpf" placeholder="CPF" maxlength="14"/>
+                                <span class="help-block">Exemplo: 111.222.333-44</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-md-12">
+                                <input id="txtPassword" type="password" class="form-control" name="password_r"  placeholder="Senha"/>
+                                <span class="help-block">Senha min 5 caracteres, max 12</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-md-12">
+                                <input id="txtPasswordConfirm" type="password" class="form-control" name="re-password" placeholder="Confirme a senha"/>
+                                <span class="help-block"></span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-md-6">
+                                <!--type="submit"-->
+                                <input  type="submit" id="btnRegistrar" class="btn btn-info btn-block" value="Registrar"/>
+                            </div>
+                            <div class="col-md-6">
+                                <a id="btnCancelar" href="#" class="btn btn-link btn-block">Cancelar</a>
+                            </div>
+                        </div>
+                </form>
+            </div>
+            <!--START FOOTER REGISTRE-SE-->
+            <div class="login-footer">
+                <div class="pull-right">
+                    <span id="msgRegistre" class="center label label-danger label-form" style="display: none;">Sistema em manutenção!</span>
+                </div>
+            </div>
+            <!--START FOOTER LOGIN-->
+
+        </div>
+        <!--END CONTAINER REGISTRAR-SE-->
+    </div>
+
+    <!--MENSSAGEM REGISTRO SUCESSO-->
+    <div class="message-box message-box-success animated fadeIn open" id="message-regitro-sucesso" style="display: none;">
+        <div class="mb-container">
+            <div class="mb-middle">
+                <div class="mb-title"><span class="fa fa-check"></span> Registro efetuado com Succeso</div>
+                <div class="mb-content">
+                    <p>Seu registro para acesso ao portal América foi efetuado com sucesso. Aguarde o processo de ativação pelos administradores do portal para a liberação de acesso.</p>
+                </div>
+                <div class="mb-footer">
+                    <button id="btnCloseMsgRegistro"class="btn btn-default btn-lg pull-right mb-control-close">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!--MENSSAGEM CPF INVALIDO-->
+    <div class="message-box message-box-danger animated fadeIn open" id="message-regitro-cpf-invalido" style="display: none;">
+        <div class="mb-container">
+            <div class="mb-middle">
+                <div class="mb-title"><span class="fa fa-times"></span>CPF Invalido</div>
+                <div class="mb-content">
+                    <p>Este portal é de uso exclusivo para funcionários da empresa América e o CPF informado é inválido para o registro. Corrija o mesmo e tente novamente. Caso perssista a validação de CPF inválido procure um dos administradore do portal América para averiguar o cadastro dos seus dados. Obrigado!</p>
+            </div>
+                <div class="mb-footer">
+                    <button class="btn btn-default btn-lg pull-right mb-control-close">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--MENSSAGEM USUARIO JA POSSUI REGISTRO-->
+    <div class="message-box message-box-warning animated fadeIn open" id="message-registro-existe" style="display: none;">
+        <div class="mb-container">
+            <div class="mb-middle">
+                <div class="mb-title"><span class="fa fa-warning"></span> Usuário já Registrado no portal</div>
+                <div class="mb-content">
+                    <p>O seu usuário já possui um registro no portal América. Aguarde a ativação para liberação de acesso que será informada via email corporativo. Obrigado!</p>
+                </div>
+                <div class="mb-footer">
+                    <button class="btn btn-default btn-lg pull-right mb-control-close">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--START VALIDADE SCRIPT-->
+    <script type='text/javascript' src='./theme/js/plugins/jquery-validation/jquery.validate.js'></script>
+
+    <script type="text/javascript">
+        var jvalidate = $("#form_registro").validate({
+            ignore: [],
+            rules: {
+                usuario: {
+                    required: true,
+                    email: true
+                },
+                nome: {
+                    required: true,
+                    minlength: 2,
+                    maxlength: 20
+                },
+                sobrenome: {
+                    required: true,
+                    minlength: 2,
+                    maxlength: 20
+                },
+                cpf: {
+                    required: true,
+                },
+                password_r: {
+                    required: true,
+                    minlength: 5,
+                    maxlength: 12
+                },
+                're-password': {
+                    required: true,
+                    minlength: 5,
+                    maxlength: 12,
+                    equalTo: "#txtPassword"
+                }
+            // },
+            // messages: {
+            //     usuario: {
+            //         required: "Entre com um usuário de domínio @americaenergia.com"
+            //     },
+            //     nome: {
+            //         required: "testando",
+            //     }
+            }
+        });
+
+    </script>
+    <!--END VALIDADE SCRIPT-->
+
+    <!--&lt;!&ndash; START OPCOES DE TEMPLATE &ndash;&gt;-->
+    <!--<scriptSql RELATORIO PERFORMANCE type="text/javascript" src="./theme/js/settings.js"></scriptSql RELATORIO PERFORMANCE>-->
+    <!--&lt;!&ndash; END OPCOES DE TEMPLATE &ndash;&gt;-->

@@ -1,0 +1,111 @@
+<script type="text/javascript">
+    var remote = new Remote('php/comunicacao.php', 'colaborador','documento');
+    var remote1 = new Remote('php/comunicacao.php', 'configuracao','parametros');
+
+    var oTable;
+    var defTable;
+    var dir = "";
+
+    function resultGetDocumento(dados) {
+        renderizaTabelaDefault(dados);
+    }
+
+    function resultDiretorio(dados) {
+        dir = dados[0].dir;
+    }
+
+    function renderizaTabelaDefault(dados) {
+        if (oTable == null) {
+            defTable = $('#t_dados').html();
+        } else {
+            $('#t_dados').html(defTable);
+        }
+        var objDataTable = colunasDefaultDataTable($('#t_dados'), dados, function (data) {
+
+            //SET ELEMENTOS PARA PREVIEW
+            var name = data.find("td:nth-child(3)").text();
+            var file1 = dir+name;
+            $('#btnView').attr('href',file1);
+
+            //SET ELEMENTOS PARA DOWNLOAD
+            var href = 'php/services/colaborador/download.php?';
+            var file2 = href+'file='+name+'&dir='+dir;
+            $('#btnDown').attr('href',file2);
+            $('#btnDown').attr('target',"_blank");
+
+        });
+        oTable = $('#t_dados').dataTable(objDataTable);
+        $("#t_dados td:contains('Nenhum')").html('Nenhum documento compartilhado');
+        $("#t_dados th:contains('Informacao')").html('Informação');
+        $(window).resize();
+    }
+
+    $(document).ready(function () {
+        remote.executa("getDocumentoUsuario", null, resultGetDocumento, $('#pnlMeusDocumentos'), erroPersonalizado);
+        remote1.executa("getDiretorioCompartilhamentoDocumento",null, resultDiretorio, $('#divControles'), erroPersonalizado);
+
+        $("#btnView").on('click', function () {
+            var objTemp = oTable.fnGetData(oTable.closest("table").find(".selected"));
+            if (objTemp != null) {
+                $("#documento_box_view").modal();
+            }
+        });
+
+    });
+
+
+</script>
+
+
+<!-- START BREADCRUMB -->
+<ul class="breadcrumb">
+</ul>
+
+<!-- PAGE CONTENT WRAPPER -->
+<div class="page-content-wrap">
+    <div class="row">
+        <div class="col-md-6 col-md-offset-3 ">
+            <div id="pnlMeusDocumentos" class="panel panel-default">
+                <!--PAINEL DE CONTROLES-->
+                <div class="panel-heading">
+                    <h3 class="panel-title">Meus Documentos</h3>
+                    <ul class="panel-controls">
+                        <li><a href="" id="btnView" class="control-primary" data-acao="add" title="Ver documento" target="preview"><span class="fa fa-picture-o"></span></a></li>
+                        <li><a href="" id="btnDown" class="control-primary" data-acao="add" title="Baixar documento"><span class="fa fa-arrow-circle-down"></span></a></li>
+                    </ul>
+                </div>
+
+                <!--START DIV TABELA-->
+                <div class="panel-body">
+                    <div id="divPadrao" class="row">
+                        <div class="col-md-12">
+                            <table id="t_dados" class="table table-striped table-bordered table-condensed">
+
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <!--END DIV TABELA-->
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<!--START DIV-MODAL VIEW DOCUMENTO -->
+<div class="modal in" id="documento_box_view" tabindex="-1" role="dialog" aria-labelledby="smallModalHead" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content ">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="smallModalHead3">View do Documento</h4>
+            </div>
+            <div class="modal-body">
+                    <iframe align="center" id="preview" src="URL" name="preview" style="width: 100%; height: 600px"> </iframe>
+            </div>
+        </div>
+    </div>
+</div>
+<!--END DIV-MODAL VIEW DOCUMENTO -->

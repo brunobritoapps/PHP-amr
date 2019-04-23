@@ -1,0 +1,1999 @@
+CREATE TABLE dbo.Region
+    (Region_id int NOT NULL,
+    Region_Name char(5) NOT NULL)
+WITH (DISTRIBUTION = REPLICATE);
+GO
+
+CREATE SCHEMA Sistema;
+CREATE SCHEMA Acesso;
+CREATE SCHEMA Colaborador;
+
+GO
+
+ALTER SCHEMA dbo TRANSFER OBJECT::Sistema.paginas;
+
+GO
+--EXEMPLO DE COMO MOVER UMA TABELA PARA UM SCHEMA
+USE [AMR_P00_HOMOLOGACAO]
+GO
+
+/****** Object:  Table [dbo].[usuario]    Script Date: 28/09/2018 15:20:06 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+SET ANSI_PADDING ON
+GO
+
+CREATE TABLE [dbo].[usuario](
+	[id] [int] IDENTITY(1,1) NOT NULL,
+	[usuario] [varchar](50) NOT NULL,
+	[nome] [varchar](50) NOT NULL,
+	[email] [varchar](100) NULL,
+	[conta] [int] NOT NULL,
+	[senha] [char](40) NOT NULL,
+	[ativo] [bit] NULL
+) ON [PRIMARY]
+
+GO
+
+CREATE TABLE [dbo].[paginas](
+	[id] [int] IDENTITY(1,1) NOT NULL,
+	[permissao] [char](36) NOT NULL,
+	[nome] [varchar](50) NOT NULL,
+	[local] [varchar](500) NULL,
+	[icone] [varchar](50) NULL,
+	[desenvolvimento] [bit] NOT NULL,
+	[menu] [bit] NOT NULL,
+	[pai] [int] NULL,
+	[ordem] [int] NULL,
+	[nivel] [int] NULL,
+	[verificar] [bit] NOT NULL
+) ON [PRIMARY]
+
+
+
+CREATE TABLE [dbo].[permissoes_contaf](
+	[id] [int] IDENTITY(1,1) NOT NULL,
+	[id_conta] [int] NOT NULL,
+	[id_permissao] [int] NOT NULL
+) ON [PRIMARY]
+
+GO
+
+CREATE TABLE [dbo].[permissoes_contap](
+	[id] [int] IDENTITY(1,1) NOT NULL,
+	[id_conta] [int] NOT NULL,
+	[id_permissao] [int] NOT NULL
+) ON [PRIMARY]
+
+GO
+
+CREATE TABLE [dbo].[permissoes_funcao](
+	[id] [int] IDENTITY(1,1) NOT NULL,
+	[caminho] [varchar](250) NULL,
+	[classe] [varchar](250) NULL,
+	[funcao] [varchar](250) NULL
+) ON [PRIMARY]
+
+GO
+
+CREATE TABLE [dbo].[permissoes_nusuariof](
+	[id] [int] IDENTITY(1,1) NOT NULL,
+	[id_usuario] [int] NOT NULL,
+	[id_permissao] [int] NOT NULL
+) ON [PRIMARY]
+
+GO
+
+CREATE TABLE [dbo].[permissoes_nusuariop](
+	[id] [int] IDENTITY(1,1) NOT NULL,
+	[id_usuario] [int] NOT NULL,
+	[id_permissao] [int] NOT NULL
+) ON [PRIMARY]
+
+GO
+
+CREATE TABLE [dbo].[log_servicos](
+	[id] [int] IDENTITY(1,1) NOT NULL,
+	[usuario] [int] NOT NULL,
+	[funcao] [varchar](200) NOT NULL,
+	[parametros] [text] NULL,
+	[hora] [char](19) NOT NULL,
+	[duracao] [int] NOT NULL,
+	[ambiente] [bit] NOT NULL
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+
+GO
+
+CREATE TABLE [dbo].[contas](
+	[id] [int] IDENTITY(1,1) NOT NULL,
+	[nome] [varchar](50) NOT NULL
+) ON [PRIMARY]
+
+GO
+
+INSERT INTO contas(nome) VALUES('Master')
+
+GO
+
+INSERT INTO usuario(usuario, nome, email, conta, senha, ativo) VALUES('Teste', 'Teste Sobrenome', '', 1 ,'a33437b99b8bd1d927a03ccb11a1ca50e96dbe10',1)
+UPDATE usuario
+SET usuario = 'loop@consultoria.com'
+WHERE id=1;
+
+GO
+
+
+SET ANSI_PADDING OFF
+
+SELECT * FROM paginas
+--PAGINAS
+INSERT INTO paginas(permissao, nome, local ,icone, desenvolvimento, menu , pai , ordem, nivel , verificar)
+          VALUES('fb00013c-91f0-457b-bc68-8edb9cdb0c2c','Acesso','','fa fa-key',0,1,NULL,5,1,1)
+
+INSERT INTO paginas(permissao, nome, local ,icone, desenvolvimento, menu , pai , ordem, nivel , verificar)
+          VALUES('db9de3b4-edb0-4d01-a76c-be8468ec1080','Usuários','pages/acesso/usuario.html','',0,1,1,1,2,1)
+
+INSERT INTO paginas(permissao, nome, local ,icone, desenvolvimento, menu , pai , ordem, nivel , verificar)
+          VALUES('fad2d57e-4219-4e61-a031-c0de69e944bc','Permissões','pages/acesso/permissao.html','',0,1,1,2,2,1)
+
+INSERT INTO paginas(permissao, nome, local ,icone, desenvolvimento, menu , pai , ordem, nivel , verificar)
+          VALUES('7c3eaac3-6287-45f0-bebd-f21fdcc7df1c','Meu perfil','pages/acesso/perfil.html','',0,1,1,3,2,1)
+
+SELECT * FROM paginas
+
+INSERT INTO paginas(permissao, nome, local ,icone, desenvolvimento, menu , pai , ordem, nivel , verificar)
+          VALUES('c8020a25-4817-42e8-a1f1-2473da2dfeac','Painel','pages/painel/painel.html','fa-desktop',0,1,1,1,1,1)
+
+SELECT * FROM paginas ORDER BY id
+
+5	c8020a25-4817-42e8-a1f1-2473da2dfeac	Painel	""	fa-desktop	0	1		1	1	1
+7	34393b3f-f56d-4c4e-b911-7d804d188dd2	Dashboard	pages/painel/dashboard.html	""	0	1	5	1	2	1
+8	0884e834-ad70-4ea9-822a-989455623995	Dados gerais		fa-search	0	1		2	1	1
+9	b2b8c4ef-118a-4cbf-8c2b-782911a90da6	G.Empresas	pages/dados/grupo.html	""	0	1	7	1	2	1
+10	319bc746-66e0-4129-ad8b-0546c25596bf	Filiais	pages/dados/filial.html	""	0	1	7	2	2	1
+11	74519cc7-fd66-49ca-9ccf-f7756b2b21d0	Depart.	pages/dados/departamento.html	""	0	1	7	3	2	1
+12	6be538d0-5b61-4f2e-85d0-6413e77d91dd	C.Custos	pages/dados/ccusto.html	""	0	1	7	4	2	1
+16	b71e31f2-6e9e-4885-be1f-5c16fa28a0c0	Cadastros 		fa-pencil-square-o	0	1		3	3	1
+17	b492119b-794e-498a-9d86-f68a19d0a47e	Regras 	pages/cadastros/regras.html		0	1	12	1	2	1
+18	c931eca7-29dc-40f7-81c7-65f26d138c82	Colaborador		fa-user	0	1		4	1	1
+19	eef64cf5-f05d-47ab-a75c-778c7aac714d	Documentos	pages/colaborador/documentos.html		0	1	14	1	2	1
+25	3af84de5-1d59-41d3-b7b9-ef8fa3aab3ac	R.Dispesas	pages/colaborador/reembolso.html		0	1	14	2	2	1
+26	cbcc8644-eb06-4431-928b-e595ef3004d9	Notificações	pages/colaborador/notificacoes.html		0	1	14	3	2	1
+27	1b633187-f19f-4926-b7aa-8cabeb942064	Mensagens	pages/colaborador/mensagens.html		0	1	14	4	2	1
+29	0c5b4aaa-0fe9-409c-bd2a-cf756c3f0f2f	Compartilhamento		fa-share	0	1		5	2	1
+32	d39c3343-b86f-4ab5-828d-c0c3ea808f89	Avisos	pages/compartihamento/avisos.html		0	1	19	1	2	1
+33	b2e8530c-f0a1-485f-95ac-032f2c6a1a10	Mensagens	pages/compartilhamento/mensagens.html		0	1	19	2	2	1
+36	20a37443-52a6-4075-8662-4d1c0f90bcda	Documentos	pages/compartilhamento/documentos.html		0	1	19	3	2	1
+38	26c8cf23-4504-4a8e-8f0d-223ba26fb950	Configurações	pages/configuracoes/configuracoes.html	fa-cog	0	1		6	1	1
+
+SELECT * FROM usuario
+
+
+CREATE TABLE [dbo].[ativacao](
+	[id] [int] IDENTITY(1,1) NOT NULL,
+	[usuario] [int] NOT NULL,
+	[fnome] [varchar](200) NOT NULL,
+	[lname] [varchar](200) NOT NULL,
+	[cpf][varchar](200) NOT NULL
+	[data_hora] [char](19) NOT NULL,
+	[ativo] [bit] NULL
+) ON [PRIMARY]
+
+ALTER TABLE [dbo].[usuario]
+ADD [grupo_empresa] [int] ,
+    [filial_empresa] [int],
+    [departamento_empresa] [int],
+    [ccusto_empresa] [int],
+    [cargo_empresa] [int];
+
+CREATE TABLE [dbo].[cargo](
+	[id] [int] IDENTITY(1,1) NOT NULL,
+	[cargo] [varchar](200) NOT NULL,
+) ON [PRIMARY]
+
+CREATE TABLE [dbo].[departamento](
+	[id] [int] IDENTITY(1,1) NOT NULL,
+	[departamento] [varchar](200) NOT NULL,
+) ON [PRIMARY]
+
+
+SELECT * FROM usuario;
+
+SELECT u.usuario,e.Nome_Empresa,e.Nome_Filial,cc.Descricao,cg.codigo
+FROM usuario AS u
+INNER JOIN corporativo_vwEmpresas AS e ON e.Cod_Empresa = u.id_empresa
+INNER JOIN corporativo_vwCcustos AS cc ON cc.Codigo = u.id_ccusto
+INNER JOIN dbo.corporativo_departamento AS cg ON cg.id = u.id_cargo
+WHERE codigo LIKE '%Gestor Financeiro%'
+
+
+SELECT * FROM corporativo_vwFuncionarios
+
+INSERT INTO ativacao(email,primeiro_nome,ultimo_nome, cpf, senha, status, log)
+VALUES('lop@teste2','Primeiro','Ultimo','22954846852','40bd001563085fc35165329ea1ff5c5ecbdbbeef',0,'2018-09-28 21:49:57')
+
+INSERT INTO ativacao(email,primeiro_nome,ultimo_nome, cpf, senha, status, log)
+VALUES('lop@teste3','Primeiro','Ultimo','22954846852','40bd001563085fc35165329ea1ff5c5ecbdbbeef',0,'2018-09-28 21:49:57')
+
+SELECT codigo FROM corporativo_departamento WHERE codigo LIKE '%Recursos Humanos%'
+SELECT codigo FROM corporativo_departamento WHERE codigo LIKE '%Financeiro%'
+SELECT codigo FROM corporativo_departamento WHERE codigo LIKE '%Gestor%'
+
+SELECT f.A2_NOME,f.A2_CGC, f.A2_EMAIL FROM corporativo_vwFuncionarios AS f WHERE A2_CGC='35744475826' AND A2_EMAIL ='roseli.gomes@americaenergia.com.br'
+SELECT f.A2_NOME,f.A2_CGC FROM corporativo_vwFuncionarios AS f WHERE A2_CGC=
+SELECT f.A2_NOME,f.A2_CGC FROM corporativo_vwFuncionarios AS f WHERE f.A2_CGC=''
+
+SELECT DISTINCT e.Nome_Filial
+FROM corporativo_vwEmpresas AS e
+
+
+SELECT SUBSTRING (Codigo, 1, 3) AS id,
+FROM dbo.corporativo_vwCcustos
+WHERE Codigo = '1SC'
+
+SELECT COUNT (1)
+FROM dbo.corporativo_vwCcustos
+WHERE Codigo LIKE '1SP%'
+
+
+SELECT *
+FROM dbo.corporativo_vwCcustos
+WHERE Codigo = '1SPADM'
+-- DEPARTAMENTOS
+SELECT DISTINCT SUBSTRING ( Codigo,4, 3)AS Departamento, Descricao FROM corporativo_vwCcustos
+WHERE LEN(Codigo) < 7
+
+-- FILIAIS DISTINCTS
+SELECT DISTINCT SUBSTRING ( Codigo,2, 2)AS Fiial FROM corporativo_vwCcustos
+
+SELECT  Descricao,value
+FROM corporativo_vwCcustos
+CROSS APPLY STRING_SPLIT(value, '-')
+
+
+create function fSplit (@string varchar(max), @separador char(1))
+returns table as return
+    with a as (
+        select
+            id = 1,
+            len_string = len(@string) + 1,
+            ini = 1,
+            fim = coalesce(nullif(charindex(@separador, @string, 1), 0), len(@string) + 1),
+            elemento = ltrim(rtrim(substring(@string, 1, coalesce(nullif(charindex(@separador, @string, 1), 0), len(@string) + 1)-1)))
+        union all
+        select
+            id + 1,
+            len(@string) + 1,
+            convert(int, fim) + 1,
+            coalesce(nullif(charindex(@separador, @string, fim + 1), 0), len_string),
+            ltrim(rtrim(substring(@string, fim + 1, coalesce(nullif(charindex(@separador, @string, fim + 1), 0), len_string)-fim-1)))
+        from a where fim < len_string)
+    select id, elemento from a
+    -- incluir with option (maxrecursion 0) na chamada da FC para strings com mais de 100 elementos
+go
+
+
+
+-- APROVADORES POR DEPARTAMENTO
+SELECT d.codigo,d.descricao AS Departamento, n.descricao AS Nivel, (u.nome+' '+ CAST(u.sobrenome AS VARCHAR (50))) AS Funcionario
+FROM reembolso_aprovador_grupo AS a
+INNER JOIN usuario AS u ON u.id = a.id_usuario
+INNER JOIN corporativo_departamento AS d ON d.id = a.id_departamento
+INNER JOIN reembolso_aprovador_nivel AS n ON n.id = a.id_nivel_aprovador
+ORDER BY n.id,d.descricao
+
+
+SELECT n.id AS  id, n.descricao AS nivel
+      FROM reembolso_aprovador_nivel AS n
+      ORDER BY n.id
+
+
+
+SELECT e.Cod_Filial, dbo.fString(e.Nome_Empresa)AS Empresa
+        FROM corporativo_vwEmpresas AS e
+
+SELECT  e.Cod_Empresa AS id, dbo.fString(e.Nome_Empresa)AS empresa , e.Cod_Filial, dbo.fString(e.Nome_Filial)AS filial
+                    FROM corporativo_vwEmpresas AS e
+
+
+-- DADOS DA SOLICITACAO DE REEEMBOLSO
+SELECT r.data_inclusao, r.titulo_evento,u.nome, s.descricao AS status
+FROM reembolso_solicitacao AS r
+INNER JOIN usuario AS u ON u.id = r.id_usuario
+INNER JOIN reembolso_status AS s ON s.id = r.id_status
+INNER JOIN reembolso_tipo_despesa AS d ON  d.id = r.id_tipo_despesa
+ORDER BY r.id
+
+
+SELECT COUNT(c.id)AS total
+  FROM colaborador_notificacao AS c
+  WHERE c.id_usuario = ? AND id_status_count=0
+
+
+INSERT INTO teste(nome) OUTPUT INSERTED.id VALUES ('PAULO');
+
+UPDATE teste  SET nome = 'CAIO' OUTPUT DELETED.nome,INSERTED.nome,INSERTED.id WHERE id=5;
+
+
+
+-- CONSULTA DE USUARIO - FRAGMENTANDO EMPRESA+FILIAL+DEPARTAMENTO
+SELECT  SUBSTRING (id_ccusto, 1, 1) AS id_empresa,SUBSTRING (id_ccusto, 2, 2) AS filial,SUBSTRING (id_ccusto, 4, 3) AS departamento FROM usuario
+
+
+INSERT
+INTO usuario(usuario, nome, email, conta, senha, ativo)
+VALUES('Teste', 'Teste Sobrenome', '', 1 ,'a33437b99b8bd1d927a03ccb11a1ca50e96dbe10',1)
+
+UPDATE usuario
+SET usuario = 'loop@consultoria.com'
+WHERE id=1;
+
+
+
+
+
+--CONSULTA APROVADORES + NIVEL + USUARIO
+
+SELECT n.descricao,u.nome
+FROM reembolso_aprovador_usuario AS apu
+INNER JOIN reembolso_aprovador_grupo AS g ON g.id = apu.id_grupo
+INNER JOIN reembolso_aprovador_nivel AS n ON n.id = apu.id_nivel
+INNER JOIN usuario AS u ON u.id = apu.id_usuario
+WHERE apu.id_grupo=1
+ORDER BY n.id
+
+
+
+SELECT u.id, u.usuario AS email, u.nome, u.email, c.nome as permissao, u.conta as id_permissao, u.ativo as id_status, s.status as status
+FROM usuario AS u
+INNER JOIN contas AS c ON c.id = u.conta
+INNER JOIN usuario_status AS s ON s.id = u.ativo
+ORDER BY s.status
+
+
+
+SELECT g.nome,SELECT
+FROM reembolso_aprovador_grupo AS g
+
+
+SELECT a.id As id ,d.codigo AS codigo ,d.descricao AS departamento, n.descricao AS nivel, (u.nome+' '+ CAST(u.sobrenome AS VARCHAR (50))) AS funcionario
+                    FROM reembolso_aprovador_grupo AS a
+                    INNER JOIN usuario AS u ON u.id = a.id_usuario
+                    INNER JOIN reembolso_aprovador_nivel AS n ON n.id = a.id_nivel_aprovador
+                    ORDER BY n.id,d.descricao
+
+
+
+SELECT u.id, u.usuario ,u.nome,u.sobrenome,u.cpf AS cpf, u.id_ccusto, cc.Descricao AS descricao, c.nome AS conta, u.conta AS id_conta
+                    FROM usuario AS u
+                    INNER JOIN contas AS c ON c.id = u.conta
+                    INNER JOIN usuario_status AS s ON s.id = u.ativo
+                    INNER JOIN corporativo_vwCcustos AS cc ON cc.Codigo = u.id_ccusto
+                    WHERE u.id = 1
+
+SELECT u.id, u.usuario ,u.nome,u.sobrenome,u.cpf AS cpf, u.id_ccusto, cc.Descricao AS descricao, c.nome AS conta, u.conta AS id_conta
+                    FROM usuario AS u
+                    INNER JOIN contas AS c ON c.id = u.conta
+                    INNER JOIN usuario_status AS s ON s.id = u.ativo
+                    INNER JOIN corporativo_vwCcustos AS cc ON cc.Codigo = u.id_ccusto
+                    INNER JOIN corporativo_vwEmpresas AS e ON e.Cod_Empresa = CAST(SUBSTRING (u.id_ccusto,1,1) AS INTEGER )
+                    WHERE u.id = 1
+
+SELECT * FROM corporativo_vwEmpresas WHERE Cod_Empresa=1
+
+SELECT u.id, u.usuario ,u.nome,u.sobrenome,u.cpf AS cpf, u.id_ccusto, cc.Descricao AS descricao, c.nome AS conta, u.conta AS id_conta,
+       e.Nome_Empresa AS empresa ,e.Cod_Empresa AS id_empresa, e.Nome_Filial AS filial,
+       SUBSTRING (u.id_ccusto,2,2)AS unidade,
+       SUBSTRING (u.id_ccusto,4,3)AS departamento
+                    FROM usuario AS u
+                    INNER JOIN contas AS c ON c.id = u.conta
+                    INNER JOIN usuario_status AS s ON s.id = u.ativo
+                    INNER JOIN corporativo_vwCcustos AS cc ON cc.Codigo = u.id_ccusto
+                    INNER JOIN corporativo_vwEmpresas AS e ON e.Cod_Empresa = CAST(SUBSTRING (u.id_ccusto,1,1) AS INTEGER )
+                    WHERE u.id = 1
+
+SELECT u.id, u.usuario ,u.nome,u.sobrenome,u.cpf , u.id_ccusto, cc.Descricao AS ccusto, c.nome AS conta, u.conta AS id_conta,
+                            e.Nome_Empresa AS empresa ,e.Cod_Empresa AS id_empresa, e.Nome_Filial AS filial,
+                            SUBSTRING (u.id_ccusto,2,2)AS unidade,
+                            SUBSTRING (u.id_ccusto,4,3)AS id_departamento,
+                            d.descricao AS departamento
+                            FROM usuario AS u
+                            INNER JOIN contas AS c ON c.id = u.conta
+                            INNER JOIN usuario_status AS s ON s.id = u.ativo
+                            INNER JOIN corporativo_vwCcustos AS cc ON cc.Codigo = u.id_ccusto
+                            INNER JOIN corporativo_vwEmpresas AS e ON e.Cod_Empresa = CAST(SUBSTRING (u.id_ccusto,1,1) AS INTEGER )
+                            INNER JOIN corporativo_departamento AS d ON d.codigo = SUBSTRING (u.id_ccusto,4,3)
+                            WHERE u.usuario='loop@master' AND u.ativo = 1
+
+SELECT u.id, u.usuario ,u.nome,u.sobrenome,u.cpf , u.id_ccusto, cc.Descricao AS ccusto, c.nome AS conta, u.conta AS id_conta,
+                            e.Nome_Empresa AS empresa ,e.Cod_Empresa AS id_empresa, e.Nome_Filial AS filial,
+                            SUBSTRING (u.id_ccusto,2,2)AS unidade,
+                            SUBSTRING (u.id_ccusto,4,3)AS id_departamento,
+                            d.descricao AS departamento
+                            FROM usuario AS u
+                            INNER JOIN contas AS c ON c.id = u.conta
+                            INNER JOIN usuario_status AS s ON s.id = u.ativo
+                            INNER JOIN corporativo_vwCcustos AS cc ON cc.Codigo = u.id_ccusto
+                            INNER JOIN corporativo_vwEmpresas AS e ON e.Cod_Empresa = CAST(SUBSTRING (u.id_ccusto,1,1) AS INTEGER )
+                            INNER JOIN corporativo_departamento AS d ON d.codigo = SUBSTRING (u.id_ccusto,4,3)
+                            WHERE u.usuario='loop@master' AND u.senha='40bd001563085fc35165329ea1ff5c5ecbdbbeef' AND u.ativo = 1
+
+SELECT u.id,u.usuario,u.nome,u.sobrenome,u.cpf,u.id_ccusto, u.conta AS id_conta,ct.nome as conta
+                          FROM usuario AS u
+                          INNER JOIN contas AS ct ON ct.id = u.conta
+                          WHERE u.usuario='loop@master' AND u.senha='40bd001563085fc35165329ea1ff5c5ecbdbbeef' AND u.ativo = 1
+
+
+SELECT c.Codigo AS id,c.Descricao AS descricao
+                    FROM corporativo_vwCcustos AS c
+                    WHERE c.Codigo LIKE '1MG%'
+
+
+CREATE FUNCTION dbo.fnRemoveZeros
+(@TEXTO AS VARCHAR(30), @DIRECAO BIT)
+RETURNS VARCHAR(30)
+AS
+BEGIN
+    DECLARE @RETORNO VARCHAR(30)
+    IF @DIRECAO = 0 --Remover zeros a esquerda
+     SET @RETORNO = SUBSTRING(@TEXTO,PATINDEX('%[a-z,1-9]%',@TEXTO),LEN(@TEXTO))
+    ELSE --Remover zeros a direita
+     SET @RETORNO = REVERSE(SUBSTRING(REVERSE(@TEXTO),PATINDEX('%[a-z,1-9]%',REVERSE(@TEXTO)),LEN(@TEXTO)))
+    RETURN (@RETORNO)
+END
+GO
+
+
+
+SELECT n.descricao,u.usuario,u.nome, u.nome,
+       e.Nome_Empresa,
+       d.descricao AS departamento,
+       cc.Descricao
+FROM reembolso_aprovador_usuario AS apu
+      LEFT JOIN reembolso_aprovador_grupo AS g ON g.id = apu.id_grupo
+      LEFT JOIN reembolso_aprovador_nivel AS n ON n.id = apu.id_nivel
+      LEFT JOIN usuario AS u ON u.id = apu.id_usuario
+      LEFT JOIN corporativo_vwEmpresas AS e ON e.Cod_Empresa = CAST(SUBSTRING (u.id_ccusto,1,1) AS INTEGER )
+      LEFT JOIN corporativo_departamento AS d ON d.codigo = SUBSTRING (u.id_ccusto,4,3)
+      LEFT JOIN corporativo_vwCcustos AS cc ON cc.Codigo = u.id_ccusto
+WHERE apu.id_grupo=1
+ORDER BY n.id
+
+
+SELECT * FROM dbo.corporativo_vwFuncionarios t WHERE A2_CGC = '35744475826'
+
+SELECT GETDATE();
+
+
+
+SELECT u.id, u.usuario ,u.nome,u.cpf AS cpf,
+          e.Nome_Empresa AS empresa,
+          cc.Descricao AS centro_de_custo,
+          g.nome AS grupo,
+          s.status
+          FROM usuario AS u
+          LEFT JOIN contas AS c ON c.id = u.conta
+          LEFT JOIN usuario_status AS s ON s.id = u.ativo
+          LEFT JOIN corporativo_vwCcustos AS cc ON cc.Codigo = u.id_ccusto
+          LEFT JOIN corporativo_vwEmpresas AS e ON e.Cod_Empresa = CAST(SUBSTRING (u.id_ccusto,1,1) AS INTEGER )
+          LEFT JOIN reembolso_aprovador_grupo AS g ON g.id = u.id_grupo
+
+ SELECT u.id, u.usuario ,u.nome,u.cpf AS cpf,
+          e.Nome_Empresa AS empresa,e.Nome_Filial,
+          cc.Descricao AS centro_de_custo,
+          g.nome AS grupo,
+          s.status
+          FROM usuario AS u
+          LEFT JOIN contas AS c ON c.id = u.conta
+          LEFT JOIN usuario_status AS s ON s.id = u.ativo
+          LEFT JOIN corporativo_vwCcustos AS cc ON cc.Codigo = u.id_ccusto
+          LEFT JOIN corporativo_vwEmpresas AS e ON dbo.fRemoveZeros(e.Cod_Empresa,0) = SUBSTRING (u.id_ccusto,1,1)
+          LEFT JOIN reembolso_aprovador_grupo AS g ON g.id = u.id_grupo
+
+SELECT * FROM corporativo_vwEmpresas WHERE Cod_Empresa='01'
+
+
+
+SELECT dbo.fRemoveZeros('01',0) AS teste;
+
+
+
+SELECT g.id, g.nome, d.id AS id_departamento,d.descricao AS departamento, g.descricao
+                    FROM reembolso_aprovador_grupo AS g
+                    LEFT JOIN corporativo_departamento AS d ON d.id = g.id_departamento
+                    ORDER BY g.nome
+
+
+
+SELECT u.usuario,u.nome, u.sobrenome,
+                         e.Nome_Empresa AS empresa,
+                         d.descricao AS departamento,
+                         cc.Descricao AS ccusto
+                    FROM reembolso_aprovador_usuario AS apu
+                          LEFT JOIN reembolso_aprovador_grupo AS g ON g.id = apu.id_grupo
+                          LEFT JOIN reembolso_aprovador_nivel AS n ON n.id = apu.id_nivel
+                          LEFT JOIN usuario AS u ON u.id = apu.id_usuario
+                          LEFT JOIN corporativo_vwEmpresas AS e ON dbo.fRemoveZeros(e.Cod_Empresa,0) = SUBSTRING (u.id_ccusto,1,1)
+                          LEFT JOIN corporativo_departamento AS d ON d.codigo = SUBSTRING (u.id_ccusto,4,3)
+                          LEFT JOIN corporativo_vwCcustos AS cc ON cc.Codigo = u.id_ccusto
+                    WHERE apu.id_grupo=1
+                    ORDER BY n.id
+
+SELECT u.id, u.usuario ,u.nome,u.sobrenome,
+                        e.Nome_Empresa AS empresa,
+                        d.descricao AS departamento
+                        FROM usuario AS u
+                        LEFT JOIN corporativo_departamento AS d ON d.codigo = SUBSTRING (u.id_ccusto,4,3)
+                        LEFT JOIN corporativo_vwEmpresas AS e ON dbo.fRemoveZeros(e.Cod_Empresa,0) = SUBSTRING (u.id_ccusto,1,1)
+                        WHERE u.id=1 AND u.ativo=1
+
+
+
+-- APROVADOR 1  DE 5
+SELECT DISTINCT rs.id,rs.titulo_evento, u.nome,rs.id_empresa,e.Nome_Empresa,rs.data_inclusao,rs.data_envio,
+      (SELECT COUNT(id) AS n_item FROM reembolso_item WHERE id_reembolso_solicitacao=rs.id)AS numero_itens,
+       CASE WHEN  rs.id_status<100 AND rs.id_status>0 THEN CAST(rs.id_status AS VARCHAR)+'-'+CAST((SELECT COUNT(id) AS n_item FROM reembolso_item WHERE id_reembolso_solicitacao=rs.id)AS VARCHAR ) ELSE '' END AS progresso,
+       CASE id_status WHEN 100 THEN 'APROVADO' WHEN 200 THEN 'REPROVADO' WHEN 0 THEN 'ENVIADO'  WHEN -1 THEN 'EDICAO' ELSE 'EM ANALISE' END AS andamento
+    FROM reembolso_solicitacao AS rs
+    LEFT JOIN usuario AS u ON u.id = rs.id_usuario
+    LEFT JOIN vwEmpresas AS e ON dbo.fRemoveZeros(e.Cod_Empresa,0)= rs.id_empresa
+    ORDER by rs.id
+    WHERE rs.id=1
+
+    SELECT COUNT(id) AS n_item FROM reembolso_item WHERE id_reembolso_solicitacao=1
+
+
+
+SELECT SUM(CAST(ri.valor AS DECIMAL (18,4)))AS total FROM reembolso_itens AS ri WHERE id_reembolso_solicitacao=1
+
+
+SELECT SUM(CAST(ri.valor AS DECIMAL (18,2)))AS total FROM reembolso_itens AS ri WHERE ri.id_reembolso_solicitacao=2
+
+SELECT itm.data_item AS data, cli.Descricao AS cliente, ntz.Descricao AS natureza, cct.Descricao, itm.valor, itm.observacao, itm.documento
+                    FROM reembolso_itens AS itm
+                    LEFT JOIN corporativo_vwClientes AS cli ON cli.Codigo = itm.id_cliente
+                    LEFT JOIN corporativo_vwNaturezas AS ntz ON ntz.Codigo = itm.id_natureza
+                    LEFT JOIN corporativo_vwCcustos AS cct ON cct.Codigo = itm.id_ccusto
+                    WHERE itm.id_reembolso_solicitacao = 2
+                    ORDER by itm.id
+
+
+
+SELECT  e.Cod_Empresa AS id, dbo.fString(e.Nome_Empresa) AS empresa , e.Cod_Filial, dbo.fString(e.Nome_Filial)AS filial
+FROM corporativo_vwEmpresas AS e
+WHERE e.Cod_Empresa=1
+
+
+
+
+-- SELECT ULTIMO USUARIO DO GRUPO
+SELECT TOP 1 id_usuario
+FROM reembolso_aprovador_usuario
+WHERE id_grupo =1
+ORDER BY ordem DESC
+
+
+
+
+-------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------TESTE----------------------------------------------------------
+-- UPDATE STATUS DO APROVADOR
+DECLARE @S int
+DECLARE @N int
+SET @S=1
+SET @N=0
+DECLARE @N_ORDEM int
+DECLARE @ID_USUARIO int
+DECLARE @ID_GRUPO_USUARIO int
+-- USUARIO
+SET @ID_USUARIO =29
+SELECT @ID_GRUPO_USUARIO = u.id_grupo
+  FROM usuario AS u
+  WHERE u.id = @ID_USUARIO;
+DECLARE @ID_APROVADOR int
+-- APROVADOR
+SET @ID_APROVADOR =1
+DECLARE @ID_GRUPO_APROVADOR int
+SELECT @ID_GRUPO_APROVADOR = u.id_grupo
+  FROM usuario AS u
+  INNER JOIN reembolso_aprovador_usuario AS au ON au.id_grupo = u.id_grupo
+  WHERE u.id = @ID_APROVADOR
+
+IF
+  (SELECT COUNT (ga.ordem)
+  FROM reembolso_aprovador_usuario AS ga
+  LEFT JOIN reembolso_aprovador_grupo AS gp ON gp.id = ga.id_grupo
+  WHERE ga.id_usuario = @ID_APROVADOR AND gp.id=@ID_GRUPO_USUARIO)=1
+
+  BEGIN
+--     SELECIONA ORDEM DO APROVADOR
+      SELECT @N_ORDEM = ga.ordem
+          FROM reembolso_aprovador_usuario AS ga
+          LEFT JOIN reembolso_aprovador_grupo AS gp ON gp.id = ga.id_grupo
+          WHERE ga.id_usuario = @ID_APROVADOR AND gp.id=@ID_GRUPO_USUARIO
+      SELECT @S AS status,@ID_APROVADOR AS aprovador,@ID_USUARIO AS usuario,@ID_GRUPO_USUARIO AS grupo,@N_ORDEM AS ordem;
+--    SELECIONA O ULTIMO APROVADOR
+      DECLARE @ID_ULTIMO_APROVADOR int
+      DECLARE @ULTIMO_ORDEM int
+      SELECT TOP 1 @ID_ULTIMO_APROVADOR=id_usuario,@ULTIMO_ORDEM=ordem
+        FROM reembolso_aprovador_usuario
+        WHERE id_grupo = @ID_GRUPO_USUARIO
+        ORDER BY ordem DESC
+--         SELECT @ID_ULTIMO_APROVADOR AS id_aprovador
+--    CONDICAO AVALIA SE O APROVADOR E O ULTIMO
+      IF
+        (@ID_ULTIMO_APROVADOR=@ID_APROVADOR)
+        BEGIN
+          PRINT 'VOCE E O ULTIMO'
+          PRINT CONCAT('O ID DE GRUPO É - ', @ID_GRUPO_APROVADOR)
+          PRINT CONCAT('O ULTIMO APROVADOR E DE ORDEM - ', @N_ORDEM)
+          PRINT CONCAT('SEU ID É - ', @ID_APROVADOR)
+        END
+      ELSE
+        BEGIN
+          PRINT 'VOCE NAO E O ULTIMO'
+          PRINT CONCAT('O ULTIMO APROVADOR E DE ID - ', @ID_ULTIMO_APROVADOR)
+          PRINT CONCAT('O ULTIMO APROVADOR E DE ORDEM - ', @ULTIMO_ORDEM)
+          PRINT CONCAT('SEU ID É - ', @ID_APROVADOR)
+        END
+  END
+ELSE
+  BEGIN
+       SELECT @N AS status;
+  END
+
+----------------------------------------------------------------------------------------------------------------
+-- FUNCAO SUB STRING
+CREATE FUNCTION dbo.fSubstringIndex
+(
+    @str NVARCHAR(4000),
+    @delim NVARCHAR(1),
+    @count INT
+)
+RETURNS NVARCHAR(4000)
+WITH SCHEMABINDING
+BEGIN
+    DECLARE @XmlSourceString XML;
+    SET @XmlSourceString = (SELECT N'<root><row>' + REPLACE( (SELECT @str AS '*' FOR XML PATH('')) , @delim, N'</row><row>' ) + N'</row></root>');
+
+    RETURN STUFF
+    (
+        ((
+            SELECT  @delim + x.XmlCol.value(N'(text())[1]', N'NVARCHAR(4000)') AS '*'
+            FROM    @XmlSourceString.nodes(N'(root/row)[position() <= sql:variable("@count")]') x(XmlCol)
+            FOR XML PATH(N''), TYPE
+        ).value(N'.', N'NVARCHAR(4000)')),
+        1, 1, N''
+    );
+END
+
+SELECT dbo.fSubstringIndex('www.somewebsite.com', '.', -2) AS Result
+-- FILTRANDO
+SELECT dbo.fSubstringIndex(Nome_Empresa,' ',2) AS empresa FROM vwEmpresas
+
+------------------------------------------------------------------------------------------------------------------
+-- CONSULTA CENTROS DE CUSTOS DO USUARIO
+DECLARE @ID_USUARIO int
+SET @ID_USUARIO=1
+SELECT DISTINCT e.Cod_Empresa AS id ,e.Nome_Empresa AS empresa
+FROM vwEmpresas AS e
+WHERE e.Cod_Empresa IN (SELECT SUBSTRING (id_ccusto,1,1)FROM usuario_ccusto AS uc WHERE uc.id_usuario =@ID_USUARIO)
+
+
+
+------------------------------------------------------------------------------------------------------------------
+-- UPDATE STATUS DO APROVADOR
+DECLARE @REEMBOLSO int
+DECLARE @S int
+DECLARE @N int
+SET @REEMBOLSO=58
+SET @S=1
+SET @N=0
+DECLARE @N_ORDEM int
+DECLARE @ID_USUARIO int
+DECLARE @ID_GRUPO_USUARIO int
+-- USUARIO
+SET @ID_USUARIO =35
+SELECT @ID_GRUPO_USUARIO = u.id_grupo
+  FROM usuario AS u
+  WHERE u.id = @ID_USUARIO;
+DECLARE @ID_APROVADOR int
+-- APROVADOR
+SET @ID_APROVADOR =1
+DECLARE @ID_GRUPO_APROVADOR int
+SELECT @ID_GRUPO_APROVADOR = u.id_grupo
+  FROM usuario AS u
+  INNER JOIN reembolso_aprovador_usuario AS au ON au.id_grupo = u.id_grupo
+  WHERE u.id = @ID_APROVADOR
+
+-- AVALIA QUANTOS APROVADORES É COMPOSTO O GRUPO
+IF
+  (SELECT COUNT (ga.ordem)
+  FROM reembolso_aprovador_usuario AS ga
+  LEFT JOIN reembolso_aprovador_grupo AS gp ON gp.id = ga.id_grupo
+  WHERE ga.id_usuario = @ID_APROVADOR AND gp.id=@ID_GRUPO_USUARIO)=1
+
+  BEGIN
+--     SELECIONA ORDEM DO APROVADOR
+      SELECT @N_ORDEM = ga.ordem
+          FROM reembolso_aprovador_usuario AS ga
+          LEFT JOIN reembolso_aprovador_grupo AS gp ON gp.id = ga.id_grupo
+          WHERE ga.id_usuario = @ID_APROVADOR AND gp.id=@ID_GRUPO_USUARIO
+--    SELECIONA O ULTIMO APROVADOR
+      DECLARE @ID_ULTIMO_APROVADOR int
+      DECLARE @ULTIMO_ORDEM int
+      SELECT TOP 1 @ID_ULTIMO_APROVADOR=id_usuario,@ULTIMO_ORDEM=ordem
+        FROM reembolso_aprovador_usuario
+        WHERE id_grupo = @ID_GRUPO_USUARIO
+        ORDER BY ordem DESC
+
+      SELECT @S AS status,@ID_APROVADOR AS aprovador,@ID_USUARIO AS usuario,@ID_GRUPO_USUARIO AS grupo,@N_ORDEM AS ordem, @ID_ULTIMO_APROVADOR AS ultimo;
+
+--    SELECT @ID_ULTIMO_APROVADOR AS id_aprovador
+--    CONDICAO AVALIA SE O APROVADOR E O ULTIMO
+      IF
+          (@ID_ULTIMO_APROVADOR=@ID_APROVADOR)
+          BEGIN
+              PRINT 'VOCE E O ULTIMO'
+              PRINT CONCAT('O GRUPO É - ', @ID_GRUPO_APROVADOR)
+              PRINT CONCAT('O ULTIMO APROVADOR E DE ORDEM - ', @N_ORDEM)
+              PRINT CONCAT('SEU ID É - ', @ID_APROVADOR)
+              UPDATE reembolso_solicitacao
+                SET id_status = 100
+              WHERE id = @REEMBOLSO
+          END
+        --    CONDICAO CASO VC NAO SEJA O ULTIMO APROVADOR
+      ELSE
+          BEGIN
+              PRINT 'VOCE NAO E O ULTIMO'
+              PRINT CONCAT('O ULTIMO APROVADOR E DE ID - ', @ID_ULTIMO_APROVADOR)
+              PRINT CONCAT('O ULTIMO APROVADOR E DE ORDEM - ', @ULTIMO_ORDEM)
+              PRINT CONCAT('A SUA ORDEM DE APROVADOR É - ', @N_ORDEM)
+              PRINT CONCAT('SEU ID É - ', @ID_APROVADOR)
+              PRINT CONCAT('O PROXIMO APROVADOR É - ', @N_ORDEM+1)
+              UPDATE reembolso_solicitacao
+                SET id_status = @N_ORDEM+1
+              WHERE id = @REEMBOLSO
+          END
+  END
+ELSE
+  BEGIN
+       SELECT @N AS status;
+  END
+
+
+
+
+
+------------------------------------------------------------------------------------------------------------------
+-- UPDATE STATUS DO APROVADOR
+DECLARE @S int
+DECLARE @N int
+SET @S=1
+SET @N=0
+DECLARE @N_ORDEM int
+DECLARE @ID_USUARIO int
+DECLARE @ID_GRUPO_USUARIO int
+-- USUARIO
+SET @ID_USUARIO =35
+SELECT @ID_GRUPO_USUARIO = u.id_grupo
+  FROM usuario AS u
+  WHERE u.id = @ID_USUARIO;
+DECLARE @ID_APROVADOR int
+-- APROVADOR
+SET @ID_APROVADOR =1
+DECLARE @ID_GRUPO_APROVADOR int
+SELECT @ID_GRUPO_APROVADOR = u.id_grupo
+  FROM usuario AS u
+  INNER JOIN reembolso_aprovador_usuario AS au ON au.id_grupo = u.id_grupo
+  WHERE u.id = @ID_APROVADOR
+
+-- AVALIA QUANTOS APROVADORES É COMPOSTO O GRUPO
+IF
+  (SELECT COUNT (ga.ordem)
+  FROM reembolso_aprovador_usuario AS ga
+  LEFT JOIN reembolso_aprovador_grupo AS gp ON gp.id = ga.id_grupo
+  WHERE ga.id_usuario = @ID_APROVADOR AND gp.id=@ID_GRUPO_USUARIO)=1
+
+  BEGIN
+--     SELECIONA ORDEM DO APROVADOR
+      SELECT @N_ORDEM = ga.ordem
+          FROM reembolso_aprovador_usuario AS ga
+          LEFT JOIN reembolso_aprovador_grupo AS gp ON gp.id = ga.id_grupo
+          WHERE ga.id_usuario = @ID_APROVADOR AND gp.id=@ID_GRUPO_USUARIO
+--    SELECIONA O ULTIMO APROVADOR
+      DECLARE @ID_ULTIMO_APROVADOR int
+      DECLARE @ULTIMO_ORDEM int
+      SELECT TOP 1 @ID_ULTIMO_APROVADOR=id_usuario,@ULTIMO_ORDEM=ordem
+        FROM reembolso_aprovador_usuario
+        WHERE id_grupo = @ID_GRUPO_USUARIO
+        ORDER BY ordem DESC
+
+      SELECT @S AS status,@ID_APROVADOR AS aprovador,@ID_USUARIO AS usuario,@ID_GRUPO_USUARIO AS grupo,@N_ORDEM AS ordem, @ID_ULTIMO_APROVADOR AS ultimo;
+
+--    SELECT @ID_ULTIMO_APROVADOR AS id_aprovador
+--    CONDICAO AVALIA SE O APROVADOR E O ULTIMO
+      IF
+          (@ID_ULTIMO_APROVADOR=@ID_APROVADOR)
+          BEGIN
+              PRINT 'VOCE E O ULTIMO'
+              PRINT CONCAT('O GRUPO É - ', @ID_GRUPO_APROVADOR)
+              PRINT CONCAT('O ULTIMO APROVADOR E DE ORDEM - ', @N_ORDEM)
+              PRINT CONCAT('SEU ID É - ', @ID_APROVADOR)
+              UPDATE reembolso_solicitacao
+                SET id_status = 100
+              WHERE id = @REEMBOLSO
+          END
+        --    CONDICAO CASO VC NAO SEJA O ULTIMO APROVADOR
+      ELSE
+          BEGIN
+              PRINT 'VOCE NAO E O ULTIMO'
+              PRINT CONCAT('O ULTIMO APROVADOR E DE ID - ', @ID_ULTIMO_APROVADOR)
+              PRINT CONCAT('O ULTIMO APROVADOR E DE ORDEM - ', @ULTIMO_ORDEM)
+              PRINT CONCAT('A SUA ORDEM DE APROVADOR É - ', @N_ORDEM)
+              PRINT CONCAT('SEU ID É - ', @ID_APROVADOR)
+              PRINT CONCAT('O PROXIMO APROVADOR É - ', @N_ORDEM+1)
+              UPDATE reembolso_solicitacao
+                SET id_status = @N_ORDEM+1
+              WHERE id = @REEMBOLSO
+          END
+  END
+ELSE
+  BEGIN
+       SELECT @N AS status;
+  END
+
+
+------------------------------------------------------------------------------------------------------------------
+-- SELECT SOLICITACOES PARA O APROVADOR ------------------------TESTE 1 ------------------------------------------
+DECLARE @S int
+DECLARE @N int
+SET @S=1
+SET @N=0
+DECLARE @N_ORDEM int
+DECLARE @ID_USUARIO int
+DECLARE @ID_GRUPO_USUARIO int
+-- USUARIO
+SET @ID_USUARIO =33
+SELECT @ID_GRUPO_USUARIO = u.id_grupo
+  FROM usuario AS u
+  WHERE u.id = @ID_USUARIO
+DECLARE @ID_APROVADOR int
+-- APROVADOR
+SET @ID_APROVADOR =1
+DECLARE @ID_GRUPO_APROVADOR int
+SELECT @ID_GRUPO_APROVADOR = u.id_grupo
+  FROM usuario AS u
+  INNER JOIN reembolso_aprovador_usuario AS au ON au.id_grupo = u.id_grupo
+  WHERE u.id = @ID_APROVADOR
+
+IF
+  (SELECT COUNT (ga.ordem)
+  FROM reembolso_aprovador_usuario AS ga
+  LEFT JOIN reembolso_aprovador_grupo AS gp ON gp.id = ga.id_grupo
+  WHERE ga.id_usuario = @ID_APROVADOR AND gp.id=@ID_GRUPO_USUARIO)=1
+
+  BEGIN
+      SELECT @N_ORDEM = ga.ordem
+          FROM reembolso_aprovador_usuario AS ga
+          LEFT JOIN reembolso_aprovador_grupo AS gp ON gp.id = ga.id_grupo
+          WHERE ga.id_usuario = @ID_APROVADOR AND gp.id=@ID_GRUPO_USUARIO
+       --SELECT @S AS status,@ID_APROVADOR AS aprovador,@ID_USUARIO AS usuario,@ID_GRUPO_APROVADOR AS grupo,@N_ORDEM AS ordem;
+      IF (@S = 1)
+          BEGIN
+              SELECT DISTINCT rs.id,rs.titulo_evento,d.descricao AS despesa,g.nome AS grupo,
+                      (SELECT SUM(CAST(ri.valor AS DECIMAL (18,2))) FROM reembolso_itens AS ri WHERE ri.id_reembolso_solicitacao=rs.id)AS total,
+                       u.nome,u.id AS usuario,e.Nome_Empresa AS empresa,rs.data_inclusao,rs.data_envio,
+                      (SELECT COUNT(id) AS n_item FROM reembolso_itens WHERE id_reembolso_solicitacao=rs.id)AS itens,
+                       CASE WHEN  rs.id_status<100 AND rs.id_status>0 THEN CAST(rs.id_status AS VARCHAR)+'-'+CAST((SELECT COUNT(id_grupo) AS n_aprov FROM reembolso_aprovador_usuario AS rau WHERE rau.id_grupo=u.id_grupo)AS VARCHAR ) ELSE '' END AS progresso,
+                       CASE id_status WHEN 100 THEN 'APROVADO' WHEN 200 THEN 'REPROVADO' WHEN 0 THEN 'ENVIADO'  WHEN -1 THEN 'EDICAO' ELSE 'EM ANALISE' END AS status
+                FROM reembolso_solicitacao AS rs
+                LEFT JOIN usuario AS u ON u.id = rs.id_usuario
+                LEFT JOIN vwEmpresas AS e ON dbo.fRemoveZeros(e.Cod_Empresa,0)= rs.id_empresa
+                LEFT JOIN reembolso_tipo_despesa AS d ON d.id = rs.id_tipo_despesa
+                LEFT JOIN reembolso_aprovador_grupo AS g ON g.id = u.id_grupo
+                WHERE rs.id_status=@N_ORDEM-1 AND u.id=@ID_USUARIO
+                ORDER by rs.id
+        END
+  END
+ELSE
+  BEGIN
+       SELECT @N AS status;
+  END
+
+------------------------------------------------------------------------------------------------------------------
+-- SELECT SOLICITACOES PARA O APROVADOR ------------------------TESTE 2 --------------------------------28/10/2018
+--------------------------------------------------------------------------------------------------------STATUS - OK
+
+-- PRIMEIRA CONSULTA DO GRUPO DO APROVADOR
+DECLARE @ID_APROVADOR int
+SET @ID_APROVADOR =1
+DECLARE @ID_GRUPO_APROVADOR int
+SELECT @ID_GRUPO_APROVADOR = u.id_grupo
+      FROM usuario AS u
+      WHERE u.id = @ID_APROVADOR
+
+
+-- USUARIO - 1:n
+DECLARE @ID_USUARIO int
+DECLARE @STATUS_REEMBOLSO int
+DECLARE @ID_REEMBOLSO int
+SET @ID_REEMBOLSO=61;
+SELECT @ID_USUARIO=r.id_usuario
+       ,@STATUS_REEMBOLSO=r.id_status
+      FROM reembolso_solicitacao AS r
+      WHERE id = @ID_REEMBOLSO
+
+      DECLARE @S int
+      DECLARE @N int
+      SET @S=1
+      SET @N=0
+      DECLARE @N_ORDEM int
+
+      DECLARE @ID_GRUPO_USUARIO int
+      SELECT @ID_GRUPO_USUARIO = u.id_grupo
+          FROM usuario AS u
+      WHERE u.id = @ID_USUARIO;
+
+      PRINT CONCAT('STATUS REEMBOLSO - ', @STATUS_REEMBOLSO)
+      -- AVALIA SE O APROVADOR E O USUARIO SOLICITANTE TEM VINCULO COM O APROVADOR
+      IF
+      (SELECT COUNT (ga.ordem)
+          FROM reembolso_aprovador_usuario AS ga
+          LEFT JOIN reembolso_aprovador_grupo AS gp ON gp.id = ga.id_grupo
+      WHERE ga.id_usuario = @ID_APROVADOR AND gp.id=@ID_GRUPO_USUARIO)=1
+
+      BEGIN
+           PRINT 'ESTA SOLICITACAO ESTA NO SEU GRUPO DE APROVACAO'
+          -- SELECIONA ORDEM DO APROVADOR EM QUE O MESMO SE ENCONTRA NO GRUPO DO USUARIO SOLICITANTE 1:1
+          SELECT @N_ORDEM = ga.ordem
+              FROM reembolso_aprovador_usuario AS ga
+              LEFT JOIN reembolso_aprovador_grupo AS gp ON gp.id = ga.id_grupo
+          WHERE ga.id_usuario = @ID_APROVADOR AND gp.id=@ID_GRUPO_USUARIO
+
+          -- SETA POSICAO DO AVALIADOR -1 PARA VERIFICAR SE A SOLICITACAO ESTARA VISIVEL NO SEU PAINEL
+          DECLARE @ORDEM_APROVADOR int
+          SET @ORDEM_APROVADOR = @N_ORDEM-1
+
+          -- AVALIA SE A ORDEM DO APROVADOR E O STATUS DO REEMBOLSO ESTAO NA HORA DA APROVACAO
+          IF(@STATUS_REEMBOLSO = @ORDEM_APROVADOR )
+              BEGIN
+                  PRINT 'ESTA NA SUA HORA DE APROVAR'
+                  SELECT DISTINCT rs.id,rs.titulo_evento,d.descricao AS despesa,g.nome AS grupo,
+                      (SELECT SUM(CAST(ri.valor AS DECIMAL (18,2))) FROM reembolso_itens AS ri WHERE ri.id_reembolso_solicitacao=rs.id)AS total,
+                       u.nome,u.id AS usuario,e.Nome_Empresa AS empresa,rs.data_inclusao,rs.data_envio,
+                      (SELECT COUNT(id) AS n_item FROM reembolso_itens WHERE id_reembolso_solicitacao=rs.id)AS itens,
+                       CASE WHEN  rs.id_status<100 AND rs.id_status>0 THEN CAST(rs.id_status AS VARCHAR)+'-'+CAST((SELECT COUNT(id_grupo) AS n_aprov FROM reembolso_aprovador_usuario AS rau WHERE rau.id_grupo=u.id_grupo)AS VARCHAR ) ELSE '' END AS progresso,
+                       CASE id_status WHEN 100 THEN 'APROVADO' WHEN 200 THEN 'REPROVADO' WHEN 0 THEN 'ENVIADO'  WHEN -1 THEN 'EDICAO' ELSE 'EM ANALISE' END AS status
+                FROM reembolso_solicitacao AS rs
+                LEFT JOIN usuario AS u ON u.id = rs.id_usuario
+                LEFT JOIN vwEmpresas AS e ON dbo.fRemoveZeros(e.Cod_Empresa,0)= rs.id_empresa
+                LEFT JOIN reembolso_tipo_despesa AS d ON d.id = rs.id_tipo_despesa
+                LEFT JOIN reembolso_aprovador_grupo AS g ON g.id = u.id_grupo
+                WHERE rs.id = @ID_REEMBOLSO
+                ORDER by rs.id
+              END
+          ELSE
+              BEGIN
+                  PRINT 'NAO ESTA NA SUA HORA'
+              END
+      END
+      ELSE
+          BEGIN
+               PRINT 'ESTA SOLICITACAO NAO E SUA'
+          END
+
+
+-------------------------------------------------------------------------------------------------------------------
+
+SELECT r.id,r.id_usuario, r.id_status
+          FROM reembolso_solicitacao AS r
+          WHERE r.id_status>-1 AND r.id_status<100
+
+-------------------------------------------------------------------------------------------------------------------
+
+SELECT uc.id_ccusto
+      FROM usuario_ccusto AS uc
+      WHERE uc.id_usuario = 1 AND uc.id_ccusto LIKE '%2'
+
+------------------------------------------------------------------------------------------------------------------
+-- SELECT CCUSTO DO USUARIO BY-EMPRESA ------------------------TESTE 1-- --------------------------------29/10/2018
+--------------------------------------------------------------------------------------------------------STATUS - OK
+SELECT uc.id_ccusto
+      FROM usuario_ccusto AS uc
+      WHERE uc.id_usuario = 1 AND SUBSTRING (uc.id_ccusto,1,1)=1
+
+
+
+------------------------------------------------------------------------------------------------------------------
+-- ESTUDO PARA INCLUSAO DE ID PERSONALIZADO DE REEMBOLSO DE DISPESAS-------------------------------------29/10/2018
+--------------------------------------------------------------------------------------------------------STATUS - OK
+CREATE TABLE #tabela (numero INT)
+INSERT INTO #tabela VALUES (1)
+INSERT INTO #tabela VALUES (12)
+INSERT INTO #tabela VALUES (123)
+INSERT INTO #tabela VALUES (1234)
+
+DECLARE @PREFIXO VARCHAR(2)
+SET @PREFIXO = 'RD'
+SELECT @PREFIXO + REPLICATE ( '0' ,9 - len(numero) )+cast (numero AS VARCHAR ) FROM #tabela
+
+
+CREATE FUNCTION dbo.fNewId_RD(@PREFIXO VARCHAR(2))
+RETURNS VARCHAR (11)
+AS
+BEGIN
+    DECLARE @NEWID VARCHAR (11)
+    DECLARE @LASTVAL INT
+    SET @LASTVAL = (SELECT MAX(id) FROM reembolso_solicitacao)
+    IF @LASTVAL is null SET @LASTVAL = 0
+    SET @LASTVAL=@LASTVAL + 1
+    SET @NEWID = @PREFIXO+REPLICATE ( '0' ,9 - len(@LASTVAL) )+cast (@LASTVAL AS VARCHAR )
+    RETURN @NEWID
+END
+
+SELECT dbo.fNewId_RD('RD');
+
+
+
+DECLARE @PREFIXO VARCHAR(2)
+SET @PREFIXO = 'RD'
+DECLARE @NEWID VARCHAR (11)
+DECLARE @LASTVAL INT
+SET @LASTVAL = (SELECT MAX(id) FROM dbo.reembolso_solicitacao)
+IF @LASTVAL is null SET @LASTVAL = 0
+SET @LASTVAL=@LASTVAL + 1
+SET @NEWID = @PREFIXO+REPLICATE ( '0' ,9 - len(@LASTVAL) )+cast (@LASTVAL AS VARCHAR )
+SELECT @NEWID
+
+
+----------------------------------OK
+USE[AMR_P00_HOMOLOGACAO]
+
+DECLARE @PREFIXO VARCHAR(2)
+SET @PREFIXO = 'RD'
+DECLARE @NEWID VARCHAR (11)
+DECLARE @LASTVAL INT
+SET @LASTVAL = (SELECT MAX(id) FROM dbo.reembolso_solicitacao)
+IF @LASTVAL is null SET @LASTVAL = 0
+SET @NEWID = @PREFIXO+REPLICATE ( '0' ,4 - len(@LASTVAL) )+cast (@LASTVAL AS VARCHAR )
+SELECT @NEWID AS newid
+----------------------------------
+
+SELECT id FROM reembolso_solicitacao WHERE id= 105;
+
+DECLARE @HASH VARCHAR (9)
+DECLARE @NEWID VARCHAR (11)
+DECLARE @PREFIXO VARCHAR(2)
+SET @PREFIXO = 'RD'
+DECLARE @LASTVAL INT
+SELECT @LASTVAL = MAX(id) FROM reembolso_solicitacao
+SET @HASH = REPLICATE ( '0' ,9 - len(@LASTVAL) )+cast (@LASTVAL AS VARCHAR )
+SET @NEWID = @PREFIXO + UPPER(RIGHT(sys.fn_sqlvarbasetostr(HASHBYTES('MD5',@HASH)),9))
+SELECT @NEWID AS MY_CRIPTO
+-------------------------------------------------------------------------------------------------------------------
+
+
+
+
+------------------------------------------------------------------------------------------------------------------
+-- ESTUDO PARA MANIPULACAO DE DATAS---------------------------------------------------------------------08/10/2018
+--------------------------------------------------------------------------------------------------------STATUS - OK
+--FUNCAO PARA SUBTRACAO
+CREATE FUNCTION dbo.fSubtraction_Date(@INI AS DATETIME, @FIM AS DATETIME)
+RETURNS @TABLE TABLE(DIAS INT, MESES INT, ANOS INT) AS
+BEGIN
+
+DECLARE	@DIA_DIFF AS DECIMAL(10,2)
+DECLARE	@MES_DIFF AS DECIMAL(10,2)
+
+DECLARE	@DIA AS DECIMAL(10,2)
+DECLARE	@MES AS DECIMAL(10,2)
+DECLARE	@ANO AS DECIMAL(10,2)
+
+SET	@DIA_DIFF = DATEDIFF(DAY, @INI, @FIM)
+SET	@MES_DIFF = DATEDIFF(MONTH, @INI, @FIM)
+
+SET @DIA = FLOOR(@DIA_DIFF%365.25)-FLOOR(365.25/12)*FLOOR(@MES_DIFF%12)
+SET @MES = FLOOR(@MES_DIFF%12)
+SET @ANO = DATEDIFF(YEAR, @INI, @FIM)
+
+INSERT INTO @TABLE (DIAS, MESES, ANOS) VALUES (@DIA, @MES, @ANO)
+
+RETURN
+
+END
+
+
+SELECT DIA FROM dbo.fSubtraction_Date('2012-01-01', '2010-01-11')
+
+
+--MODELO 2
+DECLARE @s DATE, @e DATE
+SELECT @s = '2010-01-01', @e = '2010-01-02';
+SELECT y + ' year(s), ' + m + ' month(s) and ' + d + ' day(s).'
+FROM
+(
+SELECT
+RTRIM(y),
+RTRIM(m - CASE WHEN pd < 0 THEN 1 ELSE 0 END),
+RTRIM(CASE WHEN pd < 0 THEN nd ELSE pd END)
+FROM
+(
+SELECT
+DATEDIFF(MONTH, @s, @e) / 12,
+DATEDIFF(MONTH, @s, @e) % 12,
+DATEDIFF(DAY, @s, DATEADD(MONTH, -DATEDIFF(MONTH, @s, @e), @e)),
+DATEDIFF(DAY, @s, DATEADD(MONTH, 1-DATEDIFF(MONTH, @s, @e), @e))
+) AS x (y, m, pd, nd)
+) AS y (y, m, d);
+
+--MODELO 3
+DECLARE @DAY_LIMIT VARCHAR (2)
+DECLARE @DATE_LIMIT VARCHAR (10)
+SET @DAY_LIMIT = '10' --SEMPRE DO PROXIMO MES
+DECLARE @DATE_REEMBOLSO DATE
+SELECT @DATE_REEMBOLSO = '2010-10-08'
+
+--REPLACE DATAS
+SELECT STUFF(@DATE_REEMBOLSO, 6, 2, '99')
+
+-- FRAGMENTA DATAS SOLICITACOES E ITENS
+DECLARE @DATE_REEMBOLSO DATE
+SELECT @DATE_REEMBOLSO = '2018-11-07'
+DECLARE @D_CURRENT INT
+DECLARE @M_CURRENT INT
+DECLARE @Y_CURRENT INT
+DECLARE @DATE_CURRENT DATE
+SET @DATE_CURRENT = GETDATE()
+SET @D_CURRENT = DAY (GETDATE())
+SET @M_CURRENT = MONTH (GETDATE())
+SET @Y_CURRENT = YEAR (GETDATE())
+--CALCULA DIFERENCA ENTRE DATA DE ENTRADA E DATA ATUAL
+SELECT DATEDIFF( DAY ,@DATE_CURRENT, @DATE_REEMBOLSO)
+
+
+
+-- FORMATOS DE APRESENTACAO DE DATAS
+DECLARE @DATE DATE
+SET @DATE = '08-10-2018';
+SELECT CONVERT(VARCHAR(10), @DATE, 120) AS 'DATA-FORMAT-120',CONVERT(VARCHAR(10), @DATE, 105) AS 'DATA-FORMAT-105', CONVERT(VARCHAR(10), @DATE, 101) AS 'DATA-FORMAT-101'
+DECLARE @D_DATE INT
+DECLARE @M_DATE INT
+DECLARE @Y_DATE INT
+SET @D_DATE = DAY (GETDATE())
+SET @M_DATE = MONTH (GETDATE())
+SET @Y_DATE = YEAR (GETDATE())
+SELECT @D_DATE AS DIA,@M_DATE AS MES,@Y_DATE AS ANO
+
+
+--MODELO 4
+--1-SET DATA LIMITE EM 'DIA' DO MES SEGUINTE
+--2-CRIA DATA LIMITE
+--3-SET DATA REEMBOLSO
+--4-VERIFICA DIFERENCA ENTRE DATAS
+
+--1
+DECLARE @DIA_LIMITE VARCHAR (2)
+SET @DIA_LIMITE = '10' --SEMPRE DO PROXIMO MES EXE: 10-12-2018
+--2
+DECLARE @DATA_LIMITE DATE
+DECLARE @M_DATE INT
+DECLARE @Y_DATE INT
+SET @M_DATE = MONTH (GETDATE())
+SET @Y_DATE = YEAR (GETDATE())
+SET @DATA_LIMITE = CONCAT(@Y_DATE,'-',@M_DATE,'-',@DIA_LIMITE)
+--3
+DECLARE @DATE_REEMBOLSO DATE
+SELECT @DATE_REEMBOLSO = '2018-11-15'
+--4
+DECLARE @DIF_MES INT
+DECLARE @DIF_DIAS INT
+SET @DIF_MES = DATEDIFF( MONTH ,@DATE_REEMBOLSO, @DATA_LIMITE)
+SET @DIF_DIAS = DATEDIFF( DAY ,@DATE_REEMBOLSO, @DATA_LIMITE)
+SELECT @DIF_DIAS AS DIF_DIAS, @DIF_MES AS DIF_MES
+
+IF(@DIF_DIAS>0)
+  BEGIN
+    PRINT(CONCAT('ESTA EM DIA - FALTAM ',@DIF_DIAS,'-DIA(s) PARA A ENTREGA DESTE REEMBOLSO'))
+  END
+IF(@DIF_DIAS=0)
+  BEGIN
+    PRINT('HOJE É O ULTIMO DIA PARA ENTREGA DESTA SOLICITACAO DE REEMBOLSO')
+  END
+IF(@DIF_DIAS<0)
+  BEGIN
+    PRINT(CONCAT('ULTRAPASSOU A DATA LIMITE DE ENTREGA EM ',-1*@DIF_DIAS,'-DIA(s)'))
+  END
+
+
+
+--MODELO 5 - COM ENTRADA DE DADOS NO FORMATO 10/12/2018
+--1-SET DATA LIMITE EM 'DIA' DO MES SEGUINTE
+--2-CRIA DATA LIMITE
+--3-SET DATA REEMBOLSO
+--4-VERIFICA DIFERENCA ENTRE DATAS
+
+--1-DO
+DECLARE @DIA_LIMITE VARCHAR (2)
+SET @DIA_LIMITE = '10' --SEMPRE DO PROXIMO MES EXE: 10-12-2018
+--2-DO
+DECLARE @DATA_LIMITE DATE
+DECLARE @M_DATE_LIMITE INT
+DECLARE @Y_DATE_LIMITE INT
+SET @M_DATE_LIMITE = MONTH (GETDATE())+1
+SET @Y_DATE_LIMITE = YEAR (GETDATE())
+SET @DATA_LIMITE = CONCAT(@Y_DATE_LIMITE,'-',@M_DATE_LIMITE,'-',@DIA_LIMITE)
+SELECT @DATA_LIMITE AS DATA_LIMITE
+--3-DO
+DECLARE @DATE VARCHAR (10)
+SET @DATE = '16/11/2018';
+DECLARE @D_DATE VARCHAR (2)
+DECLARE @M_DATE VARCHAR (2)
+DECLARE @Y_DATE VARCHAR (4)
+SET @D_DATE= SUBSTRING (@DATE ,1,2)
+SET @M_DATE= SUBSTRING (@DATE ,4,2)
+SET @Y_DATE= SUBSTRING (@DATE ,7,4)
+DECLARE @DATE_REEMBOLSO DATE
+SET @DATE_REEMBOLSO = CONCAT(@Y_DATE,'-',@M_DATE,'-',@D_DATE)
+--SELECT @DATE_REEMBOLSO
+
+--4-DO
+DECLARE @DIF_MES INT
+DECLARE @DIF_DIAS INT
+SET @DIF_MES = DATEDIFF(MONTH ,@DATE_REEMBOLSO, @DATA_LIMITE)
+SET @DIF_DIAS = DATEDIFF( DAY ,@DATE_REEMBOLSO, @DATA_LIMITE)
+
+
+IF(@DIF_MES=0)
+  BEGIN
+  IF(@DIF_DIAS>0)
+    BEGIN
+      SELECT @DIF_DIAS AS DIF_DIAS, @DIF_MES AS DIF_MES
+      PRINT(CONCAT('ESTA EM DIA - FALTAM ',@DIF_DIAS,'-DIA(s) PARA A ENTREGA DESTE REEMBOLSO'))
+    END
+  IF(@DIF_DIAS=0)
+    BEGIN
+      SELECT @DIF_DIAS AS DIF_DIAS, @DIF_MES AS DIF_MES
+      PRINT('HOJE É O ULTIMO DIA PARA ENTREGA DESTA SOLICITACAO DE REEMBOLSO')
+    END
+  IF(@DIF_DIAS<0)
+    BEGIN
+      PRINT(CONCAT('ULTRAPASSOU A DATA LIMITE DE ENTREGA EM ',-1*@DIF_DIAS,'-DIA(s)'))
+    END
+  END
+IF(@DIF_MES>0)
+  BEGIN
+    PRINT(CONCAT('VOCE NAO PODE LANCAR REEMBOLSOS ATRASADOS',@DIF_MES))
+  END
+
+
+-- NOTA NUMERO DE FUNCIONARIOS DA BASE DO PROTHEUS \
+--RESULT - 72
+USE [PortalRD]
+SELECT DISTINCT (A2_NOME) FROM vwFornecedores
+
+
+------------------------------------------------------------------------------------------------------------------
+-- SELECT SOLICITACOES PARA O APROVADOR ------------------------TESTE 2 --------------------------------28/10/2018
+--------------------------------------------------------------------------------------------------------STATUS - OK
+
+USE[AMR_P00_HOMOLOGACAO]
+
+DECLARE @PREFIXO VARCHAR(2)
+SET @PREFIXO = 'RD'
+DECLARE @NEWID VARCHAR (11)
+DECLARE @LASTVAL INT
+SET @LASTVAL = (SELECT MAX(id) FROM dbo.reembolso_solicitacao)
+IF @LASTVAL is null SET @LASTVAL = 0
+SET @NEWID = @PREFIXO+REPLICATE ( '0' ,4 - len(@LASTVAL) )+cast (@LASTVAL AS VARCHAR )
+SELECT @NEWID AS newid
+
+
+-----------------------------------------------------------------------------------------------------------------
+-- ESTUDO PARA SET DATA INCLUSAO  REEMBOLSO---------------------------------------------------------------------08/10/2018
+--------------------------------------------------------------------------------------------------------STATUS - OK
+
+--2
+DECLARE @D_DATE INT
+DECLARE @M_DATE INT
+DECLARE @Y_DATE INT
+SET @D_DATE = DAY (GETDATE())
+SET @M_DATE = MONTH (GETDATE())
+SET @Y_DATE = YEAR (GETDATE())
+SELECT CONCAT(@D_DATE,'-',@M_DATE,'-',@Y_DATE) AS data
+
+
+-----------------------------------------------------------------------------------------------------------------
+-- ESTUDO PARA SET DATA INCLUSAO  REEMBOLSO---------------------------------------------------------------------08/10/2018
+--------------------------------------------------------------------------------------------------------STATUS - OK
+
+SELECT CONVERT(VARCHAR(11),GETDATE(),102)
+
+SELECT CONVERT(VARCHAR(10), GETDATE(), 120) AS 'DATA-FORMAT-120',CONVERT(VARCHAR(10), GETDATE(), 105) AS 'DATA-FORMAT-105', CONVERT(VARCHAR(10), GETDATE(), 101) AS 'DATA-FORMAT-103'
+
+
+SELECT DISTINCT rs.id_format AS cod,rs.titulo_evento,d.descricao AS despesa,
+                      (SELECT SUM(CAST(ri.valor AS DECIMAL (18,2))) FROM reembolso_itens AS ri WHERE ri.id_reembolso=rs.id_format)AS total,
+                       u.nome,e.Nome_Empresa AS empresa,rs.data_inclusao,rs.data_envio,
+                      (SELECT COUNT(id) AS n_item FROM reembolso_itens WHERE id_reembolso=rs.id_format)AS itens,
+                       CASE WHEN  rs.id_status<100 AND rs.id_status>0 THEN CAST(rs.id_status AS VARCHAR)+'-'+CAST((SELECT COUNT(id_grupo) AS n_aprov FROM reembolso_aprovador_usuario AS rau WHERE rau.id_grupo=u.id_grupo)AS VARCHAR ) ELSE '' END AS progresso,
+                       CASE id_status WHEN 100 THEN 'APROVADO' WHEN 200 THEN 'REPROVADO' WHEN 0 THEN 'ENVIADO'  WHEN -1 THEN 'EDICAO' ELSE 'EM ANALISE' END AS status
+                    FROM reembolso_solicitacao AS rs
+                    LEFT JOIN usuario AS u ON u.id = rs.id_usuario
+                    LEFT JOIN vwEmpresas AS e ON dbo.fRemoveZeros(e.Cod_Empresa,0)= rs.id_empresa
+                    LEFT JOIN reembolso_tipo_despesa AS d ON d.id = rs.id_tipo_despesa
+                    ORDER by rs.id_format
+
+
+
+
+-----------------------------------------------------------------------------------------------------------------
+-- ESTUDO PARA RESET DATA -----------------------------------------------------------------------------08/10/2018
+------------------------------------------------------------------------------------------------------STATUS - OK
+
+USE[AMR_P00_PRODUCAO]
+TRUNCATE TABLE reembolso_tipo_despesa
+
+
+DELETE * FROM reembolso_tipo_despesa
+DBCC CHECKIDENT ('reembolso_tipo_despesa', 0).
+DBCC CHECKIDENT (tabela, RESEED, valor)
+------------------------------------------------------------------------------------------------------STATUS - OK
+
+
+SELECT DISTINCT rs.id, rs.id_format,rs.titulo_evento,d.descricao AS despesa,g.nome AS grupo,
+                      (SELECT SUM(CAST(ri.valor AS DECIMAL (18,2))) FROM reembolso_itens AS ri WHERE ri.id_reembolso_solicitacao=rs.id)AS total,
+                       u.id AS usuario,u.nome,e.Nome_Empresa AS empresa,rs.data_inclusao,rs.data_envio,
+                      (SELECT COUNT(id) AS n_item FROM reembolso_itens WHERE id_reembolso_solicitacao=rs.id)AS itens,
+                       CASE WHEN  rs.id_status<100 AND rs.id_status>0 THEN CAST(rs.id_status AS VARCHAR)+'-'+CAST((SELECT COUNT(id_grupo) AS n_aprov FROM reembolso_aprovador_usuario AS rau WHERE rau.id_grupo=u.id_grupo)AS VARCHAR ) ELSE '' END AS progresso,
+                       CASE id_status WHEN 100 THEN 'APROVADO' WHEN 150 THEN 'INTEGRADO' WHEN 200 THEN 'REPROVADO' WHEN 0 THEN 'ENVIADO'  WHEN -1 THEN 'EDICAO' ELSE 'EM ANALISE' END AS status
+                    FROM reembolso_solicitacao AS rs
+                    LEFT JOIN usuario AS u ON u.id = rs.id_usuario
+                    LEFT JOIN vwEmpresas AS e ON dbo.fRemoveZeros(e.Cod_Empresa,0)= rs.id_empresa
+                    LEFT JOIN reembolso_tipo_despesa AS d ON d.id = rs.id_tipo_despesa
+                    LEFT JOIN reembolso_aprovador_grupo AS g ON g.id = u.id_grupo
+                    ORDER by rs.id
+
+
+
+SELECT DISTINCT rs.id_format AS cod,rs.titulo_evento,d.descricao AS despesa,
+                      (SELECT SUM(CAST(ri.total AS DECIMAL (18,2))) FROM reembolso_itens AS ri WHERE ri.id_reembolso=rs.id_format)AS total,
+                       u.nome,e.Nome_Empresa AS empresa,rs.data_inclusao,rs.data_envio,
+                      (SELECT COUNT(id) AS n_item FROM reembolso_itens WHERE id_reembolso=rs.id_format)AS itens,
+                       CASE WHEN  rs.id_status<100 AND rs.id_status>0 THEN CAST(rs.id_status AS VARCHAR)+'-'+CAST((SELECT COUNT(id_grupo) AS n_aprov FROM reembolso_aprovador_usuario AS rau WHERE rau.id_grupo=u.id_grupo)AS VARCHAR ) ELSE '' END AS progresso,
+                       CASE id_status WHEN 100 THEN 'APROVADO' WHEN 200 THEN 'REPROVADO' WHEN 0 THEN 'ENVIADO'  WHEN -1 THEN 'EDICAO' ELSE 'EM ANALISE' END AS status
+                    FROM reembolso_solicitacao AS rs
+                    LEFT JOIN usuario AS u ON u.id = rs.id_usuario
+                    LEFT JOIN vwEmpresas AS e ON dbo.fRemoveZeros(e.Cod_Empresa,0)= rs.id_empresa
+                    LEFT JOIN reembolso_tipo_despesa AS d ON d.id = rs.id_tipo_despesa
+                    ORDER by rs.id_format
+
+
+
+-----------------------------------------------------------------------------------------------------------------
+-- ESTUDO PARA SELECIONAR O DIA DA SEMANA DE UMA DATA -----------------------------------------------------------------------------08/10/2018
+------------------------------------------------------------------------------------------------------STATUS - OK
+DECLARE @DATE VARCHAR (10)
+SET @DATE = '23-11-2018'
+DECLARE @D_DATE VARCHAR (2)
+DECLARE @M_DATE VARCHAR (2)
+DECLARE @Y_DATE VARCHAR (4)
+SET @D_DATE= SUBSTRING (@DATE ,1,2)
+SET @M_DATE= SUBSTRING (@DATE ,4,2)
+SET @Y_DATE= SUBSTRING (@DATE ,7,4)
+DECLARE @DATE_ITEM DATE
+SET @DATE_ITEM = CONCAT(@Y_DATE,'-',@M_DATE,'-',@D_DATE)
+DECLARE @WEEK INT
+DECLARE @DAY VARCHAR (14)
+SET @WEEK=DATEPART(dw,@DATE_ITEM)
+SET @DAY=
+  CASE
+    WHEN @WEEK=1 THEN 'domingo'
+    WHEN @WEEK=2 THEN 'segunda-feira'
+    WHEN @WEEK=3 THEN 'terça-feira'
+    WHEN @WEEK=4 THEN 'quarta-feira'
+    WHEN @WEEK=5 THEN 'quinta-feira'
+    WHEN @WEEK=6 THEN 'sexta-feira'
+    WHEN @WEEK=7 THEN 'sabado'
+  END
+SELECT @DAY AS semana, @WEEK as dia
+
+------------------------------------------------------------------------------------------------------------------
+-- INFO APROVADOR
+DECLARE @REEMBOLSO int
+DECLARE @S int
+DECLARE @N int
+SET @REEMBOLSO=58
+SET @S=1
+SET @N=0
+DECLARE @N_ORDEM int
+DECLARE @ID_USUARIO int
+DECLARE @ID_GRUPO_USUARIO int
+
+-- USUARIO
+SET @ID_USUARIO =34
+SELECT @ID_GRUPO_USUARIO = u.id_grupo
+FROM usuario AS u
+WHERE u.id = @ID_USUARIO;
+DECLARE @ID_APROVADOR int
+DECLARE @GRUPO_NOME varchar (100)
+DECLARE @N_APROVADORES_GRUPO int
+-- APROVADOR
+SET @ID_APROVADOR =1
+DECLARE @ID_GRUPO_APROVADOR int
+SELECT @ID_GRUPO_APROVADOR = u.id_grupo
+FROM usuario AS u
+INNER JOIN reembolso_aprovador_usuario AS au ON au.id_grupo = u.id_grupo
+WHERE u.id = @ID_APROVADOR
+
+-- AVALIA QUANTOS APROVADORES É COMPOSTO O GRUPO
+IF
+(SELECT COUNT (ga.ordem)
+FROM reembolso_aprovador_usuario AS ga
+LEFT JOIN reembolso_aprovador_grupo AS gp ON gp.id = ga.id_grupo
+WHERE ga.id_usuario = @ID_APROVADOR AND gp.id=@ID_GRUPO_USUARIO)=1
+
+BEGIN
+  --    SELECIONA NUMERO DE APROVADORES DO GRUPO
+  SET @N_APROVADORES_GRUPO=(SELECT COUNT (ga.ordem) FROM reembolso_aprovador_usuario AS ga
+  WHERE  ga.id_grupo=@ID_GRUPO_USUARIO)
+  --    SELECIONA NUMERO DE APROVADORES DO GRUPO
+  SET @GRUPO_NOME = (SELECT gp.nome FROM reembolso_aprovador_grupo AS gp
+  WHERE  gp.id=@ID_GRUPO_USUARIO)
+  --     SELECIONA ORDEM DO APROVADOR
+  SELECT @N_ORDEM = ga.ordem
+    FROM reembolso_aprovador_usuario AS ga
+    LEFT JOIN reembolso_aprovador_grupo AS gp ON gp.id = ga.id_grupo
+    WHERE ga.id_usuario = @ID_APROVADOR AND gp.id=@ID_GRUPO_USUARIO
+  --    SELECIONA O ULTIMO APROVADOR
+  DECLARE @ID_ULTIMO_APROVADOR int
+  DECLARE @ULTIMO_ORDEM int
+  SELECT TOP 1 @ID_ULTIMO_APROVADOR=id_usuario,@ULTIMO_ORDEM=ordem
+  FROM reembolso_aprovador_usuario
+  WHERE id_grupo = @ID_GRUPO_USUARIO
+  ORDER BY ordem DESC
+
+  SELECT @S AS status,@ID_APROVADOR AS aprovador,@ID_USUARIO AS usuario,@ID_GRUPO_USUARIO AS id_grupo,@GRUPO_NOME AS grupo, @N_APROVADORES_GRUPO AS numero,@N_ORDEM AS ordem
+END
+
+
+------------------------------------------------------------------------------------------------------------------
+-- INFO USUARIO ARMAZENADOS EM SESSAO
+SELECT TOP 1 Nome_Empresa AS  empresa
+FROM usuario_ccusto AS cc
+LEFT JOIN vwEmpresas ON Cod_Empresa = SUBSTRING (cc.id_ccusto,1,1)
+WHERE cc.id_usuario=26
+
+
+SELECT u.id
+      ,u.usuario
+      ,u.nome
+      ,u.sobrenome
+      ,u.cpf
+      ,c.nome AS tipo_conta
+      ,u.conta
+      ,(SELECT TOP 1 Nome_Empresa
+          FROM usuario_ccusto AS ucc
+          LEFT JOIN vwEmpresas ON Cod_Empresa = SUBSTRING (ucc.id_ccusto,1,1)
+          WHERE ucc.id_usuario=u.id)AS empresa
+
+      ,(SELECT TOP 1 ucc.id_ccusto
+      FROM usuario_ccusto AS ucc
+      WHERE ucc.id_usuario=u.id)AS id_ccusto
+
+      ,(SELECT TOP 1 cc.Descricao AS id_ccusto
+          FROM usuario_ccusto AS ucc
+          LEFT JOIN corporativo_vwCcustos AS cc ON  cc.Codigo = ucc.id_ccusto
+          WHERE ucc.id_usuario=u.id)AS ccusto
+
+  FROM usuario AS u
+      LEFT JOIN contas AS c ON c.id = u.conta
+  WHERE u.usuario='america@master' AND u.senha='40bd001563085fc35165329ea1ff5c5ecbdbbeef' AND u.ativo = 1
+
+
+
+
+-- FORMATOS DE APRESENTACAO DE DATAS
+DECLARE @DATE DATE
+SET @DATE = '08-10-2018';
+SELECT CONVERT(VARCHAR(10), GETDATE(), 120) AS 'DATA-FORMAT-120',CONVERT(VARCHAR(10), GETDATE(), 105) AS 'DATA-FORMAT-105', CONVERT(VARCHAR(10), GETDATE(), 101) AS 'DATA-FORMAT-101'
+
+
+------------------------------------------------------------------------------------------------------------------
+-- APROVACAO FINANCEIRA FILTROS
+
+
+SELECT  * FROM processo_vwAprovaFinCab
+WHERE Codigo like'%000011030%'
+
+Use[P12_PRODUCAO]
+SELECT * FROM SE2010
+WHERE E2_DATALIB='01'
+
+Use[AMR_P00_PRODUCAO]
+SELECT t.* FROM dbo.processo_vwAprovaFinCab t
+WHERE Vencimento='2018-12-10'
+AND Beneficiario LIKE '%ADRIANA%'
+
+Use[AMR_P00_PRODUCAO]
+SELECT t.* FROM dbo.processo_vwAprovaFinCab t
+WHERE Beneficiario LIKE '%ADRIANA BENELLI%'
+
+SELECT * FROM dbo.processo_vwAprovaFinCab ap
+WHERE ap.Codigo like '%01   001227989 NF 00185601%'
+
+SELECT t.* FROM dbo.processo_vwAprovaFinIte t
+WHERE Codigo='01   001227989 NF 00185601'
+
+SELECT t.* FROM dbo.processo_vwAprovaFinDoc t
+WHERE Codigo='01   001227989 NF 00185601'
+
+Use[AMR_P00_PRODUCAO]
+SELECT t.* FROM dbo.processo_vwAprovaFinCab t
+WHERE t.E2_NUM='000411'
+
+Use[AMR_P00_PRODUCAO]
+SELECT t.* FROM dbo.processo_vwAprovaFinCab t
+WHERE t.E2_NUM='RD012'
+
+
+Use[P12_PRODUCAO]
+SELECT
+'01'+E2_FILIAL Cod_Empresa,
+E2_FILIAL+E2_PREFIXO+E2_NUM+E2_PARCELA+E2_TIPO+E2_FORNECE+E2_LOJA Codigo,
+'FI ' Tipo,
+CONVERT(DATE,E2_EMIS1) Emissao,
+E2_FORNECE+E2_LOJA Cod_Loja,
+A2_NOME Beneficiario,
+' ' Cod_User,
+' ' Nome_Aprov,
+' ' Status,
+' ' Nivel,
+CAST(E2_VALOR AS decimal(18,2)) AS Valor,
+E2_SALDO,
+CONVERT(DATE,E2_VENCREA) Vencimento,
+E2_HIST Observacao,
+E2_NATUREZ Natureza,
+E2_FILIAL,
+E2_PREFIXO,
+E2_NUM,
+E2_PARCELA,
+E2_TIPO,
+E2_FORNECE,
+E2_LOJA,
+E2_DATALIB Status
+FROM P12_PRODUCAO..SE2010 SE2
+JOIN P12_PRODUCAO..SA2010 SA2 ON A2_FILIAL=' ' AND A2_COD=E2_FORNECE AND A2_LOJA=E2_LOJA AND SA2.D_E_L_E_T_=' '
+WHERE E2_FILIAL BETWEEN '01' AND '02'
+AND E2_SALDO > 0
+AND E2_NUM='000011030'
+
+
+SELECT E2_NUM, E2_NOMFOR, E2_VENCTO, E2_VALOR,E2_DATALIB,E2_STATLIB, E2_USUALIB, E2_TIPOFAT, E2_DECRESC, E2_SDDECRE
+FROM P12_PRODUCAO..SE2010 SE2
+WHERE SE2.E2_NUM ='000011030'
+AND SE2.E2_VENCTO='20181205'
+
+UNION ALL
+
+SELECT E2_NUM, E2_NOMFOR, E2_VENCTO, E2_VALOR,E2_DATALIB,E2_STATLIB, E2_USUALIB, E2_TIPOFAT, E2_DECRESC, E2_SDDECRE
+FROM P12_PRODUCAO..SE2010 SE2
+WHERE SE2.E2_NUM ='000000476'
+AND SE2.E2_VENCTO='20181210'
+
+UNION ALL
+
+SELECT E2_NUM, E2_NOMFOR, E2_VENCTO, E2_VALOR,E2_DATALIB,E2_STATLIB, E2_USUALIB, E2_TIPOFAT, E2_DECRESC, E2_SDDECRE
+FROM P12_PRODUCAO..SE2010 SE2
+WHERE SE2.E2_NUM ='000001701'
+AND SE2.E2_VENCTO='20181210'
+
+UNION ALL
+
+SELECT E2_NUM, E2_NOMFOR, E2_VENCTO, E2_VALOR,E2_DATALIB,E2_STATLIB, E2_USUALIB, E2_TIPOFAT, E2_DECRESC, E2_SDDECRE
+FROM P12_PRODUCAO..SE2010 SE2
+WHERE SE2.E2_NUM ='000039552'
+AND SE2.E2_VENCTO='20181205'
+
+
+
+
+
+SELECT E2_NUM, E2_NOMFOR, E2_VENCTO, E2_VALOR,E2_DATALIB,E2_STATLIB, E2_USUALIB
+FROM P12_PRODUCAO..SE2010 SE2
+WHERE SE2.E2_NUM ='000011030'
+AND SE2.E2_VENCTO='20181205'
+
+UNION ALL
+
+SELECT E2_NUM, E2_NOMFOR, E2_VENCTO, E2_VALOR,E2_DATALIB,E2_STATLIB, E2_USUALIB
+FROM P12_PRODUCAO..SE2010 SE2
+WHERE SE2.E2_NUM ='000000476'
+AND SE2.E2_VENCTO='20181210'
+
+UNION ALL
+
+SELECT E2_NUM, E2_NOMFOR, E2_VENCTO, E2_VALOR,E2_DATALIB,E2_STATLIB, E2_USUALIB
+FROM P12_PRODUCAO..SE2010 SE2
+WHERE SE2.E2_NUM ='000001701'
+AND SE2.E2_VENCTO='20181210'
+
+UNION ALL
+
+SELECT E2_NUM, E2_NOMFOR, E2_VENCTO, E2_VALOR,E2_DATALIB,E2_STATLIB, E2_USUALIB
+FROM P12_PRODUCAO..SE2010 SE2
+WHERE SE2.E2_NUM ='000039552'
+AND SE2.E2_VENCTO='20181205'
+
+
+
+SELECT *
+FROM P12_PRODUCAO..SE2010 SE2
+WHERE SE2.E2_NUM ='000011030'
+AND SE2.E2_VENCTO='20181205'
+
+UNION ALL
+
+SELECT *
+FROM P12_PRODUCAO..SE2010 SE2
+WHERE SE2.E2_NUM ='000001701'
+AND SE2.E2_VENCTO='20181210'
+
+UNION ALL
+
+SELECT *
+FROM P12_PRODUCAO..SE2010 SE2
+WHERE SE2.E2_NUM ='000039552'
+AND SE2.E2_VENCTO='20181205'
+
+UNION ALL
+
+SELECT *
+FROM P12_PRODUCAO..SE2010 SE2
+WHERE SE2.E2_NUM ='000000476'
+AND SE2.E2_VENCTO='20181210'
+
+
+Use[AMR_P00_PRODUCAO]
+SELECT CONVERT(VARCHAR(10), af.Vencimento, 105) Vencimento
+FROM dbo.processo_vwAprovaFinCab af
+
+SELECT a.* FROM dbo.processo_vwAprovaFinCab a
+WHERE a.Codigo='01   001227989 NF 00185601'
+
+SELECT t.* FROM dbo.processo_vwAprovaFinIte t
+WHERE Codigo='01   001227989 NF 00185601'
+
+SELECT it.Item AS item,
+       it.Codigo AS Titulo,
+       it.Produto AS Natureza,
+       it.Total AS Valor
+      FROM dbo.processo_vwAprovaFinIte it
+
+SELECT * FROM dbo.processo_vwAprovaFinIte
+
+
+------------------------------------------------------------------------------------------------------------------
+-- APROVACAO FINANCEIRA - INFORMACOES GERAIS PAINEL
+
+SELECT TOP 10
+       REPLICATE('0', 3 - LEN(ROW_NUMBER()OVER (ORDER BY it.Codigo))) + RTrim(ROW_NUMBER()OVER (ORDER BY it.Codigo))AS item
+       ,it.Codigo AS titulo
+       ,ISNULL(it.Codigo_Produto, 'nulo')AS natureza
+       ,ISNULL(CAST(CAST(it.Total AS DECIMAL(18,2)) AS VARCHAR(30)), '')AS valor
+      FROM dbo.processo_vwAprovaFinIte it
+
+SELECT
+      REPLICATE('0', 3 - LEN(ROW_NUMBER()OVER (ORDER BY dc.Codigo))) + RTrim(ROW_NUMBER()OVER (ORDER BY dc.Codigo))AS item
+      ,dc.Documento
+FROM processo_vwAprovaFinDoc dc
+
+-- SELECT TITULOS A APROVAR
+SELECT TOP 10
+      af.Codigo AS codigo,
+      af.Tipo AS tipo,
+      CAST(CAST(af.Valor AS DECIMAL(18,2)) AS VARCHAR(30))AS valor,
+      af.Beneficiario AS beneficiario,
+      ep.Nome_Empresa AS pagadora,
+      CONVERT(VARCHAR(10), af.Vencimento, 105) AS vencimento,
+      af.Observacao
+  FROM dbo.processo_vwAprovaFinCab af
+  LEFT JOIN corporativo_vwEmpresas ep ON ep.Cod_Empresa+ep.Cod_Filial = af.Cod_Empresa
+  ORDER BY af.Vencimento DESC
+
+--INFO GERAIS TITULOS
+SELECT
+       COUNT(af.Cod_Empresa)AS num,
+       CONVERT(VARCHAR(10), MAX(af.Vencimento), 105) AS dataMax,
+       CONVERT(VARCHAR(10), MIN(af.Vencimento), 105) AS dataMin,
+       CAST(CAST(SUM(af.Valor) AS DECIMAL(18,2)) AS VARCHAR(30)) AS total
+FROM dbo.processo_vwAprovaFinCab af
+
+-- EMPRESAS PAGADORAS - 1
+SELECT DISTINCT
+    REPLACE (LTRIM(ep.Nome_Empresa),'AMERICA ','') AS pagadora
+    FROM dbo.processo_vwAprovaFinCab af
+    LEFT JOIN corporativo_vwEmpresas ep ON ep.Cod_Empresa+ep.Cod_Filial = af.Cod_Empresa
+    WHERE ep.Nome_Empresa IS NOT NULL
+
+-- EMPRESAS PAGADORAS - 2
+SELECT DISTINCT
+    REPLACE (LTRIM(ep.Nome_Empresa),'AMERICA ','') AS pagadora,
+    (SELECT COUNT(af2.Cod_Empresa) FROM dbo.processo_vwAprovaFinCab af2 WHERE af2.Cod_Empresa=ep.Cod_Empresa+ep.Cod_Filial)  AS numTitulos
+    FROM dbo.processo_vwAprovaFinCab af
+    LEFT JOIN corporativo_vwEmpresas ep ON ep.Cod_Empresa+ep.Cod_Filial = af.Cod_Empresa
+    WHERE ep.Nome_Empresa IS NOT NULL
+
+-- EMPRESAS PAGADORAS - 3
+SELECT DISTINCT
+    REPLACE (LTRIM(ep.Nome_Empresa),'AMERICA ','') AS pagadora,
+    (SELECT COUNT(af2.Cod_Empresa) FROM dbo.processo_vwAprovaFinCab af2 WHERE af2.Cod_Empresa=ep.Cod_Empresa+ep.Cod_Filial)  AS numTitulos,
+    (SELECT FORMAT (SUM(af2.Valor), 'c', 'pt-br') FROM dbo.processo_vwAprovaFinCab af2 WHERE af2.Cod_Empresa=ep.Cod_Empresa+ep.Cod_Filial)  AS totalPagadora
+    FROM dbo.processo_vwAprovaFinCab af
+    LEFT JOIN corporativo_vwEmpresas ep ON ep.Cod_Empresa+ep.Cod_Filial = af.Cod_Empresa
+    WHERE ep.Nome_Empresa IS NOT NULL
+
+
+-- TIPOS DE TITULOS
+SELECT DISTINCT
+    af.Tipo AS tipo
+    FROM dbo.processo_vwAprovaFinCab af
+
+-- HISTORICO DE PAGAMENTOS
+SELECT TOP 3
+      af.Codigo AS codigo,
+      af.Tipo AS tipo,
+      CAST(CAST(af.Valor AS DECIMAL(18,2)) AS VARCHAR(30))AS valor,
+      af.Beneficiario AS beneficiario,
+      ep.Nome_Empresa AS pagadora,
+      CONVERT(VARCHAR(10), af.Vencimento, 105) AS vencimento,
+      af.Observacao
+  FROM dbo.processo_vwAprovaFinCab af
+  LEFT JOIN corporativo_vwEmpresas ep ON ep.Cod_Empresa+ep.Cod_Filial = af.Cod_Empresa
+
+
+SELECT GETDATE()
+
+select
+	format (12345678.90, 'c', 'en-us') as 'en-us',
+	format (12345678.90, 'c', 'pt-br') as 'pt-br'
+
+
+SELECT
+   COUNT(af.Codigo)AS num
+   ,CONVERT(VARCHAR(10), MAX(af.Vencimento), 105) AS dataAte
+   ,CONVERT(VARCHAR(10), MIN(af.Vencimento), 105) AS dataDe
+   ,CAST(CAST(SUM(af.Valor) AS DECIMAL(18,2)) AS VARCHAR(30))AS valor
+   --format (12345678.90, 'c', 'pt-br') as 'pt-br'
+   FROM dbo.processo_vwAprovaFinCab af
+
+DECLARE @VALOR decimal(18,2)
+SET @VALOR = (SELECT CAST(CAST(SUM(af.Valor) AS DECIMAL(18,2)) AS VARCHAR(30))AS valor
+FROM dbo.processo_vwAprovaFinCab af)
+SELECT
+   COUNT(af.Codigo)AS num,
+   CONVERT(VARCHAR(10), MAX(af.Vencimento), 105) AS dataAte,
+   CONVERT(VARCHAR(10), MIN(af.Vencimento), 105) AS dataDe,
+   FORMAT (@VALOR, 'c', 'pt-br') AS valor
+   FROM dbo.processo_vwAprovaFinCab af
+
+
+
+USE[AMR_P00_PRODUCAO]
+SELECT SUBSTRING(afc.Cod_Empresa,2,1)cod_empresa
+FROM processo_vwAprovaFinCab AS afc
+WHERE Codigo= '01TSTTESTE     NF 00182101'
+
+SELECT  TOP 5
+    CONVERT(VARCHAR(10),CONVERT(DATE,E5_DATA,105),105) AS data
+    ,E5_TIPO AS tipo
+    ,E5_BENEF As beneficiario
+    ,E5_VALOR AS valor
+    FROM ?
+    WHERE E5_BENEF =?
+    ORDER BY CONVERT(DATE,E5_DATA,105) DESC
+
+------------------------------------------------------------------------------------------------------------------
+-- ESTUDO PARA DISPARO DE TRIGGER SQL----------------------------------------------------------------- -03/12/2018
+-------------------------------------------------------------------------------------------------------STATUS - OK
+-- BASES CONEXOES
+-- USE[AMR_P00_PRODUCAO]
+-- USE[P12_PRODUCAO]
+------------------------------------------------------------------------------------------------------------------
+-- MAPEAMENTO DIAGRAMA DE ESTADO
+--CENARIO - TITULO
+-- 1-INCLUSO
+-- 2-LIBERADO PARA APROVACAO
+-- 3-VISUALIZADO NO PORTAL
+-- 4-APROVADO NO PORTAL
+-- User           Documento       Ação        Onde    Erp.E2_DATALIB     Erp.E2_XPRTLIB        Portal.Status        Portal.IdTitulo         Portal.DataAprov
+-- ==========     ==========      ==========  =====    ==============     ==============        =============       ===============         ===============
+--1-Roseli        Titulo          Incluir     ERP     ''                 ''                    -n/a                 -                       -
+--2-Roseli        Titulo          Liberar     ERP     ''                 ''    ==> 1           -n/a                 -                       -
+--3-Endrew        Titulo          Visualizar  PRT     ''                 1                     -n/a                 -                       -                 **view pesquisa o que tem 1
+--4-Endrew        Titulo          Aprovar     PRT     ''   ==> data      1     ==> ' '         -   ==> 150          xxxxxxxx0000000         ==> data
+--
+--
+--CENARIO - TITULO
+-- 1-INCLUSO
+-- 2-LIBERADO PARA APROVACAO-
+-- 3-ESTORNA APROVACAO
+-- User           Documento       Ação        Onde    Erp.E2_DATALIB     Erp.E2_XPRTLIB        Portal.Status        Portal.IdTItulo         Portal.DataAprov
+-- ==========     ==========      ==========  =====    ==============     ==============       =============        ===============         ===============
+--1-Roseli        Titulo          Incluir     ERP     ''                 ''                    -                    -                       -
+--2-Roseli        Titulo          Liberar     ERP     ''                 ''    ==> 1           -                    -                       -
+--3-Roseli        Titulo          Deletar     ERP     D_E_L_E_T         D_E_L_E_T              -                    -                       -
+--
+--CENARIO - TITULO
+-- 1-INCLUSO
+-- 2-LIBERADO PARA APROVACAO-
+-- 3-VIZUALIZADO PELO PORTAL
+-- 4-ESTORNA APROVACAO
+-- User           Documento       Ação        Onde    Erp.E2_DATALIB     Erp.E2_XPRTLIB        Portal.Status        Portal.IdTitulo         Portal.DataAprov
+-- ==========     ==========      ==========  =====    ==============     ==============        =============       ===============         ===============
+--1-Roseli        Titulo          Incluir     ERP     ''                 ''                    -                    -                       -
+--2-Roseli        Titulo          Liberar     ERP     ''                 ''    ==> 1           -                    -                       -
+--3-Endrew        Titulo          Visualizar  PRT     ''                 1                     -                    -                       -                   **view pesquisa o que tem 1
+--4-Endrew        Titulo          Aprovar     PRT     ''   ==> data      1     ==> ' '         -   ==> 150          xxxxxxxx0000000         ==> data
+--5 Roseli        Titulo          Estorna     ERP     data ==> ' '       ''                    150                  -
+
+
+-- SINTAXE TRIGGER
+--   Trigger on an INSERT, UPDATE, or DELETE statement to a table or view (DML Trigger)
+--   CREATE TRIGGER [ schema_name . ]trigger_name
+--   ON { table | view }
+--   [ WITH <dml_trigger_option> [ ,...n ] ]
+--   { FOR | AFTER | INSTEAD OF }
+--   { [ INSERT ] [ , ] [ UPDATE ] [ , ] [ DELETE ] }
+--   [ WITH APPEND ]
+--   [ NOT FOR REPLICATION ]
+--   AS { sql_statement  [ ; ] [ ,...n ] | EXTERNAL NAME <method specifier [ ; ] > }
+--
+--   <dml_trigger_option> ::=
+--       [ ENCRYPTION ]
+--       [ EXECUTE AS Clause ]
+--   <method_specifier> ::=
+--       assembly_name.class_name.method_name
+
+
+-- CREATE TRIGGER Sales.bonus_reminder
+-- ON Sales.SalesPersonQuotaHistory
+-- WITH ENCRYPTION
+-- AFTER INSERT, UPDATE
+-- AS RAISERROR ('Notify Compensation', 16, 10);
+-- GO
+--
+-- -- Now, change the trigger.
+-- ALTER TRIGGER Sales.bonus_reminder
+-- ON Sales.SalesPersonQuotaHistory
+-- AFTER INSERT
+-- AS RAISERROR ('Notify Compensation', 16, 10);
+-- GO
+
+
+--Criando a Table de Novos Produtos--
+
+	Create Table NovosProdutos
+	 (Codigo Int Identity(1,1),
+	   Descricao VarChar(10))
+
+	--Criando a Table de Histórico Novos Produtos--
+	Create Table HistoricoNovosProdutos
+	 (Codigo Int,
+	   Descricao VarChar(10))
+	Go
+
+	--Inserindo valores --
+	Insert Into Novosprodutos Values('Arroz')
+	Insert Into Novosprodutos Values('Arroz1')
+	Insert Into Novosprodutos Values('Arroz2')
+	Insert Into Novosprodutos Values('Arroz3')
+	Go
+
+	--Criando a Trigger para controle de histórico--
+	Create TRIGGER T_Historico
+	ON NovosProdutos
+	for update
+	AS
+	 IF (Select Descricao from Inserted) <> (Select Descricao from Deleted)
+	  BEGIN
+	   INSERT Into HistoricoNovosProdutos (Codigo, Descricao)
+	        SELECT Codigo, Descricao FROM INSERTED
+	  END
+	Go
+
+	--Fazendo os teste --
+
+
+	Update NovosProdutos
+	Set Descricao='Arroz 4'
+	Where Codigo = 1
+	Go
+
+	Update NovosProdutos
+	Set Descricao='Arroz1'
+	Where Codigo = 2
+	Go
+
+
+CREATE TRIGGER reminder
+ON Person.Address
+AFTER UPDATE
+AS
+IF ( UPDATE (StateProvinceID) OR UPDATE (PostalCode) )
+BEGIN
+--
+
+END;
+GO
+
+
+CREATE TRIGGER tg_financeiro_aprova
+ON AMR_P00_PRODUCAO
+
+
+------------------------------------------------------------------------------------------------------------------
+-- CONSULTA DE GRUPO PAINEL GERAL REEMBOLSO DE DESPESAS - APROVACAO---------------------------------------------0k
+IF OBJECT_ID('tempdb..#tmp_user') IS NOT NULL
+  DROP TABLE #tmp_user
+
+create table #tmp_user
+(
+id_temp int
+)
+Insert into #tmp_user (id_temp) VALUES (33)
+Insert into #tmp_user (id_temp) VALUES (26)
+Insert into #tmp_user (id_temp) VALUES (1)
+Insert into #tmp_user (id_temp) VALUES (1)
+
+SELECT * FROM #tmp_user
+
+SELECT COUNT(gr.id) AS num, gr.descricao AS grupo
+FROM reembolso_aprovador_usuario AS ug
+LEFT JOIN reembolso_aprovador_grupo AS gr ON gr.id = ug.id_grupo
+WHERE ug.id_usuario IN ( SELECT tmp.id_temp FROM #tmp_user AS tmp )
+GROUP BY gr.descricao
+
+
+SELECT us.id AS id, gr.descricao AS grupo
+FROM usuario AS us
+LEFT JOIN #tmp_user AS tmp ON tmp.id_temp = us.id
+LEFT JOIN reembolso_aprovador_grupo AS gr ON gr.id = us.id_grupo
+WHERE us.id IN ( SELECT tmp.id_temp FROM #tmp_user AS tmp )
+
+IF OBJECT_ID('tempdb..#tmp_user') IS NULL
+  DROP TABLE #tmp_user
+
+CREATE TABLE #tmp_user
+(
+id_temp INT
+)
+INSERT INTO #tmp_user (id_temp) VALUES (36)
+INSERT INTO #tmp_user (id_temp) VALUES (26)
+INSERT INTO #tmp_user (id_temp) VALUES (1)
+INSERT INTO #tmp_user (id_temp) VALUES (1)
+
+SELECT COUNT(gr.id) AS num, gr.descricao AS grupo
+FROM usuario AS us
+LEFT JOIN #tmp_user AS tmp ON tmp.id_temp = us.id
+LEFT JOIN reembolso_aprovador_grupo AS gr ON gr.id = us.id_grupo
+WHERE us.id IN ( SELECT tmp.id_temp FROM #tmp_user AS tmp )
+GROUP BY gr.descricao
+
+
+DELETE FROM temp_usuario;
+INSERT INTO temp_usuario (id_temp) VALUES (33);
+INSERT INTO temp_usuario (id_temp) VALUES (26);
+INSERT INTO temp_usuario (id_temp) VALUES (1);
+INSERT INTO temp_usuario (id_temp) VALUES (1);
+SELECT COUNT(gr.id) AS num, gr.descricao AS grupo
+FROM usuario AS us
+LEFT JOIN temp_usuario AS tmp ON tmp.id_temp = us.id
+LEFT JOIN reembolso_aprovador_grupo AS gr ON gr.id = us.id_grupo
+WHERE us.id IN ( SELECT tmp.id_temp FROM temp_usuario AS tmp )
+GROUP BY gr.descricao;

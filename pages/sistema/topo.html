@@ -1,0 +1,128 @@
+<script type="text/javascript">
+    var remoteTopo = new Remote('php/comunicacao.php', 'colaborador', 'notificacao');
+
+    function printaQuantidade(dados){
+        if(dados.total>0){
+            $('#countNotificacao').html(dados.total);
+        }else{
+            $('#countNotificacao').html("");
+        }
+    }
+    $(document).ready(function () {
+        //ADICIONA NOTIFICACOES
+        // remoteTopo.executa("getCountNotificacao", null, printaQuantidade, $('#menuNotificacao'), erroPersonalizado);
+
+        //dados do usuario
+        $("#s_login").html(s.login);
+        $(".a_nome").html(s.nome);
+        $("#s_email").html(s.email);
+        $(".foto_usuario").attr("src", 'php/outros/loadimage.php?n='+s.usuario);
+
+        $(".breadcrumb").append('<li><a href="index.php" class="glyphicons home"><i></i>Home</a></li>');
+        for (var i = menu.statusMenu.length - 1; i >= 0; i--) {
+            $(".breadcrumb").append('<li>' + menu.statusMenu[i].nome + '</li>');
+        }
+
+        // $("#menuNotificacao").onblur(function(){
+        //     remoteTopo.executa("setStatus", null, printaQuantidade, null, erroPersonalizado);
+        // });
+
+        $("#btnSair").on('click', function(){
+            $("#mb-signout").show();
+        });
+
+        $("#btnNoSair").on('click', function(){
+            $("#mb-signout").hide();
+        });
+
+    });
+</script>
+<!-- START X-NAVIGATION VERTICAL -->
+<ul id="painel_topo" class="x-navigation x-navigation-horizontal x-navigation-panel">
+
+    <!-- TOGGLE NAVIGATION -->
+    <li class="xn-icon-button">
+        <a href="#" class="x-navigation-minimize"><span class="fa fa-dedent"></span></a>
+    </li>
+    <!-- END TOGGLE NAVIGATION -->
+
+    <!-- SIGN OUT -->
+    <li class="xn-icon-button pull-right">
+        <a id="btnSair" title="Sair"><span></span>  <span class="fa fa-sign-out"></span></a>
+    </li>
+    <!-- END SIGN OUT -->
+
+    <!-- MESSAGE BOX - SIGN OUT -->
+    <div class="message-box animated fadeIn" data-sound="alert" id="mb-signout">
+        <div class="mb-container">
+            <div class="mb-middle">
+                <div class="mb-title"><span class="fa fa-sign-out"></span> Log <strong>Out</strong> ?</div>
+                <div class="mb-content">
+                    <p>Você gostaria de fazer logout do Portal América?</p>
+                    <p>Pressione 'Não' se você quer continuar logado ao portal. Pressione 'Sim' caso queira fazer logout do seu usuário.</p>
+                </div>
+                <div class="mb-footer">
+                    <div class="pull-right">
+                        <a href="index.php?sair=1" class="btn btn-success btn-lg">Sim</a>
+                        <button id="btnNoSair" class="btn btn-default btn-lg mb-control-close">Não</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- END MESSAGE BOX - SIGN OUT-->
+
+    <!--PLUGINS AUDIO-->
+    <audio id="audio-alert" src="theme/audio/alert.mp3" preload="auto"></audio>
+    <!--END PLUGINS AUDIO-->
+
+
+    <!-- START NOTIFICACOES-->
+    <!--<li class="xn-icon-button pull-right">-->
+        <!--<a id = "menuNotificacao" href="#"><span class="fa fa-bell"></span></a>-->
+        <!--<div id ="countNotificacao" class="informer informer-warning"></div>-->
+        <!--<div class="panel panel-primary animated zoomIn xn-drop-left xn-panel-dragging">-->
+            <!--<div class="panel-heading">-->
+                <!--<h3 class="panel-title"><span class="fa fa-bell"></span> Notificações</h3>-->
+                <!--<div class="pull-right">-->
+                    <!--<span class="label label-warning">3 active</span>-->
+                <!--</div>-->
+            <!--</div>-->
+            <!--<div class="panel-body list-group scroll" style="height: 200px;">-->
+                <!--<a class="list-group-item" href="#">-->
+                    <!--<strong>Phasellus augue arcu, elementum</strong>-->
+                    <!--<div class="progress progress-small progress-striped active">-->
+                        <!--<div class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100" style="width: 50%;">50%</div>-->
+                    <!--</div>-->
+                    <!--<small class="text-muted">John Doe, 25 Sep 2014 / 50%</small>-->
+                <!--</a>-->
+                <!--<a class="list-group-item" href="#">-->
+                    <!--<strong>Aenean ac cursus</strong>-->
+                    <!--<div class="progress progress-small progress-striped active">-->
+                        <!--<div class="progress-bar progress-bar-warning" role="progressbar" aria-valuenow="80" aria-valuemin="0" aria-valuemax="100" style="width: 80%;">80%</div>-->
+                    <!--</div>-->
+                    <!--<small class="text-muted">Dmitry Ivaniuk, 24 Sep 2014 / 80%</small>-->
+                <!--</a>-->
+                <!--<a class="list-group-item" href="#">-->
+                    <!--<strong>Lorem ipsum dolor</strong>-->
+                    <!--<div class="progress progress-small progress-striped active">-->
+                        <!--<div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="95" aria-valuemin="0" aria-valuemax="100" style="width: 95%;">95%</div>-->
+                    <!--</div>-->
+                    <!--<small class="text-muted">John Doe, 23 Sep 2014 / 95%</small>-->
+                <!--</a>-->
+                <!--<a class="list-group-item" href="#">-->
+                    <!--<strong>Cras suscipit ac quam at tincidunt.</strong>-->
+                    <!--<div class="progress progress-small">-->
+                        <!--<div class="progress-bar" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 100%;">100%</div>-->
+                    <!--</div>-->
+                    <!--<small class="text-muted">John Doe, 21 Sep 2014 /</small><small class="text-success"> Done</small>-->
+                <!--</a>-->
+            <!--</div>-->
+            <!--<div class="panel-footer text-center">-->
+                <!--<a href="pages-tasks.html">Show all tasks</a>-->
+            <!--</div>-->
+        <!--</div>-->
+    <!--</li>-->
+    <!-- END NOTIFICACCOES -->
+</ul>
+<!-- END X-NAVIGATION VERTICAL -->

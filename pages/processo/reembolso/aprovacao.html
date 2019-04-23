@@ -1,0 +1,1831 @@
+<!--START STYLE-PAGE-->
+<style type="text/css">
+    .env{
+        color: #0000CC;
+    }
+    .edt{
+        color: rgba(83, 83, 83, 0.91);
+    }
+    .apr{
+        color: #4d9d4f;
+    }
+    .rep{
+        color: #ff000d;
+    }
+
+    .anl{
+        color: #ff7e05;
+    }
+    /*LEGENDAS */
+
+    #l1{
+        background-color: rgba(255, 7, 6, 40);
+        border: 0 none;
+        outline: 0;
+        box-shadow: 0 0 0 0;
+    }
+    .l2{
+        color: #3c36ff;
+    }
+    #l3{
+        color: #ff9642;
+    }
+    #l4{
+        color: #ff3820;
+    }
+    #l5{
+        color: #00c4ff;
+    }
+    #l6{
+        color: #ff00ef;
+    }
+    #l7{
+        color: #ff7e05;
+    }
+    #l8{
+        color: #4d9d4f;
+    }
+
+    input[type="text"]:disabled{
+         color: #8b8b8b;
+         background-color: rgba(255, 123, 56, 0);
+         border: 0 none;
+         outline: 0;
+         box-shadow: 0 0 0 0;
+    }
+
+    #txtDescricaoGrupo_list{
+        color: #8b8b8b;
+        background-color: rgba(255, 123, 56, 0);
+        border: 0 none;
+        outline: 0;
+        box-shadow: 0 0 0 0;
+    }
+    .formItensMsg{
+        color: #8b8b8b;
+        background-color: rgba(255, 123, 56, 0);
+        border: 0 none;
+        outline: 0;
+        box-shadow: 0 0 0 0;
+    }
+    .formFooterMsg{
+        background-color: rgba(255, 123, 56, 0);
+        border: 0 none;
+        /*outline: 0;*/
+        /*box-shadow: 0 0 0 0;*/
+    }
+
+    .formMsg{
+        border-color: #dbdbdb;
+        outline: 0;
+        box-shadow: 0 0 0 0;
+    }
+
+</style>
+<!--END  STYLE-PAGE-->
+
+
+<script type="text/javascript">
+
+    var remote1 = new Remote('php/comunicacao.php', 'processo/reembolso', 'aprovacao');
+    var remote2 = new Remote('php/comunicacao.php', 'cadastro/reembolso', 'grupo');
+    var remote3 = new Remote('php/comunicacao.php', 'configuracao','parametros');
+    var remote4 = new Remote('php/comunicacao.php', 'email','email');
+    var remote5 = new Remote('php/comunicacao.php', 'colaborador', 'reembolso');
+
+    var oTable;
+    var defTable;
+
+    var oTable_acomp;
+    var defTable_acomp;
+
+    var oTable_rev;
+    var defTable_rev;
+
+    var oTable_hist;
+    var defTable_hist;
+
+    var dir = "";
+    var verificadorMsg=0;
+    var verificadorSts=0;
+    var perm;
+
+    function resultGetMeusReembolsos(dados) {
+        if(dados.length>0){
+        //COUNT DE TITULOS A APROVAR
+        var txt ='';
+        if(dados.length==1){
+            txt='titulo';
+        }else if(dados.length>1){
+            txt='titulos';
+        }else{
+            txt='titulo';
+        }
+        $('#txtNumTitulos').val(dados.length+' '+txt);
+
+        //TOTAL TITULOS A APROVAR
+        var total=0.0;
+        for (var i=0; i< dados.length;i++){
+            total=total+Number.parseFloat(dados[i].total);
+        }
+        $('#txtTotalTitulos').val(function_NumberToReal(total));
+
+        // VALOR MAX-MIN
+        var arrMaxMin = new Array();
+        for (var i=0; i< dados.length;i++){
+            arrMaxMin[i]=Number.parseFloat(dados[i].total);
+        }
+        var maior = Number.NEGATIVE_INFINITY,
+            menor = Infinity;
+        arrMaxMin.forEach(function(item){
+            if (Number(item) > maior) maior = item;
+            if (Number(item) < menor) menor = item;
+        });
+        $('#txtValorMin').val(function_NumberToReal(menor));
+        $('#txtValorMax').val(function_NumberToReal(maior));
+
+        //CONTADOR GROUP BY EMPRESA
+        $('#txtEmpresaCount').val(function_CountInArray_Empresa('ENERGIA',dados)+function_CountInArray_Empresa('GESTAO',dados) );
+        $('#txtStatusCount').val(function_CountInArray_Status('ENVIADO',dados)+function_CountInArray_Status('EM ANALISE',dados)+function_CountInArray_Status('REPROVADO',dados)+function_CountInArray_Status('APROVADO',dados) );
+        $('#txtDespesasCount').val(function_CountInArray_Despesa('REEMBOLSO',dados)+function_CountInArray_Despesa('AUXILIO SAUDE',dados));
+
+        //CONUNT GRUP BY GRUPO
+        var arrUser = new Array();
+        for (var i=0; i< dados.length;i++){
+            arrUser[i]=Number.parseInt(dados[i].usuario);
+        }
+        //remote1.executa("getReembolsoAprovadorInfoGrupos", {arrUser: arrUser}, resultGetReembolsoAprovadorInfoGrupos, $('#pnlGeral'), erroPersonalizado);
+        //TABELA DEDAULT
+        renderizaTabelaDefault(dados);
+        }else{
+            renderizaTabelaDefault(dados);
+            $('#txtNumTitulos').val('0 titulos');
+            refresh_painelGeral();
+        }
+    }
+
+    function resultGetAcompanhamento(dados) {
+        //COUNT DE TITULOS A REVISAO
+        var txt ='';
+        if(dados.length==1){
+            txt='titulo';
+        }else if(dados.length>1){
+            txt='titulos';
+        }else{
+            txt='titulos';
+        }
+        $('#txtNumTitulosAcop').val(dados.length+' '+txt);
+        renderizaTabelaAcompanhamento(dados);
+    }
+
+    function resultGetHistorico(dados) {
+        renderizaTabelaHistorico(dados);
+    }
+
+    function resultGetReembolsoRevisao(dados){
+        //COUNT DE TITULOS A REVISAO
+        var txt ='';
+        if(dados.length==1){
+            txt='titulo';
+        }else if(dados.length>1){
+            txt='titulos';
+        }else{
+            txt='titulos';
+        }
+        $('#txtNumTitulosNeg').val(dados.length+' '+txt);
+
+        renderizaTabelaRevisao(dados)
+    }
+
+    function renderizaTabelaDefault(dados) {
+        if (oTable == null) {
+            defTable = $('#t_dados').html();
+        } else {
+            $('#t_dados').html(defTable);
+        }
+        var objDataTable = colunasDefaultDataTable($('#t_dados'), dados, function (data) {
+            remote1.executa("getInfoUsuario",{id_reembolso: data.find("td:nth-child(1)").text()}, render_InfoUsuarioPadrao, $('#pnlInfoUsuario'));
+            remote1.executa("getInfoAprovador",{id_reembolso:data.find("td:nth-child(1)").text()}, render_InfoAprovador, $('#pnlInfoAprovador'));
+        });
+        oTable = $('#t_dados').dataTable(objDataTable);
+        $('#t_dados th').css('text-align','center');
+        $("#t_dados td:contains('Nenhum')").html('Nenhum Titulo para aprovar');
+        $("#t_dados th:contains('Informacao')").html('Informação');
+        $(window).resize();
+    }
+
+    function renderizaTabelaRevisao(dados) {
+
+        if (oTable_rev == null) {
+            defTable_rev = $('#t_dadosRev').html();
+        } else {
+            $('#t_dadosRev').html(defTable_rev);
+        }
+        // var objDataTable = colunasDefaultDataTable($('#t_dados'), dados);
+        var objDataTable = colunasDefaultDataTable($('#t_dadosRev'), dados, function (data) {
+            var id_reembolso = data.find("td:nth-child(1)").text();
+            remote1.executa("getInfoUsuario",{"idReembolso": id_reembolso }, render_InfoUsuarioResumo, $('#pnlInfoUsuario'));
+            remote1.executa("getInfoAprovador",{"idReembolso":id_reembolso}, render_InfoAprovador, $('#pnlInfoAprovador'));
+        });
+        oTable_rev = $('#t_dadosRev').dataTable(objDataTable);
+        for (var i=1; i< dados.length+1;i++){
+                $("#t_dadosRev tbody").find("tr:nth-child("+i+")").addClass("warning");
+        }
+        $("#t_dadosRev td:contains('Nenhum')").html('Nenhum Titulo para revisão');
+        $("#t_dadosRev th:contains('Informacao')").html('Informação');
+        $(window).resize();
+    }
+
+    function renderizaTabelaAcompanhamento(dados) {
+        if (oTable_acomp == null) {
+            defTable_acomp = $('#t_dadosAcomp').html();
+        } else {
+            $('#t_dadosAcomp').html(defTable_acomp);
+        }
+        // var objDataTable = colunasDefaultDataTable($('#t_dados'), dados);
+        var objDataTable = colunasDefaultDataTable($('#t_dadosAcomp'), dados, function (data) {
+            var id_reembolso = data.find("td:nth-child(1)").text();
+            var status = data.find("td:nth-child(13)").text();
+            if(status == 'PARA REVISAO' ){
+                $('#btnMsgViewRev').show();
+                $('#btnMsgViewAnal').hide();
+            }else if (status=='NEGADO'){
+                $('#btnMsgViewRev').hide();
+                $('#btnMsgViewAnal').show();
+            }
+
+            remote1.executa("getInfoUsuario",{"idReembolso": id_reembolso}, render_InfoUsuarioResumo, $('#pnlInfoUsuario'));
+            remote1.executa("getInfoAprovador",{"idReembolso":id_reembolso}, render_InfoAprovador, $('#pnlInfoAprovador'));
+
+
+        });
+        oTable_acomp = $('#t_dadosAcomp').dataTable(objDataTable);
+
+
+        //SETANDO STATUS
+        for (var i=1; i< dados.length+1;i++){
+            var status =  $("#t_dadosAcomp tr:nth-child("+i+") td:nth-child(13)").text();
+            //alert(result);
+            if (status=="EM ANALISE"){
+                $("#t_dadosAcomp tbody").find("tr:nth-child("+i+")").removeClass("info").addClass("warning");
+            }else if(status=="PARA REVISAO"){
+                $("#t_dadosAcomp tbody").find("tr:nth-child("+i+")").removeClass("warning").addClass("info");
+            }
+        }
+        $("#t_dadosAcomp td:contains('Nenhum')").html('Nenhum Titulo para em acompanhamento e  análise');
+        $("#t_dadosAcomp th:contains('Informacao')").html('Informação');
+        $(window).resize();
+    }
+
+    function renderizaTabelaHistorico(dados) {
+        if (oTable_hist == null) {
+            defTable_hist = $('#t_dadosHist').html();
+        } else {
+            $('#t_dadosHist').html(defTable_hist);
+        }
+        // var objDataTable = colunasDefaultDataTable($('#t_dados'), dados);
+        var objDataTable = colunasDefaultDataTable($('#t_dadosHist'), dados, function (data) {
+            var status = data.find("td:nth-child(14)").text();
+            var id_reembolso = data.find("td:nth-child(1)").text();
+            //alert(id_reembolso);
+            if(status == 'REPROVADO' ){
+                $('#btnMsgViewHist').show();
+                verificadorSts =200;
+
+            }else{
+                $('#btnMsgViewHist').hide();
+                verificadorSts =100;
+            }
+            remote1.executa("getInfoUsuario",{"idReembolso": id_reembolso}, render_InfoUsuarioResumo, $('#pnlInfoUsuario'));
+        });
+        oTable_hist = $('#t_dadosHist').dataTable(objDataTable);
+
+        for (var i=1; i< dados.length+1;i++){
+            var status =  $("#t_dadosHist tr:nth-child("+i+") td:nth-child(14)").text();
+            //alert(result);
+            if (status=="APROVADO"|| status=="APROVADO-ERP"){
+                $("#t_dadosHist tbody").find("tr:nth-child("+i+")").removeClass("danger").removeClass("info").addClass("success");
+            }else if(status=="REPROVADO"){
+                $("#t_dadosHist tbody").find("tr:nth-child("+i+")").removeClass("success").removeClass("info").addClass("danger");
+            }else if(status=="INTEGRADO") {
+                $("#t_dadosHist tbody").find("tr:nth-child("+i+")").removeClass("success").removeClass("info").addClass("info");
+            }
+        }
+        $("#t_dadosAcomp td:contains('Nenhum')").html('Nenhum Titulo em histórico');
+        $("#t_dadosAcomp th:contains('Informacao')").html('Informação');
+        $(window).resize();
+
+    }
+
+    function resultGetReembolsoAprovadorInfoGrupos(dados){
+        var txt ='';
+        for (var i=0; i< dados.length;i++){
+            txt+=dados[i].grupo+' ('+dados[i].num+')     ';
+        }
+        $('#txtGrupos').val(txt);
+    }
+
+    function resultDiretorio(dados) {
+        dir = dados[0].dir;
+        //alert(dir);
+    }
+
+    //MY FUNCTION RENDER'S
+    function render_ItemInfo(dados){
+        var conteudo="";
+
+        //SET ELEMENTOS DONWLOAD
+        var href = 'php/services/colaborador/download.php?';
+        var name = "";
+        var file ="";
+        var file2="";
+        for (var i=0; i< dados.length;i++){
+            //SET ELEMENTOS VIEW
+            name = dados[i].documento;
+            file = dir+name;
+            file2 = href+'file='+name+'&dir='+dir;
+
+            conteudo += '<div class="col-md-12">' +
+                '          <div class="panel panel-primary">\n' +
+                '            <div class="panel-heading">\n' +
+                '                <h3 class="panel-title"><span class="fa fa-file"></span>Item'+(i+1)+'</h3>\n' +
+                '            </div>\n' +
+                '            <div class="panel-body">\n' +
+                '               <label><br>Dia da Semana</label><br><span>'+dados[i].semana+'</span>\n' +
+                '               <br><label>Data</label><br>'+dados[i].data+'\n' +
+                '               <br><label>Cliente</label><br>'+dados[i].cliente+'\n' +
+                '               <br><label>Natureza</label><br>'+dados[i].natureza+'\n' +
+                '               <br><label>Valor</label><br>'+dados[i].valor+'\n' +
+                '               <br><label>Desconto</label><br>'+dados[i].desconto+'\n' +
+                '               <br><label>Total</label><br>'+dados[i].total+'\n' +
+                '               <br><label>Observações</label><br>\n' +
+                '               <textarea  class="form-control" disabled="disabled">'+dados[i].observacao+'</textarea>\n'+
+                '               <br><label>Documento</label><br>'+dados[i].documento+'\n' +
+                '            </div>\n' +
+                '            <div class="panel-footer">\n' +
+                '               <div class="panel-body">\n' +
+                '                   <ul class="panel-controls">\n' +
+                '                       <li><a class="control-primarys" data-toggle="modal" href="'+file+'" target="preview"  data-arquivo-v="'+dados[i].documento+'" title="Ver documento"><span class="fa fa-picture-o" ></span></a></li>\n' +
+                '                       <li><a href="'+file2+'"  class="control-primarys" data-acao="down" data-arquivo-d="'+dados[i].documento+'" title="Download"><span class="fa fa-arrow-down" ></span></a></li>\n' +
+                '                   </ul>\n' +
+                '               </div>\n' +
+                '            </div>\n' +
+                '          </div>\n' +
+                '       </div>\n';
+        }
+        $('#divItem_info').html(conteudo);
+    }
+
+    function render_InfoUsuarioPadrao(dados) {
+        //alert(dados[0].data_base);
+        var conteudo='';
+        var rnd = Math.random();
+        conteudo += '<div class="col-md-12" style="padding-top: 20px">\n' +
+            '  <div class="panel panel-primary">\n'+
+            '      <div class="profile">\n'+
+            '          <div class="profile"><div class="profile-image"><img src="php/outros/loadimage.php?n=' + dados[0].id + '&c=' + rnd + '" class="foto_usuario" alt="Usuário"></div></div>\n'+
+            '              <div class="profile-data">\n' +
+            '                 <div class="profile-data-name ">' + dados[0].nome+' '+dados[0].sobrenome+'</div>\n' +
+            '                 <div class="profile-data-title ">' + dados[0].empresa + '</div>\n' +
+            '                 <div class="profile-data-name"> CPF </div>\n' +
+            '                 <div class="profile-data-title">' + dados[0].cpf + '</div>\n' +
+            '                 <div class="profile-data-name"> Grupo </div>\n' +
+            '                 <div class="profile-data-title">' + dados[0].grupo + '</div>\n' +
+            '                 <div class="profile-data-name"> Total ('+ dados[0].data_base +') </div>\n' +
+            '                 <div class="profile-data-title">R$' + dados[0].total_mes + '</div>\n' +
+            '             </div>\n' +
+            '         </div>\n' +
+            '     </div>\n' +
+            ' </div>';
+        $("#divInfoUsuario").html(conteudo);
+    }
+
+    function render_InfoUsuarioResumo(dados) {
+        //alert(dados[0].data_base);
+        var conteudo='';
+        var rnd = Math.random();
+        conteudo += '<div class="col-md-12" style="padding-top: 20px">\n' +
+            '  <div class="panel panel-primary">\n'+
+            '      <div class="profile">\n'+
+            '          <div class="profile"><div class="profile-image"><img src="php/outros/loadimage.php?n=' + dados[0].id + '&c=' + rnd + '" class="foto_usuario" alt="Usuário"></div></div>\n'+
+            '              <div class="profile-data">\n' +
+            '                 <div class="profile-data-name ">' + dados[0].nome+' '+dados[0].sobrenome+'</div>\n' +
+            '                 <div class="profile-data-title ">' + dados[0].empresa + '</div>\n' +
+            '                 <div class="profile-data-name"> CPF </div>\n' +
+            '                 <div class="profile-data-title">' + dados[0].cpf + '</div>\n' +
+            '                 <div class="profile-data-name"> Grupo </div>\n' +
+            '                 <div class="profile-data-title">' + dados[0].grupo + '</div>\n' +
+            '             </div>\n' +
+            '         </div>\n' +
+            '     </div>\n' +
+            ' </div>';
+        $("#divInfoUsuario").html(conteudo);
+    }
+
+    function render_InfoAprovador(dados) {
+        var conteudo='';
+        conteudo += '<div class="col-md-12" style="padding-top: 20px">\n' +
+            '  <div class="panel panel-primary">\n'+
+            '      <div class="profile">\n'+
+            '              <div class="profile-data">\n' +
+            '                 <div class="profile-data-name">Grupo</div></br>\n' +
+            '                 <div class="profile-data-title">' + dados[0].grupo + '</div>\n' +
+            '                 <div class="profile-data-name">Range de aprovação</div></br>\n' +
+            '                 <div class="profile-data-title">' + dados[0].inicio_aprov +'-'+ dados[0].fim_aprov+'</div>\n' +
+            '             </div>\n' +
+            '         </div>\n' +
+            '     </div>\n' +
+            ' </div>';
+        $('#txtId_Grupo').val(dados[0].id_grupo);
+        $("#divInfoAprovador").html(conteudo);
+    }
+
+    function render_ViewAprov(dados) {
+        var conteudo='';
+        for (var i = 0; i < dados.length; i++) {
+            var rnd = Math.random();
+            conteudo += '<div class="col-md-4" style="padding-top: 20px">\n' +
+                '  <div class="panel panel-primary">\n'+
+                '      <div class="profile">\n'+
+                '          <div class="profile"><div class="profile-image"><img src="php/outros/loadimage.php?n=' + dados[i].id + '&c=' + rnd + '" class="foto_usuario" alt="Usuário"></div></div>\n'+
+                '              <div class="profile-data">\n' +
+                '                 <div class="profile-data-name ">' + dados[i].nome+' '+dados[i].sobrenome+'</div>\n' +
+                '                 <div class="profile-data-title ">' + dados[i].empresa + '</div>\n' +
+                '                 <div class="profile-data-title"> ' + dados[i].departamento + '</div>\n' +
+                '             </div>\n' +
+                '         </div>\n' +
+                '     </div>\n' +
+                '      <div class="panel-footer">\n' +
+                '          <div class="profile-data">\n' +
+                '                 <div class="profile-data-title"> Alçada (de  R$) - '+dados[i].alcada_inicio+'</div>\n' +
+                '                 <div class="profile-data-title"> Alçada (até R$) - '+dados[i].alcada_fim+'</div>\n' +
+                '                 <div class="profile-data-title"> Ordem - ' + dados[i].ordem + '</div>\n' +
+                '             </div>\n' +
+                '       </div>\n' +
+                ' </div>';
+                $("#txtNomeGrupo_list").val(dados[i].grupo);
+                $("#txtDepartamentoGrupo_list").val(dados[i].departamento);
+                $("#txtDescricaoGrupo_list").val(dados[i].descricao_grupo);
+        }
+        $("#divViewAprov").html(conteudo);
+    }
+
+    function function_NumberToReal(numero) {
+        var numero = numero.toFixed(2).split('.');
+        numero[0] = "R$ " + numero[0].split(/(?=(?:...)*$)/).join('.');
+        return numero.join(',');
+    }
+
+    function function_CountInArray_Empresa(param, dados) {
+        var txt='';
+        var contador = 0;
+        for (var i=0; i< dados.length;i++){
+            if ( dados[i].empresa.trim() == param.trim()) {
+                contador++;
+            }
+        }
+        if(contador>0){
+            txt=contador;
+            return param+' ('+txt+')  ';
+        }else{
+            return txt;
+        }
+    }
+
+    function function_CountInArray_Status(param, dados) {
+        var txt='';
+        var contador = 0;
+        for (var i=0; i< dados.length;i++){
+            if ( dados[i].status.trim() == param.trim()) {
+                contador++;
+            }
+        }
+        if(contador>0){
+            txt=contador;
+            return param+' ('+txt+')  ';
+        }else{
+            return txt;
+        }
+    }
+
+    function function_CountInArray_Despesa(param, dados) {
+        var txt='';
+        var contador = 0;
+        for (var i=0; i< dados.length;i++){
+            if ( dados[i].despesa.trim() == param.trim()) {
+                contador++;
+            }
+        }
+        if(contador>0){
+            txt=contador;
+            return param+' ('+txt+')  ';
+        }else{
+            return txt;
+        }
+    }
+
+    function refresh_painelGeral(){
+        $('#txtTotalTitulos').val('');
+        $('#txtValorMin').val('');
+        $('#txtValorMax').val('');
+        $('#txtEmpresaCount').val('') ;
+        $('#txtStatusCount').val('');
+        $('#txtDespesasCount').val('');
+        $('#txtGrupos').val('');
+    }
+
+    function resultGetPermissaoRevisao(dados){
+        if(dados==1){
+            $("#divPainelRev").show();
+            $("#btnRev").show();
+            $("#btnRepPri").show();
+            $("#btnRev").show();
+            perm = 1;
+        }else{
+            $("#divPainelRev").hide();
+            $("#btnRepPri").hide();
+            $("#btnRevPri").hide();
+            $("#btnRev").hide();
+        }
+
+    }
+
+    function valida_mensagemNegado(){
+        var msg = $("#txtMensagem_env").val();
+        if(msg!='' & msg.length>50){
+            return true;
+        }else{
+            noty({
+                text: '<br/><b><p><span class="fa fa-check-circle"></span><font size="2">   Faltam dados para envio da mensagem</font></p></b><p>Preencha a mensagem com as observações ao mínimo com 50 caracteres de instrução</p>',
+                type: 'warning',
+                layout: 'topCenter',
+                timeout: 6000
+            });
+            return false;
+        }
+    }
+
+    function resultGetReembolsoMessagem(dados){
+        refreshModalMensagemReembolso_view();
+        //alert(dados[0].mensagem);
+        setImagemUsuario('#divImagemDeMsg',dados[0].id);
+
+        $("#txtMensagem_view").html(dados[0].mensagem);
+        $("#txtDataAprov").val(dados[0].data);
+        $("#txtNomeAprov").val(dados[0].nome+' '+dados[0].sobrenome);
+        $("#txtEmailAprov").val(dados[0].usuario);
+    }
+
+    function refreshModalMensagemReembolso() {
+        $("#txtMensagem_view").html('');
+        $("#txtDataAprov").val('');
+        $("#txtNomeAprov").val('');
+        $("#txtEmailAprov").val('');
+    }
+
+    function refreshModalMensagemReembolso_view() {
+        $("#txtMensagem_view").html('');
+        $("#txtDataAprov").val('');
+        $("#txtNomeAprov").val('');
+        $("#txtEmailAprov").val('');
+    }
+
+    function refreshModalMensagemReembolso_env() {
+        $("#txtCodReembolso").val('');
+        $("#txtEventoReembolso").val('');
+        $("#txtMensagem_env").val('');
+    }
+
+    function resultGetReembolsoInfoParaMensagemNegado(dados){
+        $("#txtId_De").val(dados[0].id_de);
+        setImagemUsuario('#divImagemDe',dados[0].id_de);
+        $("#txtUsuarioNomeDe").val(dados[0].nome_de+' '+dados[0].sobrenome_de);
+        $("#txtUsuarioEmailDe").val(dados[0].email_de);
+        $("#txtId_Para").val(dados[0].id_para);
+        setImagemUsuario('#divImagemPara',dados[0].id_para);
+        $("#txtUsuarioNomePara").val(dados[0].nome_para+' '+dados[0].sobrenome_para);
+        $("#txtUsuarioEmailPara").val(dados[0].email_para);
+    }
+
+    function resultEmailReprovado(dados){
+        if(dados==0){
+            $('#msg_box_env').modal('toggle');
+            noty({
+                text: '<br/><b><p><span class="fa fa-check-circle"></span><font size="2">   Erro</font></p></b><p>Erro ao aplicação a ação de Reprovação</p>',
+                type: 'error',
+                layout: 'topCenter',
+                timeout: 4000
+            });
+            //alert('Erro ao enviar email');
+        }else if (dados==1){
+            $('#msg_box_env').modal('toggle');
+            noty({
+                text: '<br/><b><p><span class="fa fa-check-circle"></span><font size="2">   Concluida ação</font></p></b><p>Esta solicitação de reembolso foi reprovada e encerrado o processo de aprovação.A mesma será mantida em seus históricos</p>',
+                type: 'success',
+                layout: 'topCenter',
+                timeout: 4000
+            });
+            setTimeout(function(){
+                location.reload();
+            }, 2000);
+            //alert('Esta solicitação de reembolso foi reprovada e encerrado o processo de aprovação.A mesma será mantida em seus históricos');
+            //location.reload();
+        }
+    }
+    function resultEmailRetomado(dados){
+        if(dados==0){
+            $('#msg_box_env').modal('toggle');
+            noty({
+                text: '<br/><b><p><span class="fa fa-check-circle"></span><font size="2">   Erro</font></p></b><p>Erro ao aplicação a ação de Retomada</p>',
+                type: 'error',
+                layout: 'topCenter',
+                timeout: 4000
+            });
+            setTimeout(function(){
+                location.reload();
+            }, 2000);
+        }else if (dados==1){
+            $('#msg_box_env').modal('toggle');
+            noty({
+                text: '<br/><b><p><span class="fa fa-check-circle"></span><font size="2">   Concluida ação</font></p></b><p>Esta solicitação foi retomada ao ciclo de aprovação e devolvida para o aprovador</p>',
+                type: 'success',
+                layout: 'topCenter',
+                timeout: 4000
+            });
+            setTimeout(function(){
+                location.reload();
+            }, 2000);
+        }
+    }
+
+    function resultEmailRevisao(dados){
+        if(dados==0){
+            $('#msg_box_env').modal('toggle');
+            noty({
+                text: '<br/><b><p><span class="fa fa-check-circle"></span><font size="2">   Erro</font></p></b><p>Erro ao aplicação a ação de Revisão</p>',
+                type: 'error',
+                layout: 'topCenter',
+                timeout: 4000
+            });
+            //alert('Erro ao enviar email');
+        }else if (dados==1){
+            $('#msg_box_env').modal('toggle');
+            noty({
+                text: '<br/><b><p><span class="fa fa-check-circle"></span><font size="2">   Concluida ação</font></p></b><p>Esta solicitação de reembolso foi enviada ao colaborador para revisão</p>',
+                type: 'success',
+                layout: 'topCenter',
+                timeout: 4000
+            });
+            setTimeout(function(){
+                location.reload();
+            }, 2000);
+            //alert('Esta solicitação de reembolso foi enviada ao colaborador para revisão.');
+            //location.reload();
+        }
+    }
+
+
+    function resultGetDadosEmailReembolsoNegado(dados){
+        var param = {
+            nome_para : dados[0].nome_para,
+            email_para : dados[0].email_para,
+            nome_de : dados[0].nome_de,
+            email_de : dados[0].email_de,
+            nome_usuario : dados[0].nome_usuario,
+            id_format : dados[0].id_format,
+            empresa : dados[0].empresa,
+            mes : dados[0].mes,
+            despesa : dados[0].despesa,
+            evento : dados[0].evento,
+            total : dados[0].total,
+            itens : dados[0].itens,
+            envio : dados[0].envio,
+            mensagem:$("#txtMensagem_env").val()
+        };
+
+        remote4.executa("e6aNegadoReembolso", param, resultEmailReembolsoNegado, $('#msg_box_env'), erroPersonalizado);
+    }
+
+    function resultEmailReembolsoNegado(dados){
+        if(dados==0){
+            $('#msg_box_env').modal('toggle');
+            noty({
+                text: '<br/><b><p><span class="fa fa-check-circle"></span><font size="2">   Erro</font></p></b><p>Erro ao aplicação a ação de Negação</p>',
+                type: 'error',
+                layout: 'topCenter',
+                timeout: 4000
+            });
+            //alert('Erro ao enviar email');
+        }else if (dados==1){
+            $('#msg_box_env').modal('toggle');
+            noty({
+                text: '<br/><b><p><span class="fa fa-check-circle"></span><font size="2">   Concluida ação</font></p></b><p>Está solicitação foi Negada no processo de aprovação e foi encaminhada ao aprovador de primeira ordem do grupo para análise</p>',
+                type: 'success',
+                layout: 'topCenter',
+                timeout: 4000
+            });
+            setTimeout(function(){
+                location.reload();
+            }, 2000);
+            //alert('Está solicitação foi Negada no processo de aprovação e foi encaminhada ao aprovador primário do grupo.');
+            //location.reload();
+        }
+    }
+
+    function resultGetDadosEmailReembolsoReprovado(dados){
+        var param = {
+            nome_para : dados[0].nome_para,
+            email_para : dados[0].email_para,
+            nome_de : dados[0].nome_de,
+            email_de : dados[0].email_de,
+            nome_usuario : dados[0].nome_usuario,
+            id_format : dados[0].id_format,
+            empresa : dados[0].empresa,
+            mes : dados[0].mes,
+            despesa : dados[0].despesa,
+            evento : dados[0].evento,
+            total : dados[0].total,
+            itens : dados[0].itens,
+            envio : dados[0].envio,
+            mensagem:$("#txtMensagem_env").val()
+        };
+        remote4.executa("e8cReprovadoReemmbolso", param, resultEmailReprovado, $('#msg_box_env'), erroPersonalizado);
+    }
+
+    function resultGetDadosEmailReembolsoRetomado(dados){
+        var param = {
+            nome_para : dados[0].nome_para,
+            email_para : dados[0].email_para,
+            nome_de : dados[0].nome_de,
+            email_de : dados[0].email_de,
+            nome_usuario : dados[0].nome_usuario,
+            id_format : dados[0].id_format,
+            empresa : dados[0].empresa,
+            mes : dados[0].mes,
+            despesa : dados[0].despesa,
+            evento : dados[0].evento,
+            total : dados[0].total,
+            itens : dados[0].itens,
+            envio : dados[0].envio,
+            negado: dados[0].negado,
+            mensagem: $("#txtMensagem_env").val()
+        };
+        remote4.executa("e9aRetomadoReembolso", param, resultEmailRetomado, $('#msg_box_env'), erroPersonalizado);
+    }
+
+    function resultGetDadosEmailReembolsoRevisao(dados){
+        var param = {
+            nome_para : dados[0].nome_para,
+            email_para : dados[0].email_para,
+            nome_de : dados[0].nome_de,
+            email_de : dados[0].email_de,
+            id_format : dados[0].id_format,
+            empresa : dados[0].empresa,
+            mes : dados[0].mes,
+            despesa : dados[0].despesa,
+            evento : dados[0].evento,
+            total : dados[0].total,
+            itens : dados[0].itens,
+            envio : dados[0].envio,
+            mensagem: $("#txtMensagem_env").val()
+        };
+        remote4.executa("e7cRevisarReembolso", param, resultEmailRevisao, $('#msg_box_env'), erroPersonalizado);
+    }
+
+
+    function resultGetReembolsoInfoParaMensagemRevisao(dados){
+        $("#txtId_De").val(dados[0].id_de);
+        setImagemUsuario('#divImagemDe',dados[0].id_de);
+        $("#txtUsuarioNomeDe").val(dados[0].nome_de+' '+dados[0].sobrenome_de);
+        $("#txtUsuarioEmailDe").val(dados[0].email_de);
+        $("#txtId_Para").val(dados[0].id_para);
+        setImagemUsuario('#divImagemPara',dados[0].id_para);
+        $("#txtUsuarioNomePara").val(dados[0].nome_para+' '+dados[0].sobrenome_para);
+        $("#txtUsuarioEmailPara").val(dados[0].email_para);
+    }
+
+    function resultGetReembolsoInfoParaMensagemReprovado(dados){
+        $("#txtId_De").val(dados[0].id_de);
+        setImagemUsuario('#divImagemDe',dados[0].id_de);
+        $("#txtUsuarioNomeDe").val(dados[0].nome_de+' '+dados[0].sobrenome_de);
+        $("#txtUsuarioEmailDe").val(dados[0].email_de);
+        $("#txtId_Para").val(dados[0].id_para);
+        setImagemUsuario('#divImagemPara',dados[0].id_para);
+        $("#txtUsuarioNomePara").val(dados[0].nome_para+' '+dados[0].sobrenome_para);
+        $("#txtUsuarioEmailPara").val(dados[0].email_para);
+    }
+
+    function resultGetReembolsoInfoParaMensagemRetomado(dados){
+        $("#txtId_De").val(dados[0].id_de);
+        setImagemUsuario('#divImagemDe',dados[0].id_de);
+        $("#txtUsuarioNomeDe").val(dados[0].nome_de+' '+dados[0].sobrenome_de);
+        $("#txtUsuarioEmailDe").val(dados[0].email_de);
+        $("#txtId_Para").val(dados[0].id_para);
+        setImagemUsuario('#divImagemPara',dados[0].id_para);
+        $("#txtUsuarioNomePara").val(dados[0].nome_para+' '+dados[0].sobrenome_para);
+        $("#txtUsuarioEmailPara").val(dados[0].email_para);
+    }
+
+    function resultSetStatusAprovadorAprovado(dados){
+        if(dados==0){
+            noty({
+                text: '<br/><b><p><span class="fa fa-check-circle"></span><font size="2">   Erro</font></p></b><p>Erro ao aprovar solicitação</p>',
+                type: 'error',
+                layout: 'topCenter',
+                timeout: 4000
+            });
+            setTimeout(function(){
+                location.reload();
+            }, 2000);
+        }else if (dados==1){
+            noty({
+                text: '<br/><b><p><span class="fa fa-check-circle"></span><font size="2">   Sucesso</font></p></b><p>Aprovação efetuada com sucesso! </br> Esta solicitação de reembolso encerrou seu ciclo de  aprovações e a mesma será mantida em seus históricos.</p>',
+                type: 'success',
+                layout: 'topCenter',
+                timeout: 4000
+            });
+            setTimeout(function(){
+                location.reload();
+            }, 2000);
+        }else if (dados==2){
+            noty({
+                text: '<br/><b><p><span class="fa fa-check-circle"></span><font size="2">   Sucesso</font></p></b><p>Aprovação efetuada com sucesso!</br> A solicitação foi encaminhada para o próximo aprovador</p>',
+                type: 'success',
+                layout: 'topCenter',
+                timeout: 4000
+            });
+            setTimeout(function(){
+                location.reload();
+            }, 2000);
+        }
+    }
+    function resultGetReembolsoMessagemRevisao(dados){
+        refreshModalMensagemReembolso();
+        setImagemUsuario('#divImagemDeMsg',dados[0].id);
+        $("#txtMensagem_view").html(dados[0].mensagem);
+        $("#txtDataAprov").val(dados[0].data);
+        $("#txtNomeAprov").val(dados[0].nome+' '+dados[0].sobrenome);
+        $("#txtEmailAprov").val(dados[0].usuario);
+    }
+
+    function setImagemUsuario(div,id_usuario,){
+        var rnd = Math.random();
+        var conteudo ='';
+        conteudo= '<div class="profile"><div class=" profile-mini profile-image"><img  src="php/outros/loadimage.php?n=' + id_usuario + '&c=' + rnd + '" class="foto_usuario" alt="Usuário"></div></div>';
+        $(div).html(conteudo);
+    }
+
+    $(document).ready(function () {
+        remote1.executa("getPermissaoRevisao", null, resultGetPermissaoRevisao, $('#pnlAnalise'), erroPersonalizado);
+        remote1.executa("getReembolsoAprovador", null, resultGetMeusReembolsos, $('#pnlAnalise'), erroPersonalizado);
+        remote1.executa("getReembolsoRevisao", null, resultGetReembolsoRevisao, $('#pnlAnalise'), erroPersonalizado);
+        remote1.executa("getReembolsoHistorico", null, resultGetHistorico, $('#pnlAnalise'), erroPersonalizado);
+        remote1.executa("getReembolsoAcompanhamento", null, resultGetAcompanhamento, $('#pnlAnalise'), erroPersonalizado);
+        remote3.executa("getDiretorioReembolso",null, resultDiretorio, $('#pnlAnalise'), erroPersonalizado);
+
+        $("#btnView").on('click', function () {
+            var objTemp = oTable.fnGetData(oTable.closest("table").find(".selected"));
+            if (objTemp != null) {
+                remote1.executa("getReembolsoItens", {id: objTemp.cod}, render_ItemInfo, $('#item_box_info'), erroPersonalizado);
+                $("#item_box_info").modal();
+            }
+        });
+
+        $("#btnViewHist").on('click', function () {
+            var objTemp = oTable_hist.fnGetData(oTable_hist.closest("table").find(".selected"));
+            if (objTemp != null) {
+                remote1.executa("getReembolsoItens", {id: objTemp.cod}, render_ItemInfo, $('#item_box_info'), erroPersonalizado);
+                $("#item_box_info").modal();
+            }
+        });
+
+        $("#btnViewAnal").on('click', function () {
+            var objTemp = oTable_acomp.fnGetData(oTable_acomp.closest("table").find(".selected"));
+            if (objTemp != null) {
+                remote1.executa("getReembolsoItens", {id: objTemp.cod}, render_ItemInfo, $('#item_box_info'), erroPersonalizado);
+                $("#item_box_info").modal();
+            }
+        });
+
+        $("#btnViewRev").on('click', function () {
+            var objTemp = oTable_rev.fnGetData(oTable_rev.closest("table").find(".selected"));
+            if (objTemp != null) {
+                remote1.executa("getReembolsoItens", {id: objTemp.cod}, render_ItemInfo, $('#item_box_info'), erroPersonalizado);
+                $("#item_box_info").modal();
+            }
+        });
+
+        $("#btnAnal").on('click', function () {
+            $("#btnRep").hide();
+            $("#btnRepPri").hide();
+            $("#btnRevPri").hide();
+            $("#btnRev").hide();
+            //
+            $("#divAcomp").show();
+            $("#btnVol").show();
+            $("#btnViewAnal").show();
+            $("#divPadrao").hide();
+            $("#btnApr").hide();
+            $("#btnHist").hide();
+            $("#btnRev").hide();
+            $("#btnRep").hide();
+            $("#btnRepPri").hide();
+            $("#btnNeg").hide();
+            $("#btnView").hide();
+            $("#btnAnal").hide();
+            //
+            $("#btnViewHist").hide();
+            $("#btnViewRev").hide();
+            //
+            $("#divInfoAprovador").html('');
+            $("#divInfoUsuario").html('<div class="profile"><div class="profile-image"><img src="img/user/no-image.jpg" alt="Usuário"></div></div>');
+        });
+
+        $("#btnVol").on('click', function () {
+            if(perm==1){
+                $("#btnRepPri").show();
+                $("#btnRevPri").show();
+                $("#btnRev").show();
+            }else{
+                $("#btnRepPri").hide();
+                $("#btnRevPri").hide();
+                $("#btnRev").hide();
+            }
+            $("#divPadrao").show();
+            $("#pnlInfoAprovador").show();
+            $("#divInfoAprovador").html('');
+            $("#divRev").hide();
+            $("#divAcomp").hide();
+            $("#divHist").hide();
+            $("#btnRep").hide();
+            $("#btnVol").hide();
+            $("#btnMsg").hide();
+            $("#btnMsgViewNeg").hide();
+            $("#btnMsgViewRev").hide();
+            $("#btnMsgViewHist").hide();
+            $("#btnMsgViewAnal").hide();
+            $("#btnRevSec").hide();
+            $("#btnMsgRep").hide();
+            $("#btnView").show();
+            $("#btnAnal").show();
+            $("#btnApr").show();
+            $("#btnNeg").show();
+            $("#btnHist").show();
+            $("#btnViewHist").hide();
+            $("#btnViewAnal").hide();
+            $("#btnViewRev").hide();
+            $("#btnRetm").hide();
+            //
+            $("#t_dados tr.selected").removeClass("selected");
+            $("#t_dadosHist tr.selected").removeClass("selected");
+            $("#t_dadosRev tr.selected").removeClass("selected");
+            $("#t_dadosAcomp tr.selected").removeClass("selected");
+
+            $("#divInfoUsuario").html('<div class="profile"><div class="profile-image"><img src="img/user/no-image.jpg" alt="Usuário"></div></div>');
+        });
+
+        $("#btnApr").on('click', function () {
+            var objTemp = oTable.fnGetData(oTable.closest("table").find(".selected"));
+            if (objTemp != null) {
+                $("#modal_small_confirm_Aprov").modal();
+            }
+        });
+
+        $("#btnAprovConf").on('click', function () {
+            var objTemp = oTable.fnGetData(oTable.closest("table").find(".selected"));
+            if (objTemp != null) {
+                $("#txtId_Edt").val(objTemp.cod);
+                remote1.executa("setReembolsoStatusAprovadorAprovado", {id_reembolso: objTemp.cod} , resultSetStatusAprovadorAprovado, $('#pnlAnalise'), erroPersonalizado);
+            }
+        });
+
+
+
+        $("#btnConf_envio").on('click', function () {
+            if(valida_mensagemNegado()){
+                var setMensagem = "";
+                var setStatus = "";
+                var setTable;
+                var getDadosEmail;
+
+                var cont=0;
+                switch(verificadorMsg) {
+                    case 1:
+                        cont=1;
+                        setMensagem = "setMensagemNegado";
+                        setStatus = "setReembolsoStatusAprovadorNegado";
+                        setTable = oTable;
+                        getDadosEmail = "getDadosEmailReembolsoNegado";
+                        break;
+                    case 2:
+                        cont=2;
+                        setMensagem = "setMensagemRevisao";
+                        setStatus = "setReembolsoStatusAprovadorRevisao";
+                        setTable = oTable_rev;
+                        getDadosEmail = "getDadosEmailReembolsoRevisao";
+                        break;
+                    case 3:
+                        cont=3;
+                        setMensagem = "setMensagemReprovado";
+                        setStatus = "setReembolsoStatusAprovadorReprovado";
+                        setTable = oTable_rev;
+                        getDadosEmail = "getDadosEmailReembolsoReprovado";
+                        break;
+                    case 4:
+                        cont=2;
+                        setMensagem = "setMensagemRevisao";
+                        setStatus = "setReembolsoStatusAprovadorRevisao";
+                        setTable = oTable;
+                        getDadosEmail = "getDadosEmailReembolsoRevisao";
+                        break;
+                    case 5:
+                        cont=3;
+                        setMensagem = "setMensagemReprovado";
+                        setStatus = "setReembolsoStatusAprovadorReprovado";
+                        setTable = oTable;
+                        getDadosEmail = "getDadosEmailReembolsoReprovado";
+                        break;
+                    case 6:
+                        cont=4;
+                        setMensagem = "setMensagemRetomado";
+                        setStatus = "setReembolsoStatusAprovadorRetomado";
+                        setTable = oTable_rev;
+                        getDadosEmail = "getDadosEmailReembolsoRetomado";
+                        break;
+                }
+
+                var objTemp = setTable.fnGetData(setTable.closest("table").find(".selected"));
+                if (objTemp != null) {
+
+                    var param_msg ={
+                        id_reembolso: objTemp.cod,
+                        mensagem: $("#txtMensagem_env").val(),
+                        usuario_de: $("#txtId_De").val(),
+                        usuario_para: $("#txtId_Para").val(),
+                    };
+                    var param_status ={
+                        id_grupo: $("#txtId_Grupo").val(),
+                        id_para: $("#txtId_Para").val(),
+                        id_reembolso:objTemp.cod
+                    };
+
+
+                    switch(cont) {
+                        case 1:
+                            remote1.executa(setMensagem,param_msg, null, $('#msg_box_env'), erroPersonalizado);
+                            remote1.executa(setStatus,{id_reembolso: objTemp.cod} , null, $('#divPadrao'), erroPersonalizado);
+                            remote1.executa(getDadosEmail,{id_reembolso: objTemp.cod} , resultGetDadosEmailReembolsoNegado, $('#msg_box_env'), erroPersonalizado);
+                            break;
+                        case 2:
+                            remote1.executa(setMensagem,param_msg, null, $('#msg_box_env'), erroPersonalizado);
+                            remote1.executa(setStatus,{id_reembolso: objTemp.cod} , null, $('#divPadrao'), erroPersonalizado);
+                            remote1.executa(getDadosEmail,{id_reembolso: objTemp.cod} , resultGetDadosEmailReembolsoRevisao, $('#msg_box_env'), erroPersonalizado);
+                            break;
+                        case 3:
+                            remote1.executa(setMensagem,param_msg, null, $('#msg_box_env'), erroPersonalizado);
+                            remote1.executa(setStatus,{id_reembolso: objTemp.cod} , null, $('#divPadrao'), erroPersonalizado);
+                            remote1.executa(getDadosEmail,{id_reembolso: objTemp.cod} , resultGetDadosEmailReembolsoReprovado, $('#msg_box_env'), erroPersonalizado);
+                            break;
+                        case 4:
+                            remote1.executa(setMensagem,param_msg, null, $('#msg_box_env'), erroPersonalizado);
+                            remote1.executa(setStatus,param_status, null, $('#divPadrao'), erroPersonalizado);
+                            remote1.executa(getDadosEmail,param_status, resultGetDadosEmailReembolsoRetomado, $('#msg_box_env'), erroPersonalizado);
+                            break;
+                    }
+                }
+             }
+        });
+
+        $("#btnNeg").on('click', function () {
+            var objTemp = oTable.fnGetData(oTable.closest("table").find(".selected"));
+            if (objTemp != null) {
+                refreshModalMensagemReembolso_env();
+                //
+                verificadorMsg=1;
+                //
+                remote1.executa("getReembolsoInfoParaMensagemNegado",{id_reembolso: objTemp.cod},resultGetReembolsoInfoParaMensagemNegado, $('#divPadrao'), erroPersonalizado);
+                //
+                $("#txtAcao").val("Negação");
+                $("#txtAcao").css("color","#061519");
+                $("#txtAcao").css("background-color","#ffd019");
+                $("#txtTituloMsg").html("Mensagem");
+                $("#lblNomeDe").html("De aprovador");
+                $("#lblEmailDe").html("E-mail do aprovador");
+                $("#lblNomePara").html("Para Aprovador");
+                $("#lblEmailPara").html("E-mail do Aprovador");
+                //
+                $("#txtCodReembolso").val(objTemp.cod);
+                $("#txtEventoReembolso").val(objTemp.titulo_evento);
+                $("#txtMesReembolso").val(objTemp.mes);
+                $("#msg_box_env").modal();
+            }
+
+        });
+
+
+        $("#btnRevSec").on('click', function () {
+            var objTemp = oTable_rev.fnGetData(oTable_rev.closest("table").find(".selected"));
+            if (objTemp != null) {
+                verificadorMsg=2;
+                //
+                remote1.executa("getReembolsoInfoParaMensagemRevisao",{id_reembolso: objTemp.cod},resultGetReembolsoInfoParaMensagemRevisao, $('#divPadrao'), erroPersonalizado);
+                //
+                $("#txtAcao").val("Revisão");
+                $("#txtAcao").css("color","#061519");
+                $("#txtAcao").css("background-color","#00C4FF");
+                $("#txtTituloMsg").html("Mensagem");
+                $("#lblNomeDe").html("De aprovador");
+                $("#lblEmailDe").html("E-mail do aprovador");
+                $("#lblNomePara").html("Para colaborador");
+
+                $("#lblEmailPara").html("E-mail do colaborador");
+                //
+                $("#txt_titulo_msg").html("Mensagem");
+                //
+                refreshModalMensagemReembolso_env();
+                $("#txtCodReembolso").val(objTemp.cod);
+                $("#txtEventoReembolso").val(objTemp.titulo_evento);
+                $("#txtMesReembolso").val(objTemp.mes);
+                $("#msg_box_env").modal();
+            }
+        });
+
+        $("#btnRevPri").on('click', function () {
+            var objTemp = oTable.fnGetData(oTable.closest("table").find(".selected"));
+            if (objTemp != null) {
+                verificadorMsg=4;
+                //
+                remote1.executa("getReembolsoInfoParaMensagemRevisao",{id_reembolso: objTemp.cod},resultGetReembolsoInfoParaMensagemRevisao, $('#divPadrao'), erroPersonalizado);
+                //
+                $("#txtAcao").val("Revisão");
+                $("#txtAcao").css("color","#061519");
+                $("#txtAcao").css("background-color","#00C4FF");
+                $("#txtTituloMsg").html("Mensagem");
+                $("#lblNomeDe").html("De aprovador");
+                $("#lblEmailDe").html("E-mail do aprovador");
+                $("#lblNomePara").html("Para colaborador");
+
+                $("#lblEmailPara").html("E-mail do colaborador");
+                //
+                $("#txt_titulo_msg").html("Mensagem");
+                //
+                refreshModalMensagemReembolso_env();
+                $("#txtCodReembolso").val(objTemp.cod);
+                $("#txtEventoReembolso").val(objTemp.titulo_evento);
+                $("#txtMesReembolso").val(objTemp.mes);
+                $("#msg_box_env").modal();
+            }
+        });
+
+
+        $("#btnRep").on('click', function () {
+            var objTemp = oTable_rev.fnGetData(oTable_rev.closest("table").find(".selected"));
+            if (objTemp != null) {
+                verificadorMsg=3;
+                //
+                $("#txtAcao").val("Reprovação");
+                $("#txtAcao").css("color","#061519");
+                $("#txtAcao").css("background-color","#c02716");
+                $("#lblNomeDe").html("De aprovador");
+                $("#lblEmailDe").html("E-mail do aprovador");
+                $("#lblNomePara").html("Para colaborador");
+                $("#lblEmailPara").html("E-mail do colaborador");
+                //
+                remote1.executa("getReembolsoInfoParaMensagemReprovado",{id_reembolso: objTemp.cod},resultGetReembolsoInfoParaMensagemReprovado, $('#divPadrao'), erroPersonalizado);
+                //
+                $("#txt_titulo_msg").html("Mensagem");
+                //
+                refreshModalMensagemReembolso_env();
+                $("#txtCodReembolso").val(objTemp.cod);
+                $("#txtEventoReembolso").val(objTemp.titulo_evento);
+                $("#txtMesReembolso").val(objTemp.mes);
+                $("#msg_box_env").modal();
+            }
+        });
+
+        $("#btnRepPri").on('click', function () {
+            var objTemp = oTable.fnGetData(oTable.closest("table").find(".selected"));
+            if (objTemp != null) {
+                verificadorMsg=5;
+                //
+                $("#txtAcao").val("Reprovação");
+                $("#txtAcao").css("color","#061519");
+                $("#txtAcao").css("background-color","#c02716");
+                $("#txtTituloMsg").html("Mensagem");
+                $("#lblNomeDe").html("De aprovador");
+                $("#lblEmailDe").html("E-mail do aprovador");
+                $("#lblNomePara").html("Para colaborador");
+                $("#lblEmailPara").html("E-mail do colaborador");
+                //
+                remote1.executa("getReembolsoInfoParaMensagemReprovado",{id_reembolso: objTemp.cod},resultGetReembolsoInfoParaMensagemReprovado, $('#divPadrao'), erroPersonalizado);
+                //
+                $("#txt_titulo_msg").html("Mensagem");
+                //
+                refreshModalMensagemReembolso_env();
+                $("#txtCodReembolso").val(objTemp.cod);
+                $("#txtEventoReembolso").val(objTemp.titulo_evento);
+                $("#txtMesReembolso").val(objTemp.mes);
+                $("#msg_box_env").modal();
+            }
+        });
+
+        $("#btnRetm").on("click", function () {
+            var objTemp = oTable_rev.fnGetData(oTable_rev.closest("table").find(".selected"));
+            if (objTemp != null) {
+                verificadorMsg=6;
+
+                $("#txtAcao").val("Retomada");
+                $("#txtAcao").css("color","#fbfbff");
+                $("#txtAcao").css("background-color","#061519");
+                $("#txtTituloMsg").html("Mensagem");
+                $("#lblNomeDe").html("De aprovador");
+                $("#lblEmailDe").html("E-mail do aprovador");
+                $("#lblNomePara").html("Para colaborador");
+                $("#lblEmailPara").html("E-mail do colaborador");
+
+                remote1.executa("getReembolsoInfoParaMensagemRetomado",{id_reembolso: objTemp.cod},resultGetReembolsoInfoParaMensagemRetomado, $('#msg_box_env'), erroPersonalizado);
+
+                $("#txt_titulo_msg").html("Mensagem");
+                //
+                refreshModalMensagemReembolso_env();
+                $("#txtCodReembolso").val(objTemp.cod);
+                $("#txtEventoReembolso").val(objTemp.titulo_evento);
+                $("#txtMesReembolso").val(objTemp.mes);
+                $("#msg_box_env").modal();
+            }
+        });
+
+        $("#btnMsgViewNeg").on("click", function () {
+            var objTemp = oTable_rev.fnGetData(oTable_rev.closest("table").find(".selected"));
+            if (objTemp != null) {
+                //alert(objTemp.cod);
+                $("#txtAcaoMsg").val('Negação');
+                $("#txtAcaoMsg").css("color","#061519");
+                $("#txtAcaoMsg").css("background-color","#ffd019");
+                remote1.executa("getReembolsoMensagemNegado", {id: objTemp.cod}, resultGetReembolsoMessagem, $('#msg_box_view'), erroPersonalizado);
+                $("#msg_box_view").modal('show');
+            }
+        });
+
+        $("#btnMsgViewRev").on("click", function () {
+            var objTemp = oTable_acomp.fnGetData(oTable_acomp.closest("table").find(".selected"));
+            if (objTemp != null) {
+                //alert(objTemp.cod);
+                $("#txtAcaoMsg").val('Revisão');
+                $("#txtAcaoMsg").css("color","#061519");
+                $("#txtAcaoMsg").css("background-color","#00C4FF");
+                remote5.executa("getReembolsoMensagemRevisao", {id: objTemp.cod}, resultGetReembolsoMessagemRevisao, $('#item_box_info'), erroPersonalizado);
+                $("#msg_box_view").modal('show');
+            }
+        });
+
+
+        $("#btnMsgViewHist").on("click", function () {
+            var objTemp = oTable_hist.fnGetData(oTable_hist.closest("table").find(".selected"));
+            if (objTemp != null) {
+                //alert(objTemp.cod);
+                $("#txtAcaoMsg").val('Reprovação');
+                $("#txtAcaoMsg").css("color","#061519");
+                $("#txtAcaoMsg").css("background-color","#c02716");
+                if(verificadorSts==200){
+                    remote1.executa("getReembolsoMensagemReprovado", {id: objTemp.cod}, resultGetReembolsoMessagem, $('#msg_box_view'), erroPersonalizado);
+                    $("#msg_box_view").modal('show');
+                }
+            }
+        });
+
+        $("#btnMsgViewAnal").on("click", function () {
+            var objTemp = oTable_acomp.fnGetData(oTable_acomp.closest("table").find(".selected"));
+            if (objTemp != null) {
+                //alert(objTemp.cod);
+                $("#txtAcaoMsg").val('Negação');
+                $("#txtAcaoMsg").css("color","#061519");
+                $("#txtAcaoMsg").css("background-color","#ffd019");
+                remote1.executa("getReembolsoMensagemNegado", {id: objTemp.cod}, resultGetReembolsoMessagem, $('#msg_box_view'), erroPersonalizado);
+                $("#msg_box_view").modal('show');
+            }
+        });
+
+
+
+
+
+        $("#btnViewAprovadores").on('click', function () {
+            if($('#txtId_Grupo').val()!=''){
+                remote2.executa("getInfoAprovadores",{"idGrupo":$('#txtId_Grupo').val()}, render_ViewAprov, $('#modal_listAprovadores'));
+                $("#modal_listAprovadores").modal();
+            }
+        });
+
+        $("#btnRev").on('click', function () {
+            $("#btnRepPri").hide();
+            $("#btnRevPri").hide();
+            //
+            $("#divPadrao").hide();
+            $("#divInfoAprovador").html('');
+            $("#btnView").hide();
+            $("#btnRepPri").hide();
+            $("#btnRev").hide();
+            $("#btnHist").hide();
+            $("#btnApr").hide();
+            $("#btnNeg").hide();
+            $("#btnAnal").hide();
+            $("#btnVol").show();
+            //
+            $("#btnRetm").show();
+            $("#btnViewRev").show();
+            $("#btnMsgViewNeg").show();
+            $("#btnRevSec").show();
+            $("#btnRep").show();
+            //
+            //
+            $("#divRev").show();
+            $("#divInfoUsuario").html('<div class="profile"><div class="profile-image"><img src="img/user/no-image.jpg" alt="Usuário"></div></div>');
+        });
+
+        $("#btnHist").on('click', function () {
+            $("#btnRepPri").hide();
+            $("#btnRevPri").hide();
+            //
+            $("#divPadrao").hide();
+            $("#pnlInfoAprovador").hide();
+            $("#divInfoAprovador").html('');
+            $("#btnView").hide();
+            $("#btnHist").hide();
+            $("#btnRev").hide();
+            $("#btnApr").hide();
+            $("#btnNeg").hide();
+            $("#btnAnal").hide();
+            $("#btnVol").show();
+            $("#btnViewHist").show();
+            //
+            $('#txtId_Grupo').val('');
+            //
+            $("#divHist").show();
+            $("#divInfoUsuario").html('<div class="profile"><div class="profile-image"><img src="img/user/no-image.jpg" alt="Usuário"></div></div>');
+        });
+
+        $("#divItem_info").on("click", "[data-arquivo-v]", function () {
+            $("#item_box_info").modal('hide');
+            $("#documento_box_view").modal();
+        });
+
+        $("#btnClose_preview").on("click", function () {
+            $("#documento_box_view").modal('hide');
+            $("#item_box_info").modal('show');
+        });
+
+    });
+</script>
+
+
+<!-- START BREADCRUMB -->
+<ul class="breadcrumb">
+</ul>
+<!-- END BREADCRUMB -->
+<!-- PAGE CONTENT WRAPPER -->
+<div id='mainContent'class="page-content-wrap">
+    <div class="row">
+        <!-- START PANEL GERAL -->
+        <div class="col-md-12">
+            <div id="pnlGeral" class="panel panel-primary">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Painel geral</h3>
+                    <ul class="panel-controls">
+                        <li><a href="#" class="panel-collapse"><span class="fa fa-angle-down"></span></a></li>
+                    </ul>
+                </div>
+                <!--START CONTEUDO PANEL-->
+                <div class="panel-body">
+                    <form role="form">
+                        <div class="form-group">
+                            <div class="col-md-2">
+                                <label class="control-label"><span class="fa fa-th"></span>  Solicitações para aprovar</label>
+                                <input id='txtNumTitulos' type="text"  class="form-control" disabled="disabled"/>
+                            </div>
+                            <div id='divPainelRev' class="col-md-2">
+                                <label class="control-label"><span class="fa fa-th"></span>  Solicitações para revisão</label>
+                                <input id='txtNumTitulosNeg' type="text"  class="form-control" disabled="disabled"/>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="control-label"><span class="fa fa-th"></span>  Solicitações em análise</label>
+                                <input id='txtNumTitulosAcop' type="text"  class="form-control" disabled="disabled"/>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="control-label"><span class="fa fa-dollar"></span>  Total para aprovar R$</label>
+                                <input id='txtTotalTitulos' type="text"  class="form-control"  disabled="disabled"/>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="control-label"><span class="fa fa-dollar"></span>  Valor(Min)R$ </label>
+                                <input id='txtValorMin' type="text"  class="form-control"  disabled="disabled"/>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="control-label"><span class="fa fa-dollar"></span>  Valor(Max)R$</label>
+                                <input id='txtValorMax' type="text"  class="form-control"  disabled="disabled"/>
+                            </div>
+                            <div class="col-md-12">
+                                <label class="control-label"><span class="fa fa-filter"></span>  Despesas(Num Solicitações )</label>
+                                <input id='txtDespesasCount' type="text"  class="form-control"  disabled="disabled"/>
+                            </div>
+                            <div class="col-md-12">
+                                <label class="control-label"><span class="fa fa-filter"></span>  Status(Num Solicitações )</label>
+                                <input id='txtStatusCount' type="text"  class="form-control" disabled="disabled"/>
+                            </div>
+                            <div class="col-md-12">
+                                <label class="control-label"><span class="fa fa-filter"></span>  Empresa(Num Solicitações)</label>
+                                <input id='txtEmpresaCount' type="text"  class="form-control" disabled="disabled"/>
+                            </div>
+                            <!--<div class="col-md-4">-->
+                                <!--<label class="control-label"><span class="fa fa-filter"></span>  Meus grupos em aprovação(Num aprovações)</label>-->
+                                <!--<input id='txtGrupos' type="text"  class="form-control" disabled="disabled"/>-->
+                            <!--</div>-->
+                        </div>
+
+                    </form>
+                </div>
+                <!--END CONTEUDO PANEL-->
+                <div class="panel-footer">
+                    <h3 class="panel-title">Legendas</h3>
+                    <div class="panel-body">
+                        <form role="form">
+                            <!--ADD LEGENDAS -->
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- END PANEL GERAL -->
+
+        <!--START PAINEL REEMBOLSOS-->
+        <div class="col-md-10">
+            <div id="pnlAnalise" class="panel panel-default">
+                <!--PAINEL DE CONTROLES-->
+                <div class="panel-heading">
+                    <h3 class="panel-title">Reembolsos</h3>
+                    <ul class="panel-controls">
+                        <li><a href="#" id="btnView" class="control-primary" data-acao="add" title="Informações"><span class="fa fa-info"></span></a></li>
+                        <li><a href="#" id="btnViewAnal" class="control-primary" data-acao="add" title="Informações" style="display: none;"><span class="fa fa-info"></span></a></li>
+                        <li><a href="#" id="btnViewRev" class="control-primary" data-acao="add" title="Informações" style="display: none;"><span class="fa fa-info"></span></a></li>
+                        <li><a href="#" id="btnViewHist" class="control-primary" data-acao="add" title="Informações" style="display: none;"><span class="fa fa-info"></span></a></li>
+                        <li><a href="#" id="btnHist" class="control-primary" data-acao="add" title="Históricos de aprovação" ><span class="glyphicon glyphicon-time"></span></a></li>
+                        <li><a href="#" id="btnMsgViewNeg" class="control-primary" data-acao="add" title="Mensagem do aprovador" style="display: none;"><span class="fa fa-comments"></span></a></li>
+                        <li><a href="#" id="btnMsgViewAnal" class="control-primary" data-acao="add" title="Mensagem do aprovador" style="display: none;"><span class="fa fa-comments"></span></a></li>
+                        <li><a href="#" id="btnMsgViewRev" class="control-primary" data-acao="add" title="Mensagem do aprovador" style="display: none;"><span class="fa fa-comments"></span></a></li>
+                        <li><a href="#" id="btnMsgViewHist" class="control-primary" data-acao="add" title="Mensagem do aprovador" style="display: none;"><span class="fa fa-comments"></span></a></li>
+                        <li><a href="#" id="btnAnal" class="control-primary" data-acao="add" title="Solicitações em análise"><span class="glyphicon glyphicon-random"></span></a></li>
+                        <li><a href="#" id="btnRev" class="control-primary" data-acao="vol" title="Solicitações para revisão" style="display: none;"><span class="fa fa-refresh"></span></a></li>
+                        <li><a href="#" id="btnApr" class="control-success" data-acao="env" title="Aprovar" ><span class="fa fa-thumbs-up"></span></a></li>
+                        <li><a href="#" id="btnRetm" class="control-primary" data-acao="vol" title="Retomar" style="display: none;"><span class="fa fa-thumbs-up"></span></a></li>
+                        <li><a href="#" id="btnRevSec" class="control-info" data-acao="vol" title="Revisar" style="display: none;"><span class="fa fa-thumbs-down"></span></a></li>
+                        <li><a href="#" id="btnRevPri" class="control-info" data-acao="vol" title="Revisar" ><span class="fa fa-thumbs-down"></span></a></li>
+                        <li><a href="#" id="btnNeg" class="control-warning" data-acao="vol" title="Negar" ><span class="fa fa-thumbs-down"></span></a></li>
+                        <li><a href="#" id="btnRepPri" class="control-danger" data-acao="vol" title="Reprovar" style="display: none;"><span class="fa fa-thumbs-down"></span></a></li>
+                        <li><a href="#" id="btnRep" class="control-danger" data-acao="vol" title="Reprovar" style="display: none;"><span class="fa fa-thumbs-down"></span></a></li>
+                        <li><a href="#" id="btnVol" class="control-primary" data-acao="vol" title="Voltar" style="display: none;" ><span class="fa fa-mail-reply"></span></a></li>
+                    </ul>
+                </div>
+                <!--PAINEL DE CONTROLES-->
+
+                <!--START DIV TABELA-->
+                <div class="panel-body">
+                    <div id="divPadrao" class="row">
+                        <h6 id="titulo1"class="panel-title-box">Minhas análises de aprovação</h6>
+                        <div class="col-md-12">
+                            <table id="t_dados" class="table table-striped table-bordered table-condensed">
+
+                            </table>
+                        </div>
+                    </div>
+                    <div id="divAcomp" class="row" style="display: none;">
+                        <h6 id="titulo2"class="panel-title-box">Acompanhamento de solicitação</h6>
+                        <div class="col-md-12">
+                            <table id="t_dadosAcomp" class="table table-bordered table-condensed">
+
+                            </table>
+                        </div>
+                    </div>
+
+                    <div id="divRev" class="row" style="display: none;">
+                        <h6 id="titulo3"class="panel-title-box">Revisão de solicitação</h6>
+                        <div class="col-md-12">
+                            <table id="t_dadosRev" class="table table-bordered table-condensed">
+
+                            </table>
+                        </div>
+                    </div>
+
+                    <div id="divHist" class="row" style="display: none;">
+                        <h6 id="titulo4"class="panel-title-box">Histórico de Aprovados</h6>
+                        <div class="col-md-12">
+                            <table id="t_dadosHist" class="table table-bordered table-condensed">
+
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <!--END DIV TABELA-->
+            </div>
+        </div>
+        <!--END PAINEL REEMBOLSOS-->
+
+        <!--START PAINEL INFO -->
+        <div class="col-md-2 ">
+            <!--START PAINEL INFO - USUARIO -->
+            <div id="pnlInfoUsuario" class="panel panel-default">
+                <!--PAINEL DE CONTROLES-->
+                <div class="panel-heading">
+                    <h3 class="panel-title">Colaborador</h3>
+                </div>
+                <div id="divInfoUsuario" class="panel-body">
+                    <div class="profile"><div class="profile-image"><img src="img/user/no-image.jpg" alt="Usuário"></div></div>
+                </div>
+            </div>
+            <!--END PAINEL INFO - USUARIO -->
+
+            <!--START PAINEL INFO - APROVADOR-->
+            <div id="pnlInfoAprovador" class="panel panel-default">
+                <!--PAINEL DE CONTROLES-->
+                <div class="panel-heading">
+                    <h3 class="panel-title">Informações do Aprovador</h3>
+                    <input id="txtId_Grupo" type="hidden"/>
+                </div>
+                <div id="divInfoAprovador" class="panel-body">
+                </div>
+                <div class="panel-footer">
+                    <ul class="panel-controls">
+                        <li><a href="#" id="btnViewAprovadores" class="control-primary" data-acao="add"  title="Informações do Grupo "><span class="fa fa-info"></span></a></li>
+                    </ul>
+                </div>
+            </div>
+            <!--END PAINEL INFO - APROVADOR-->
+        </div>
+        <!--END PAINEL INFO-->
+
+    </div>
+</div>
+
+
+<!--START DIV-MODAL LIST APROVADORES -->
+<div id="modal_listAprovadores" class="modal in"  tabindex="-1" role="dialog" aria-labelledby="smallModalHead" aria-hidden="true">
+    <div class="modal-dialog modal-lg ">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="smallModalHead">Lista de Aprovadores de Grupo</h4>
+            </div>
+            <div class="modal-body">
+                <div class="col-md-12">
+                    <div id="divViewAprov" class="row">
+                        <!--CONTENT VIEW APROV-->
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Nome do Grupo</label>
+                        <input id="txtNomeGrupo_list" type="text" style="color: rgba(12,16,33,0.5)" class="form-control formGrupo" maxlength="50"  disabled="disabled">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Departamento</label>
+                        <input id="txtDepartamentoGrupo_list" type="text" style="color: rgba(12,16,33,0.5)" class="form-control formGrupo" maxlength="50"  disabled="disabled">
+                    </div>
+                </div>
+
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <label>Descrição</label>
+                        <textarea id="txtDescricaoGrupo_list"  style="margin-bottom: 10px; color: rgba(12,16,33,0.5)" class="form-control formGrupo" rows="5" disabled="disabled"></textarea>
+                    </div>
+                </div>
+            </div>
+            <!--START - FOOTER PAINEL -ITEM -->
+            <div class="modal-footer">
+                <!--<button type="button" class="btn btn-default" data-dismiss="modal">Sair</button>-->
+            </div>
+            <!--END - PAINEL DE CONTROLES-->
+        </div>
+    </div>
+</div>
+<!--END DIV-MODAL LIST APROVADORES -->
+
+<!--START DIV-MODAL VIEW ITEM SOLICITACAO -->
+<div class="modal" id="item_box_info" tabindex="-1" role="dialog" aria-labelledby="smallModalHead" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content ">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="smallModalHead3">Itens da Solicitação</h4>
+            </div>
+            <div class="modal-body">
+                <div id="divItem_info" class="row">
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+<!--END DIV-MODAL VIEW ITEM SOLICITACAO -->
+
+<!--START DIV-MODAL VIEW DOCUMENTO-->
+<div class="modal" id="documento_box_view" tabindex="-1" role="dialog" aria-labelledby="smallModalHead" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content ">
+            <div class="modal-header">
+
+                <button id='btnClose_preview'type="button" class="close" data-dismiss="modal" data-toggle="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="smallModalHead4">Preview do Documento</h4>
+            </div>
+            <div class="modal-body">
+                <iframe id="preview" src="URL" name="preview" style="width: 100%; height: 800px"> </iframe>
+            </div>
+        </div>
+    </div>
+</div>
+<!--END DIV-MODAL VIEW DOCUMENTO -->
+
+<!--START DIV-MODAL ENVIO MENSAGEM DO REEMBOLSO -->
+<div class="modal" id="msg_box_env" tabindex="0" role="dialog" aria-labelledby="smallModalHead" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content ">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 id="txtTituloMsg" class="modal-title" ><span class="fa fa-envelope "></span>"Mensagem"</h4>
+            </div>
+            <div class="modal-body row">
+                <div class="col-md-6">
+                    <div id="divImagemDe" class="col-md-12"></div>
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <input id="txtId_De" type="hidden"/>
+                            <label id="lblNomeDe"></label>
+                            <input id="txtUsuarioNomeDe" class="form-control formItensMsg" disabled="disabled">
+                        </div>
+                    </div>
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label id="lblEmailDe"></label>
+                            <input id="txtUsuarioEmailDe" class="form-control formItensMsg" disabled="disabled">
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div id="divImagemPara"class="col-md-12">
+
+                    </div>
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <input id="txtId_Para" type="hidden"/>
+                            <label id="lblNomePara"></label>
+                            <input id="txtUsuarioNomePara" class="form-control formItensMsg" disabled="disabled">
+                        </div>
+                    </div>
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label id="lblEmailPara"></label>
+                            <input id="txtUsuarioEmailPara" class="form-control formItensMsg" disabled="disabled">
+                        </div>
+                    </div>
+
+                </div>
+                <div class="col-md-12">
+                    <div id="div_msg_neg" class="col-md-12">
+                        <div class="form-group">
+                            <label>Mensagem</label>
+                            <textarea id="txtMensagem_env"  spellcheck="false" class="form-control formMsg" rows="10" ></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div class="col-md-2">
+                    <div class="form-group">
+                        <label>Ação</label>
+                        <input id="txtAcao" style="margin-bottom: 10px; text-align: center; color: rgba(12,16,33,0.5);" class="form-control formFooterMsg" disabled="disabled">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-group">
+                        <label>Reembolso</label>
+                        <input id="txtCodReembolso"  style="margin-bottom: 10px; color: rgba(12,16,33,0.5)" class="form-control formFooterMsg" disabled="disabled">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-group">
+                        <label>Mês</label>
+                        <input id="txtMesReembolso"  style="margin-bottom: 10px; color: rgba(12,16,33,0.5)" class="form-control formFooterMsg" disabled="disabled">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Evento</label>
+                        <input id="txtEventoReembolso" style="margin-bottom: 10px; color: rgba(12,16,33,0.5)" class="form-control formFooterMsg" disabled="disabled">
+                    </div>
+                </div>
+                <div class="col-md-12">
+                    <button id="btnConf_envio"   type="button" class="btn btn-primary" >Enviar mensagem</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!--END DIV-MODAL MENSAGEM DO REEMBOLSO - ENVIO -->
+
+
+<!--START DIV-MODAL MENSAGEM DO REEMBOLSO - VIEW -->
+<div class="modal" id="msg_box_view" tabindex="-1" role="dialog" aria-labelledby="smallModalHead" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content ">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" >Mensagem</h4>
+            </div>
+            <div class="modal-body">
+                <!--ADD IMAGEM-->
+                <div id="divImagemDeMsg"></div>
+                <!---->
+                <div class="form-group">
+                    <div class="form-group">
+                        <label>Nome do aprovador</label>
+                        <input id="txtNomeAprov" type="text" class="form-control" maxlength="50" placeholder="" readonly>
+                        <label>Email do aprovador</label>
+                        <input id="txtEmailAprov" type="text" class="form-control" maxlength="50" placeholder="" readonly>
+
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Mensagem</label>
+                    <textarea id="txtMensagem_view" class="form-control" rows="10" disabled="disabled" ></textarea>
+                </div>
+                <div class="form-group">
+                    <p>Para mais informações contatar o aprovador responsável pela mensagem.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Ação</label>
+                        <input id="txtAcaoMsg" style="margin-bottom: 10px; text-align: center; color: rgba(12,16,33,0.5);" class="form-control formFooterMsg" disabled="disabled">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Data</label>
+                        <input id="txtDataAprov" type="text" class="form-control" maxlength="50" placeholder="" readonly>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+<!--END DIV-MODAL MENSAGEM DO REEMBOLSO - VIEW -->
+
+
+<!--CONFIRMACAO APROAVACAO SOLICITACAO-->
+<div class="modal" id="modal_small_confirm_Aprov" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="defModalHead1">Confirmação</h4>
+            </div>
+            <div class="modal-body">
+                Confirma aprovar essa solicitação?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" data-dismiss="modal">Cancelar</button>
+                <button id="btnAprovConf" type="button" class="btn btn-primary" data-dismiss="modal">Sim</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!--END CONFIRMACAO APROAVACAO SOLICITACAO-->
+
+<!--CONFIRMACAO NEGAR SOLICITACAO-->
+<div class="modal" id="modal_small_confirm_Neg" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="defModalHead2">Confirmação</h4>
+            </div>
+            <div class="modal-body">
+                Confirma negar essa solicitação?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" data-dismiss="modal">Cancelar</button>
+                <button id="btnNegConf" type="button" class="btn btn-primary" data-dismiss="modal">Sim</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!--END CONFIRMACAO NEGAR SOLICITACAO-->
+
+
+
+
+
+

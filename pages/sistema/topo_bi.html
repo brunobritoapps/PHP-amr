@@ -1,0 +1,31 @@
+<script type="text/javascript">
+    $(document).ready(function () {
+        //dados do usuario
+        $("#s_login").html(s.login);
+        $(".a_nome").html(s.nome);
+        $("#s_email").html(s.email);
+        $(".foto_usuario").attr("src", 'php/outros/loadimage.php?n='+s.usuario);
+
+        $(".breadcrumb").append('<li><a href="bi.php" class="glyphicons home"><i></i>Home</a></li>');
+        for (var i = menu.statusMenu.length - 1; i >= 0; i--) {
+            $(".breadcrumb").append('<li>' + menu.statusMenu[i].nome + '</li>');
+        }
+    });
+</script>
+<!-- START X-NAVIGATION VERTICAL -->
+<ul class="x-navigation x-navigation-horizontal x-navigation-panel">
+    <!-- TOGGLE NAVIGATION -->
+    <li class="xn-icon-button">
+        <a href="#" class="x-navigation-minimize"><span class="fa fa-dedent"></span></a>
+    </li>
+    <!-- END TOGGLE NAVIGATION -->
+
+    <!-- SIGN OUT -->
+    <li class="xn-icon-button pull-right">
+        <a href="bi.php?sair=1" title="Sair"><span>SAIR</span>  <span class="fa fa-sign-out"></span></a>                        
+    </li> 
+    <!-- END SIGN OUT -->
+
+
+</ul>
+<!-- END X-NAVIGATION VERTICAL -->

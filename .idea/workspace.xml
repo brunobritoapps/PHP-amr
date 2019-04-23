@@ -1,0 +1,582 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="25b071b6-91c9-445a-b564-cb81d73c674a" name="Default" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    </list>
+    <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
+    <option name="TRACKING_ENABLED" value="true" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="DatabaseView">
+    <option name="SHOW_INTERMEDIATE" value="true" />
+    <option name="GROUP_DATA_SOURCES" value="true" />
+    <option name="GROUP_SCHEMA" value="true" />
+    <option name="GROUP_CONTENTS" value="false" />
+    <option name="SORT_POSITIONED" value="false" />
+    <option name="SHOW_EMPTY_GROUPS" value="false" />
+    <option name="AUTO_SCROLL_FROM_SOURCE" value="false" />
+    <option name="HIDDEN_KINDS">
+      <set />
+    </option>
+    <expand />
+    <select />
+  </component>
+  <component name="FileEditorManager">
+    <leaf />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="HTML File" />
+      </list>
+    </option>
+  </component>
+  <component name="FindInProjectRecents">
+    <findStrings>
+      <find>divImgUser_Info</find>
+      <find>txtNomeSobrenome_Info</find>
+      <find>refresh</find>
+      <find>a_nome</find>
+      <find>divImgUser</find>
+      <find>gra</find>
+      <find>btnEdt</find>
+      <find>modal</find>
+      <find>btnAddUser</find>
+      <find>divNome_AddAprov</find>
+      <find>divItens</find>
+      <find>renderBox</find>
+      <find>renderApro</find>
+      <find>divAddAprov</find>
+      <find>btnRem_Item</find>
+      <find>btnSalvarItem</find>
+      <find>btnGra</find>
+      <find>txtIdAprov</find>
+      <find>modal_small</find>
+      <find>btnRemConf</find>
+      <find>remote1</find>
+      <find>selUsuario_AddAprov</find>
+      <find>resultGetModalAprovador</find>
+      <find>btnSaveAprov</find>
+      <find>modal_AddUsuario</find>
+      <find>btnAddAprov</find>
+      <find>divViewAprov</find>
+      <find>btnAdd</find>
+      <find>btnView</find>
+      <find>txtId</find>
+    </findStrings>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="IdeDocumentHistory">
+    <option name="CHANGED_PATHS">
+      <list>
+        <option value="$PROJECT_DIR$/pages/cadastro/aprovadores.html" />
+        <option value="$PROJECT_DIR$/pages/carlos/carlos.html" />
+        <option value="$PROJECT_DIR$/pages/sistema/testes.php" />
+        <option value="$PROJECT_DIR$/php/services/geral/testes.php" />
+        <option value="$PROJECT_DIR$/php/services/geral/teste.php" />
+        <option value="$PROJECT_DIR$/pages/corporativo/filial.html" />
+        <option value="$PROJECT_DIR$/php/services/corporativo/cargo.php" />
+        <option value="$PROJECT_DIR$/theme/css/theme-default-bi.css" />
+        <option value="$PROJECT_DIR$/theme/css/theme-default.css" />
+        <option value="$PROJECT_DIR$/php/services/corporativo/filial.php" />
+        <option value="$PROJECT_DIR$/pages/corporativo/cargo.html" />
+        <option value="$PROJECT_DIR$/pages/cadastro/reembolso/aprovadores.html" />
+        <option value="$PROJECT_DIR$/php/services/corporativo/grupo.php" />
+        <option value="$PROJECT_DIR$/php/services/corporativo/empresa.php" />
+        <option value="$PROJECT_DIR$/pages/corporativo/grupo.html" />
+        <option value="$PROJECT_DIR$/php/services/colaborador/notificacao.php" />
+        <option value="$PROJECT_DIR$/theme/js/actions.js" />
+        <option value="$PROJECT_DIR$/pages/corporativo/ccusto.html" />
+        <option value="$PROJECT_DIR$/pages/painel/painel.html" />
+        <option value="$PROJECT_DIR$/theme/js/plugins/maskedinput/jquery.maskedinput.min.js" />
+        <option value="$PROJECT_DIR$/pages/sistema/foot.html" />
+        <option value="$PROJECT_DIR$/pages/home.html" />
+        <option value="$PROJECT_DIR$/php/services/acesso/ativacao.php" />
+        <option value="$PROJECT_DIR$/php/services/cadastro/reembolso/aprovadores.php" />
+        <option value="$PROJECT_DIR$/pages/acesso/ativacao.html" />
+        <option value="$PROJECT_DIR$/theme/css/theme-light.css" />
+        <option value="$PROJECT_DIR$/pages/sistema/head.html" />
+        <option value="$PROJECT_DIR$/index.php" />
+        <option value="$PROJECT_DIR$/php/services/corporativo/ccusto.php" />
+        <option value="$PROJECT_DIR$/php/services/corporativo/departamento.php" />
+        <option value="$PROJECT_DIR$/pages/acesso/permissao.html" />
+        <option value="$PROJECT_DIR$/php/outros/phpMailer/corpo.html" />
+        <option value="$PROJECT_DIR$/php/outros/phpMailer/enviarEmail.php" />
+        <option value="$PROJECT_DIR$/pages/sistema/menu.html" />
+        <option value="$PROJECT_DIR$/php/outros/loadpdf.php" />
+        <option value="$PROJECT_DIR$/test/loadpdf.php" />
+        <option value="$PROJECT_DIR$/test/index.php" />
+        <option value="$PROJECT_DIR$/php/services/geral/login.php" />
+        <option value="$PROJECT_DIR$/pages/sistema/login.html" />
+        <option value="$PROJECT_DIR$/pages/compartilhamento/documentos.html" />
+        <option value="$PROJECT_DIR$/pages/sistema/topo.html" />
+        <option value="/dcb8fe02/b5032143-61d2-4a6d-a482-e966c7bd99cd/database/AMR_P00_HOMOLOGACAO/schema/dbo/view/corporativo_vwEmpresas.sql" />
+        <option value="$PROJECT_DIR$/pages/acesso/perfil.html" />
+        <option value="$PROJECT_DIR$/pages/acesso/usuario.html" />
+        <option value="$PROJECT_DIR$/BaseInicial.sql" />
+        <option value="$PROJECT_DIR$/php/services/acesso/usuario_permissao.php" />
+        <option value="$PROJECT_DIR$/pages/compartilhamento/documento.html" />
+        <option value="$PROJECT_DIR$/pages/colaborador/reembolso.html" />
+        <option value="$PROJECT_DIR$/php/services/cadastro/reembolso/grupo.php" />
+        <option value="$PROJECT_DIR$/pages/cadastro/reembolso/grupo.html" />
+        <option value="$PROJECT_DIR$/php/services/colaborador/reembolso.php" />
+      </list>
+    </option>
+  </component>
+  <component name="JsBuildToolGruntFileManager" detection-done="true" sorting="DEFINITION_ORDER" />
+  <component name="JsBuildToolPackageJson" detection-done="true" sorting="DEFINITION_ORDER" />
+  <component name="JsGulpfileManager">
+    <detection-done>true</detection-done>
+    <sorting>DEFINITION_ORDER</sorting>
+  </component>
+  <component name="NodePackageJsonFileManager">
+    <packageJsonPaths />
+  </component>
+  <component name="ProjectFrameBounds" extendedState="6">
+    <option name="x" value="330" />
+    <option name="y" value="200" />
+    <option name="width" value="858" />
+    <option name="height" value="757" />
+  </component>
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectView">
+    <navigator proportions="" version="1">
+      <foldersAlwaysOnTop value="true" />
+    </navigator>
+    <panes>
+      <pane id="Scope" />
+      <pane id="ProjectPane">
+        <subPane>
+          <expand>
+            <path>
+              <item name="americaportal" type="b2602c69:ProjectViewProjectNode" />
+              <item name="americaportal" type="462c0819:PsiDirectoryNode" />
+            </path>
+          </expand>
+          <select />
+        </subPane>
+      </pane>
+    </panes>
+  </component>
+  <component name="PropertiesComponent">
+    <property name="DefaultHtmlFileTemplate" value="HTML File" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="com.intellij.database.dataSource.DataSourceTemplate" value="SQL Server (Microsoft)" />
+    <property name="database.console.LAST_STATE" value="true" />
+    <property name="database.data.extractors.current.id" value="SQL Inserts" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../../../../myworkpace/producao/america" />
+    <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
+    <property name="nodejs_npm_path_reset_for_default_project" value="true" />
+  </component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\xampp\htdocs\americaportal\test" />
+      <recent name="C:\xampp\htdocs\base\pages\acesso" />
+      <recent name="C:\xampp\htdocs\base\pages\processo\usuario" />
+      <recent name="C:\xampp\htdocs\base\pages\processo" />
+      <recent name="C:\xampp\htdocs\base\php\services\cadastro\reembolso" />
+    </key>
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\xampp\htdocs\americaportal\test" />
+      <recent name="C:\xampp\htdocs\americaportal\php\outros\phpMailer" />
+      <recent name="C:\xampp\htdocs\base\pages\processo\reembolso" />
+      <recent name="C:\xampp\htdocs\base\php\services\corporativo" />
+    </key>
+  </component>
+  <component name="RunDashboard">
+    <option name="ruleStates">
+      <list>
+        <RuleState>
+          <option name="name" value="ConfigurationTypeDashboardGroupingRule" />
+        </RuleState>
+        <RuleState>
+          <option name="name" value="StatusDashboardGroupingRule" />
+        </RuleState>
+      </list>
+    </option>
+  </component>
+  <component name="RunManager">
+    <configuration name="testes.php" type="PhpLocalRunConfigurationType" factoryName="PHP Console" temporary="true" path="$PROJECT_DIR$/php/services/geral/testes.php" />
+    <recent_temporary>
+      <list>
+        <item itemvalue="PHP Script.testes.php" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="25b071b6-91c9-445a-b564-cb81d73c674a" name="Default" comment="" />
+      <created>1538160985316</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1538160985316</updated>
+      <workItem from="1538160986765" duration="8368000" />
+      <workItem from="1538228184439" duration="54597000" />
+      <workItem from="1538337332243" duration="21335000" />
+      <workItem from="1538399150697" duration="53000" />
+      <workItem from="1538400619879" duration="56487000" />
+      <workItem from="1538575844377" duration="2353000" />
+      <workItem from="1538589884433" duration="23262000" />
+      <workItem from="1538664636410" duration="52299000" />
+      <workItem from="1538764771575" duration="7208000" />
+      <workItem from="1538838160244" duration="46253000" />
+      <workItem from="1538925141032" duration="11464000" />
+      <workItem from="1538972126844" duration="19423000" />
+      <workItem from="1539089643924" duration="27489000" />
+      <workItem from="1539185773365" duration="3272000" />
+      <workItem from="1539266682642" duration="30264000" />
+      <workItem from="1539356868976" duration="47431000" />
+      <workItem from="1539614950148" duration="21513000" />
+      <workItem from="1555935206617" duration="715000" />
+      <workItem from="1556005960207" duration="622000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TimeTrackingManager">
+    <option name="totallyTimeSpent" value="434408000" />
+  </component>
+  <component name="ToolWindowManager">
+    <frame x="-8" y="-8" width="1616" height="876" extended-state="6" />
+    <layout>
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.236875" />
+      <window_info anchor="bottom" id="TODO" order="6" />
+      <window_info anchor="bottom" id="Docker" order="7" show_stripe_button="false" />
+      <window_info anchor="bottom" id="Event Log" order="7" sideWeight="0.500625" side_tool="true" weight="0.410691" />
+      <window_info anchor="right" id="Database" order="3" visible="true" weight="0.30875" />
+      <window_info anchor="bottom" id="Database Changes" order="7" show_stripe_button="false" />
+      <window_info anchor="bottom" id="Version Control" order="7" />
+      <window_info anchor="bottom" id="Run" order="2" weight="0.32985657" />
+      <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
+      <window_info anchor="bottom" id="Terminal" order="7" />
+      <window_info id="Favorites" order="2" side_tool="true" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
+      <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
+      <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
+      <window_info anchor="bottom" id="SQL Generator" order="8" weight="0.32985657" />
+      <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
+      <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
+      <window_info anchor="bottom" id="Inspection Results" order="8" weight="0.32985657" />
+      <window_info anchor="bottom" id="Command Line Tools Console" order="8" weight="0.32985657" />
+      <window_info anchor="bottom" id="Message" order="0" />
+      <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
+      <window_info anchor="bottom" id="Database Console" order="7" sideWeight="0.499375" visible="true" weight="0.19426337" />
+      <window_info anchor="bottom" id="Find" order="1" weight="0.24771838" />
+    </layout>
+    <layout-to-restore>
+      <window_info anchor="bottom" id="Version Control" order="12" show_stripe_button="false" />
+      <window_info active="true" anchor="bottom" id="Database Console" order="7" sideWeight="0.499375" visible="true" weight="0.2750978" />
+      <window_info anchor="bottom" id="Docker" order="8" show_stripe_button="false" />
+      <window_info anchor="bottom" id="Run" order="2" />
+      <window_info anchor="bottom" id="SQL Generator" order="13" weight="0.32985657" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.2" />
+      <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
+      <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
+      <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
+      <window_info anchor="bottom" id="Database Changes" order="9" show_stripe_button="false" />
+      <window_info anchor="bottom" id="TODO" order="6" />
+      <window_info anchor="bottom" id="Inspection Results" order="14" weight="0.32985657" />
+      <window_info anchor="bottom" id="Find" order="1" weight="0.24771838" />
+      <window_info anchor="bottom" id="Command Line Tools Console" order="15" weight="0.32985657" />
+      <window_info anchor="right" id="Database" order="3" visible="true" weight="0.19125" />
+      <window_info anchor="bottom" id="Terminal" order="10" />
+      <window_info anchor="bottom" id="Event Log" order="11" sideWeight="0.500625" side_tool="true" weight="0.410691" />
+      <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
+      <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
+      <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
+      <window_info anchor="bottom" id="Message" order="0" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
+      <window_info id="Favorites" order="2" side_tool="true" />
+    </layout-to-restore>
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="1" />
+  </component>
+  <component name="VcsContentAnnotationSettings">
+    <option name="myLimit" value="2678400000" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <option name="time" value="9" />
+    </breakpoint-manager>
+  </component>
+  <component name="editorHistoryManager">
+    <entry file="das://b5032143-61d2-4a6d-a482-e966c7bd99cd/database/AMR_P00_HOMOLOGACAO/schema/dbo/table/permissoes_contaf">
+      <provider selected="true" editor-type-id="com.intellij.database.editor.DatabaseTableFileEditorProvider">
+        <state>
+          <filtering enabled="true" />
+          <column-attributes>
+            <column name="%%physloc%%" enabled="false" />
+          </column-attributes>
+        </state>
+      </provider>
+    </entry>
+    <entry file="das://b5032143-61d2-4a6d-a482-e966c7bd99cd/database/AMR_P00_HOMOLOGACAO/schema/dbo/table/permissoes_contap">
+      <provider selected="true" editor-type-id="com.intellij.database.editor.DatabaseTableFileEditorProvider">
+        <state>
+          <filtering enabled="true" />
+          <column-attributes>
+            <column name="%%physloc%%" enabled="false" />
+          </column-attributes>
+        </state>
+      </provider>
+    </entry>
+    <entry file="das://b5032143-61d2-4a6d-a482-e966c7bd99cd/database/AMR_P00_HOMOLOGACAO/schema/dbo/table/contas">
+      <provider selected="true" editor-type-id="com.intellij.database.editor.DatabaseTableFileEditorProvider">
+        <state>
+          <filtering enabled="true" />
+          <column-attributes>
+            <column name="%%physloc%%" enabled="false" />
+          </column-attributes>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/AppData/Local/Temp/enviar_email.php.url" />
+    <entry file="file://$PROJECT_DIR$/../myAppExamples/sendEmail/enviar_email.php" />
+    <entry file="file://$PROJECT_DIR$/php/outros/phpMailer/examples/sendmail.phps" />
+    <entry file="file://$PROJECT_DIR$/php/outros/phpMailer/class.phpmailer.php" />
+    <entry file="file://$PROJECT_DIR$/php/outros/phpMailer/class.smtp.php" />
+    <entry file="file://$PROJECT_DIR$/php/outros/phpMailer/teste.php" />
+    <entry file="file://$PROJECT_DIR$/php/outros/phpMailer/corpo.html" />
+    <entry file="file://$PROJECT_DIR$/php/outros/phpMailer/enviarEmail.php" />
+    <entry file="file://$PROJECT_DIR$/exportaTabelaExcel.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-3774" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pages/acesso/permissao.html" />
+    <entry file="das://b5032143-61d2-4a6d-a482-e966c7bd99cd/database/AMR_P00_HOMOLOGACAO/schema/dbo/table/colaborador_documento">
+      <provider selected="true" editor-type-id="com.intellij.database.editor.DatabaseTableFileEditorProvider">
+        <state>
+          <filtering enabled="true" />
+          <column-attributes>
+            <column name="%%physloc%%" enabled="false" />
+          </column-attributes>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/php/comunicacao.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="204">
+          <caret line="69" column="44" lean-forward="true" selection-start-line="69" selection-start-column="44" selection-end-line="69" selection-end-column="44" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/upload.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-1120">
+          <caret line="35" column="60" lean-forward="true" selection-start-line="35" selection-start-column="60" selection-end-line="35" selection-end-column="60" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/test/loadimage.php" />
+    <entry file="file://$PROJECT_DIR$/test/loadpdf.php" />
+    <entry file="file://$PROJECT_DIR$/php/services/geral/login.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="323">
+          <caret line="85" column="42" selection-start-line="85" selection-start-column="42" selection-end-line="85" selection-end-column="42" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pages/sistema/login.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="203">
+          <caret line="136" column="31" selection-start-line="136" selection-start-column="31" selection-end-line="136" selection-end-column="31" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/test/index.php" />
+    <entry file="file://$PROJECT_DIR$/php/outros/loadimage.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="170">
+          <caret line="10" column="25" selection-start-line="10" selection-start-column="25" selection-end-line="10" selection-end-column="25" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/theme/js/plugins.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-504" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/theme/js/funcoesGenericas.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-561" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/theme/js/demo_tables.js">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/theme/js/demo_tasks.js">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/theme/js/plugins/datatables/jquery.dataTables.pt-br.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-858" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pages/sistema/topo.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="289">
+          <caret line="17" column="34" selection-start-line="17" selection-start-column="34" selection-end-line="17" selection-end-column="34" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="dbSrc:///dcb8fe02/b5032143-61d2-4a6d-a482-e966c7bd99cd/database/AMR_P00_HOMOLOGACAO/schema/dbo/routine/fSplit.sql" />
+    <entry file="dbSrc:///dcb8fe02/b5032143-61d2-4a6d-a482-e966c7bd99cd/database/AMR_P00_HOMOLOGACAO/schema/dbo/view/corporativo_vwEmpresas.sql" />
+    <entry file="das://b5032143-61d2-4a6d-a482-e966c7bd99cd/database/AMR_P00_HOMOLOGACAO/schema/dbo/view/corporativo_vwEmpresas">
+      <provider selected="true" editor-type-id="com.intellij.database.editor.DatabaseTableFileEditorProvider">
+        <state>
+          <filtering enabled="true" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pages/sistema/menu.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="378">
+          <caret line="54" column="84" selection-start-line="54" selection-start-column="78" selection-end-line="54" selection-end-column="84" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="das://b5032143-61d2-4a6d-a482-e966c7bd99cd/database/AMR_P00_HOMOLOGACAO/schema/dbo/view/corporativo_vwFuncionarios">
+      <provider selected="true" editor-type-id="com.intellij.database.editor.DatabaseTableFileEditorProvider">
+        <state>
+          <filtering enabled="true" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pages/acesso/perfil.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="304">
+          <caret line="159" selection-start-line="159" selection-end-line="159" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="das://b5032143-61d2-4a6d-a482-e966c7bd99cd/database/AMR_P00_HOMOLOGACAO/schema/dbo/table/reembolso_aprovador_nivel">
+      <provider selected="true" editor-type-id="com.intellij.database.editor.DatabaseTableFileEditorProvider">
+        <state>
+          <filtering enabled="true" />
+          <column-attributes>
+            <column name="%%physloc%%" enabled="false" />
+          </column-attributes>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pages/acesso/ativacao.html" />
+    <entry file="das://b5032143-61d2-4a6d-a482-e966c7bd99cd/database/AMR_P00_HOMOLOGACAO/schema/dbo/table/reembolso_item">
+      <provider selected="true" editor-type-id="com.intellij.database.editor.DatabaseTableFileEditorProvider">
+        <state>
+          <filtering enabled="true" />
+          <column-attributes>
+            <column name="%%physloc%%" enabled="false" />
+          </column-attributes>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/BaseInicial.sql" />
+    <entry file="das://b5032143-61d2-4a6d-a482-e966c7bd99cd/database/AMR_P00_HOMOLOGACAO/schema/dbo/table/reembolso_aprovador_grupo">
+      <provider selected="true" editor-type-id="com.intellij.database.editor.DatabaseTableFileEditorProvider">
+        <state>
+          <filtering enabled="true" />
+          <column-attributes>
+            <column name="%%physloc%%" enabled="false" />
+          </column-attributes>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pages/acesso/usuario.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-3893">
+          <caret line="79" column="42" selection-start-line="79" selection-start-column="28" selection-end-line="79" selection-end-column="42" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pages/colaborador/documento.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="51">
+          <caret line="3" column="23" lean-forward="true" selection-start-line="3" selection-start-column="23" selection-end-line="3" selection-end-column="23" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/php/services/acesso/usuario_permissao.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="194">
+          <caret line="40" column="67" selection-start-line="40" selection-start-column="67" selection-end-line="40" selection-end-column="67" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="das://b5032143-61d2-4a6d-a482-e966c7bd99cd/database/AMR_P00_HOMOLOGACAO/schema/dbo/table/paginas">
+      <provider selected="true" editor-type-id="com.intellij.database.editor.DatabaseTableFileEditorProvider">
+        <state>
+          <filtering enabled="true" />
+          <column-attributes>
+            <column name="%%physloc%%" enabled="false" />
+          </column-attributes>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pages/compartilhamento/documento.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="221">
+          <caret line="163" column="44" lean-forward="true" selection-start-line="163" selection-start-column="31" selection-end-line="163" selection-end-column="44" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="das://b5032143-61d2-4a6d-a482-e966c7bd99cd/database/AMR_P00_HOMOLOGACAO/schema/dbo/table/usuario">
+      <provider selected="true" editor-type-id="com.intellij.database.editor.DatabaseTableFileEditorProvider">
+        <state>
+          <filtering enabled="true" />
+          <column-attributes>
+            <column name="%%physloc%%" enabled="false" />
+          </column-attributes>
+        </state>
+      </provider>
+    </entry>
+    <entry file="das://b5032143-61d2-4a6d-a482-e966c7bd99cd/database/AMR_P00_HOMOLOGACAO/schema/dbo/table/reembolso_aprovador_usuario">
+      <provider selected="true" editor-type-id="com.intellij.database.editor.DatabaseTableFileEditorProvider">
+        <state>
+          <filtering enabled="true" />
+          <column-attributes>
+            <column name="%%physloc%%" enabled="false" />
+          </column-attributes>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$APPLICATION_CONFIG_DIR$/consoles/db/b5032143-61d2-4a6d-a482-e966c7bd99cd/console.sql" />
+    <entry file="file://$PROJECT_DIR$/php/services/colaborador/reembolso.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="272">
+          <caret line="66" column="80" selection-start-line="66" selection-start-column="80" selection-end-line="66" selection-end-column="80" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/php/services/cadastro/reembolso/grupo.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="340">
+          <caret line="57" column="55" selection-start-line="57" selection-start-column="55" selection-end-line="57" selection-end-column="55" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pages/colaborador/reembolso.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="17">
+          <caret line="248" column="36" selection-start-line="248" selection-start-column="36" selection-end-line="248" selection-end-column="36" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pages/cadastro/reembolso/grupo.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="17">
+          <caret line="200" column="33" selection-start-line="200" selection-start-column="33" selection-end-line="200" selection-end-column="33" />
+        </state>
+      </provider>
+    </entry>
+  </component>
+</project>

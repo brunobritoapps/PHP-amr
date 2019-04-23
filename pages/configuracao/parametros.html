@@ -1,0 +1,736 @@
+<script type="text/javascript">
+    var remote = new Remote('php/comunicacao.php', 'configuracao','parametros');
+    var remote1 = new Remote('php/comunicacao.php', 'cadastro/reembolso', 'limite');
+    var remote2 = new Remote('php/comunicacao.php', 'acesso','usuario_permissao');
+
+    var oTable;
+    var defTable;
+    var arrDir = new Array();
+    var arrEmails = new Array();
+    var v1;
+    var v2;
+    var v3;
+    var v4;
+
+    function resultGetLimite(dados) {
+        renderizaTabelaDefault(dados);
+    }
+
+    function renderizaTabelaDefault(dados) {
+        if (oTable == null) {
+            defTable = $('#t_dados').html();
+        } else {
+            $('#t_dados').html(defTable);
+        }
+        var objDataTable = colunasDefaultDataTable($('#t_dados'), dados);
+        oTable = $('#t_dados').dataTable(objDataTable);
+        $(window).resize();
+    }
+    function resultGetUsuario(dados) {
+        var strTemp = "0";
+        $("#selUsuario_AddUsuario").html('<option value=0 >Selecione</option>');
+        for (var i = 0; i < dados.length; i++) {
+            strTemp += "," + dados[i].id_unico
+            $("#selUsuario_AddUsuario").append('<option value="' + dados[i].id + '">['+ dados[i].usuario +'],['+ dados[i].nome +' '+ dados[i].sobrenome +'],['+ dados[i].empresa +'],['+ dados[i].departamento +'],['+ dados[i].cpf +']</option>');
+        }
+        $("#selUsuario_AddUsuario").selectpicker("refresh");
+    }
+
+    function resultGetTipoEmail(dados) {
+        //alert(dados[0].tipo);
+        $("#sel_tipo").html("");
+        $("#sel_tipo").html("<option value=0>Selecione</option>");
+        for (var i = 0; i < dados.length; i++) {
+            $("#sel_tipo").append('<option value="' + dados[i].id + '">' + dados[i].tipo + '</option>');
+        }
+        $("#sel_tipo").selectpicker("refresh");
+    }
+
+    function resutlGetDiretorioTodos_reembolso(dados){
+        $('#txtId_Dir1').val(dados[0].id);
+        $('#txtDir1').val(dados[0].dir);
+        $('#txtId_Dir2').val(dados[1].id);
+        $('#txtDir2').val(dados[1].dir);
+        $('#txtId_Dir3').val(dados[2].id);
+        $('#txtDir3').val(dados[2].dir);
+        val1=true;
+    }
+
+    function resutlGetDiretorioTodos_erp(dados){
+        $('#txtId_Emp1').val(dados[0].id);
+        $('#txtDirEmp1').val(dados[0].dir);
+        $('#txtId_Emp2').val(dados[1].id);
+        $('#txtDirEmp2').val(dados[1].dir);
+        $('#txtId_Emp3').val(dados[2].id);
+        $('#txtDirEmp3').val(dados[2].dir);
+        $('#txtId_Emp4').val(dados[3].id);
+        $('#txtDirEmp4').val(dados[3].dir);
+        $('#txtId_Emp5').val(dados[4].id);
+        $('#txtDirEmp5').val(dados[4].dir);
+        $('#txtId_Emp6').val(dados[5].id);
+        $('#txtDirEmp6').val(dados[5].dir);
+        $('#txtId_Emp7').val(dados[6].id);
+        $('#txtDirEmp7').val(dados[6].dir);
+        $('#txtId_Emp8').val(dados[7].id);
+        $('#txtDirEmp8').val(dados[7].dir);
+        val2=true;
+    }
+
+    function resutlGetDataLimite_reembolso(dados){
+        //alert( $('#txtId_DataLimite').val());
+        $('#txtId_DataLimite').val(dados[0].id);
+        $('#txtDataLimite').val(dados[0].dataLimite);
+        $('#txtId_PosLimite').val(dados[1].id);
+        $('#txtPosLimite').val(dados[1].dataLimite);
+        val3= true;
+    }
+
+    function show_ElemReembolso(x){
+        if(x==true){
+            $('#txtDataLimite').prop('disabled', false);
+            $('#txtPosLimite').prop('disabled', false);
+            $('#txtValorKm').prop('disabled', false);
+            //
+            $('#txtDir1').prop('disabled', false);
+            $('#txtDir2').prop('disabled', false);
+            $('#txtDir3').prop('disabled', false);
+            //
+            $('#txtDirEmp1').prop('disabled', false);
+            $('#txtDirEmp2').prop('disabled', false);
+            $('#txtDirEmp3').prop('disabled', false);
+            $('#txtDirEmp4').prop('disabled', false);
+            $('#txtDirEmp5').prop('disabled', false);
+            $('#txtDirEmp6').prop('disabled', false);
+            $('#txtDirEmp7').prop('disabled', false);
+            $('#txtDirEmp8').prop('disabled', false);
+        }else{
+            $('#txtDataLimite').prop('disabled', true);
+            $('#txtPosLimite').prop('disabled', true);
+            $('#txtValorKm').prop('disabled', true);
+            //
+            $('#txtDir1').prop('disabled', true);
+            $('#txtDir2').prop('disabled', true);
+            $('#txtDir3').prop('disabled', true);
+            //
+            $('#txtDirEmp1').prop('disabled', true);
+            $('#txtDirEmp2').prop('disabled', true);
+            $('#txtDirEmp3').prop('disabled', true);
+            $('#txtDirEmp4').prop('disabled', true);
+            $('#txtDirEmp5').prop('disabled', true);
+            $('#txtDirEmp6').prop('disabled', true);
+            $('#txtDirEmp7').prop('disabled', true);
+            $('#txtDirEmp8').prop('disabled', true);
+        }
+    }
+
+    function render_ElemReembolso(x){
+        if(x==true){
+            $('#btnEdt').show();
+            $('#btnCan').hide();
+            $('#btnGra').hide();
+        }else{
+            $('#btnCan').show();
+            $('#btnGra').show();
+        }
+    }
+
+    function validate_ElemReembolso() {
+        if ($('#txtDir1').val().length>0 || $('#txtDir2').val().length>0 || $('#txtDir2').val().length>0) {
+            return 1
+        } else
+            noty({
+                text: '<br/><b><p><span class="fa fa-exclamation-circle"></span><font size="2">   Campos Nulos</font></p></b><p>Nenhum parâmetro de sistema pode ser nulo</p>',
+                type: 'warning',
+                layout: 'topCenter',
+                timeout: 4000
+            });
+            return 0
+    }
+
+    function resutlGetContaKm_reembolso(dados){
+        $("#txtValorKm").val(dados[0].valor);
+    }
+
+    function resultGetModalUsuario(dados){
+        $("#txtId_AddUsuario").val(dados[0].id);
+        $("#divNomeSobrenome_AddUsuario").html(dados[0].nome+' '+dados[0].sobrenome);
+        $("#divEmpresa_AddUsuario").html(dados[0].empresa);
+        $("#divDepartamento_AddUsuario").html(dados[0].departamento);
+        $("#divCpf_AddUsuario").html('CPF:'+dados[0].cpf);
+        $("#divEmail_AddUsuario").html(dados[0].usuario);
+        //
+        $("#txtNome").val(dados[0].nome);
+        $("#txtEmail").val(dados[0].usuario);
+    }
+
+    function renderListEmails(dados){
+        //alert(dados[0].tipo);
+        var conteudo="";
+        for (var i=0; i< dados.length;i++){
+            pos=i+1;
+            conteudo += '<div class="panel "style="padding-top: 10px;padding-right: 10px">' +
+                '           <ul class="panel-controls" >\n' +
+                '                <li ><a href="#" id="btnRem_Item" class="control-danger" data-acao="rem" data-remove-item="'+i+'"  title="Remover"><span class="fa fa-minus" ></span></a></li>\n' +
+                '                <li ><a href="#" id="btnEdt_Item" class="control-warning" data-acao="edt" data-edit-item="'+i+'"  title="Editar"><span class="fa fa-pencil" ></span></a></li>\n' +
+                '           </ul>\n' +
+                '        <div class="panel-body ">' +
+                '           <div class="col-md-12">\n'+
+                '               <div class="form-group" style="padding-top: 10px">\n' +
+                '                      <label>Email-'+pos+'</label>\n' +
+                '                      <input type="text" value="'+dados[i].email_usuario+'" class="form-control "  disabled="disabled">\n' +
+                '              </div>\n' +
+                '           </div>\n' +
+                '           <div class="col-md-12" style="padding-top: 10px">\n' +
+                '                 <div class="form-group">\n' +
+                '                      <label>Nome colaborador</label>\n' +
+                '                      <input type="text" value="'+dados[i].nome_usuario+'" class="form-control " disabled="disabled">\n' +
+                '                 </div>\n' +
+                '           </div>\n' +
+                '           <div class="col-md-12" style="padding-top: 10px">\n' +
+                '                 <div class="form-group">\n' +
+                '                      <label>Tipo envio </label>\n' +
+                '                      <input type="text" value="'+dados[i].tipo+'" class="form-control " disabled="disabled">\n' +
+                '                 </div>\n' +
+                '           </div>\n' +
+                '        </div>\n' +
+                '    </div>';
+        }
+        $('#divEmails').html(conteudo);
+    }
+
+    function resultGetEmails(dados){
+        arrEmails = new Array();
+        for (var i=0; i< dados.length;i++){
+            var tempObj = {};
+            tempObj.id_usuario = dados[i].id_usuario;
+            tempObj.nome_usuario = dados[i].nome_usuario;
+            tempObj.email_usuario = dados[i].email_usuario;
+            tempObj.id_tipo = dados[i].id_tipo;
+            tempObj.tipo = dados[i].tipo;
+            //
+            arrEmails.push(tempObj);
+        }
+        renderListEmails(arrEmails);
+    }
+
+    function setDadosUsuario(){
+        var id = $("#selUsuario_AddUsuario").val();
+        var rnd = Math.random();
+        $("#imgUser_AddUsuario").html('<div class="profile"><div class="profile-image"><img src="php/outros/loadimage.php?n=' + id + '&c=' + rnd + '" class="foto_usuario" alt="Usuário"></div></div>');
+        remote2.executa("getInfoUsuario",{idUsuario:id}, resultGetModalUsuario, $('#modal_AddUsuario'), erroPersonalizado);
+    }
+
+    function valida_GraEmails() {
+        var valid_usuario= true;
+        if(arrEmails.length==0){
+            valid_item = false;
+            noty({
+                text: '<br/><b><p><span class="fa fa-exclamation-circle"></span><font size="2">   Faltam informações para o grupo de Emails</font></p></b><p>Não adicionado (Usuarios) ao grupo de Emails</p>',
+                type: 'warning',
+                layout: 'topCenter',
+                timeout: 4000
+            });
+            valid_usuario= false;
+        }
+        if(valid_usuario==true){
+            return true;
+        }else {
+            return false;
+        }
+    }
+
+    function valida_SaveEmails(){
+        var usuario = $('#selUsuario_AddUsuario').find(":selected").val();
+        var tipo = $('#sel_tipo').find(":selected").val();
+
+        var valid_usuario = true;
+        if(usuario==0){
+            valid_usuario = false;
+            noty({
+                text: '<br/><b><p><span class="fa fa-exclamation-circle"></span><font size="2">   Faltam informações para o grupo de Emails</font></p></b><p>Campo (Usuário) não selecionado</p>',
+                type: 'warning',
+                layout: 'topCenter',
+                timeout: 4000
+            });
+        }
+
+        var valid_tipo = true;
+        if(tipo==0){
+            valid_tipo = false;
+            noty({
+                text: '<br/><b><p><span class="fa fa-exclamation-circle"></span><font size="2">   Faltam informações para o grupo de Emails</font></p></b><p>Campo (Tipo de envio) não selecionado</p>',
+                type: 'warning',
+                layout: 'topCenter',
+                timeout: 4000
+            });
+        }
+
+
+
+        if(valid_tipo & valid_usuario){
+            return true
+        }else {
+            return false
+        }
+    }
+
+    function resultSetEmail(dados){
+        if(dados.length==0){
+            noty({
+                text: '<br/><b><p><span class="fa fa-exclamation-circle"></span><font size="2">   Erro</font></p></b><p>Erro ao gravar grupo de emails</p>',
+                type: 'error',
+                layout: 'topCenter',
+                timeout: 4000
+            });
+        }else{
+            noty({
+                text: '<br/><b><p><span class="fa fa-exclamation-circle"></span><font size="2">   Sucesso</font></p></b><p>Grupo de emails adicionado</p>',
+                type: 'success',
+                layout: 'topCenter',
+                timeout: 4000
+            });
+            resultGetEmails(dados);
+        }
+    }
+
+    $(document).ready(function () {
+        render_ElemReembolso(true);
+        remote.executa("getDiretorioTodos_reembolso", null, resutlGetDiretorioTodos_reembolso, $('#divParam'), erroPersonalizado);
+        remote.executa("getDiretorioTodos_erp", null, resutlGetDiretorioTodos_erp, $('#divParam'), erroPersonalizado);
+        remote.executa("getDataLimite_reembolso", null, resutlGetDataLimite_reembolso, $('#divParam'), erroPersonalizado);
+        remote.executa("getCotaKm_reembolso", null, resutlGetContaKm_reembolso, $('#divParam'), erroPersonalizado);
+        //LIMITES/NATUREZAS
+        remote1.executa("getLimiteTodos", null, resultGetLimite, $("#pnlLimites"), erroPersonalizado);
+        remote.executa("getDiretorioTodos_reembolso", null, resutlGetDiretorioTodos_reembolso, $('#divParam'), erroPersonalizado);
+        //
+        remote2.executa("getResumoUsuario", null, resultGetUsuario, $('#modal_AddUsuario'), erroPersonalizado);
+        remote.executa("getTipoEmails_reembolso", null, resultGetTipoEmail, $('#modal_AddUsuario'), erroPersonalizado);
+        remote.executa("getEmails_reembolso", null, resultGetEmails, $('#modal_AddUsuario'), erroPersonalizado);
+
+
+
+
+        $("#btnEdt").on('click', function () {
+            show_ElemReembolso(true);
+            $("#btnGra").show();
+            $("#btnCan").show();
+            $("#btnEdt").hide();
+        });
+
+        $("#btnCan").on('click', function () {
+            location.reload();
+        });
+
+        $("#btnGra").on('click', function () {
+            if (validate_ElemReembolso() == 1) {
+                $("#modal_small_Gra").modal();
+            }
+        });
+
+        $("#btnGraConf").on('click', function () {
+            arrDir = new Array();
+            var tempObj = {};
+            tempObj.id = $("#txtId_Dir1").val();
+            tempObj.diretorio = $("#txtDir1").val();
+            arrDir.push(tempObj);
+            var tempObj = {};
+            tempObj.id = $("#txtId_Dir2").val();
+            tempObj.diretorio = $("#txtDir2").val();
+            arrDir.push(tempObj);
+            var tempObj = {};
+            tempObj.id = $("#txtId_Dir3").val();
+            tempObj.diretorio = $("#txtDir3").val();
+            arrDir.push(tempObj);
+            var tempObj = {};
+            tempObj.id = $("#txtId_Emp1").val();
+            tempObj.diretorio = $("#txtDirEmp1").val();
+            arrDir.push(tempObj);
+            var tempObj = {};
+            tempObj.id = $("#txtId_Emp2").val();
+            tempObj.diretorio = $("#txtDirEmp2").val();
+            arrDir.push(tempObj);
+            var tempObj = {};
+            tempObj.id = $("#txtId_Emp3").val();
+            tempObj.diretorio = $("#txtDirEmp3").val();
+            arrDir.push(tempObj);
+            var tempObj = {};
+            tempObj.id = $("#txtId_Emp4").val();
+            tempObj.diretorio = $("#txtDirEmp4").val();
+            arrDir.push(tempObj);
+            var tempObj = {};
+            tempObj.id = $("#txtId_Emp5").val();
+            tempObj.diretorio = $("#txtDirEmp5").val();
+            arrDir.push(tempObj);
+            var tempObj = {};
+            tempObj.id = $("#txtId_Emp6").val();
+            tempObj.diretorio = $("#txtDirEmp6").val();
+            arrDir.push(tempObj);
+            var tempObj = {};
+            tempObj.id = $("#txtId_Emp7").val();
+            tempObj.diretorio = $("#txtDirEmp7").val();
+            arrDir.push(tempObj);
+            var tempObj = {};
+            tempObj.id = $("#txtId_Emp8").val();
+            tempObj.diretorio = $("#txtDirEmp8").val();
+            arrDir.push(tempObj);
+            remote.executa("setDiretorio_reembolso", {"arrDir":arrDir}, resutlGetDiretorioTodos_reembolso, $('#divParam'), erroPersonalizado);
+            remote.executa("getDiretorioTodos_erp", null, resutlGetDiretorioTodos_erp, $('#divParam'), erroPersonalizado);
+            //DATA LIMITE
+            remote.executa("setDataLimite_reembolso", {"id":$("#txtId_DataLimite").val(),"data":$("#txtDataLimite").val()}, resutlGetDataLimite_reembolso, $('#divParam'), erroPersonalizado);
+            //POS DATA - LIMITE
+            remote.executa("setDataLimite_reembolso", {"id":$("#txtId_PosLimite").val(),"data":$("#txtPosLimite").val()}, resutlGetDataLimite_reembolso, $('#divParam'), erroPersonalizado);
+            remote.executa("setCotaKm_reembolso", {"valor":$("#txtValorKm").val()}, resutlGetContaKm_reembolso, $('#divParam'), erroPersonalizado);
+            show_ElemReembolso(false);
+            render_ElemReembolso(true);
+        });
+
+        $("#btnEdt_limite").on('click', function () {
+            var objTemp = oTable.fnGetData(oTable.closest("table").find(".selected"));
+            if (objTemp != null) {
+                $("#txtIdNatureza").val(objTemp.codigo);
+                $("#txtNatureza").val(objTemp.natureza);
+                $("#txtLimite").val(objTemp.limite);
+                $("#small_modal_limite").modal('show');
+            }
+        });
+
+        $("#btnGra_limite").on('click', function () {
+            remote1.executa("setLimite", {natureza: $("#txtIdNatureza").val(),limite: $("#txtLimite").val()}, resultGetLimite, $("#pnlLimites"), erroPersonalizado);
+            $("#small_modal_limite").modal('hide');
+        });
+
+        $('#txtLimite').on('change', function() {
+            var val = $(this).val().replace(',','.');
+            $(this).val(val);
+        });
+
+        $('#txtValorKm').on('input', function() {
+            var val = $(this).val().replace(',','.');
+            $(this).val(val);
+        });
+
+        $("#selUsuario_AddUsuario").change(function () {
+            setDadosUsuario();
+        });
+
+        $('#btnAdd').on('click', function() {
+            $("#modal_AddUsuario").modal('show');
+        });
+
+        $("#divEmails").on("click", "[data-edit-item]", function () {
+            $this = $(this);
+            var i = $this.attr("data-edit-item");
+            $("#selUsuario_AddUsuario").val(arrEmails[i].id_usuario);
+            $("#selUsuario_AddUsuario").selectpicker("refresh");
+            setDadosUsuario();
+            $("#sel_tipo").val(arrEmails[i].id_tipo);
+            $("#sel_tipo").selectpicker("refresh");
+
+            $("#modal_AddUsuario").modal();
+        });
+
+        $("#divEmails").on("click", "[data-remove-item]", function () {
+            $this = $(this);
+            var i = $this.attr("data-remove-item");
+            arrEmails.splice(i,1);
+            renderListEmails(arrEmails);
+        });
+
+        $("#btnSave_Email").on("click", function (){
+            if(valida_SaveEmails()){
+                var tempObj = {};
+                tempObj.id_usuario = $("#selUsuario_AddUsuario").val();
+                tempObj.nome_usuario = $("#txtNome").val();
+                tempObj.email_usuario = $("#txtEmail").val();
+                tempObj.id_tipo = $("#sel_tipo option:selected").val();
+                tempObj.tipo = $("#sel_tipo option:selected").text();
+
+                arrEmails.push(tempObj);
+
+                renderListEmails(arrEmails);
+
+                $("#modal_AddUsuario").modal("hide");
+            }
+
+        });
+
+        $("#btnGra_Email").on("click", function (){
+            var param = {
+                arrEmail: arrEmails
+            };
+            if(valida_SaveEmails() & valida_GraEmails()){
+                remote.executa("setEmails_reembolso", param, resultSetEmail, $("#divPadrao"), erroPersonalizado);
+            }
+        });
+
+    });
+</script>
+
+
+<!-- START BREADCRUMB -->
+<ul class="breadcrumb">
+</ul>
+<!-- END BREADCRUMB -->
+
+<!-- PAGE CONTENT WRAPPER -->
+<div class="page-content-wrap">
+    <div class="row">
+        <div class="col-md-6 col-md-offset-3" id="divParam">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Parâmetros</h3>
+                </div>
+                <div class="panel-body">
+                    <div id="divPadrao" class="row">
+                        <div class="col-md-12">
+                            <!-- START TABS -->
+                            <div class="panel panel-default tabs">
+                                <ul class="nav nav-tabs" role="tablist">
+                                    <li class="active"><a href="#tab-first" role="tab" data-toggle="tab"><span class="fa fa-list-ul"></span>Geral</a></li>
+                                    <li class=""><a href="#tab-second" role="tab" data-toggle="tab"><span class="fa fa-files-o"></span>Reembolso de Despesas</a></li>
+                                    <li class=""><a href="#tab-third" role="tab" data-toggle="tab"><span class="glyphicon glyphicon-time"></span>Aprovação Financeira</a></li>
+                                    <li class=""><a href="#tab-fourth" role="tab" data-toggle="tab"><span class="glyphicon glyphicon-time"></span>Integração ERP</a></li>
+                                </ul>
+                                <div class="panel-body tab-content">
+
+                                    <!--GERAL -->
+                                    <div class="active tab-pane" id="tab-first">
+                                        <div class="panel panel-default tabs">
+                                        <ul class="nav nav-tabs" role="tablist">
+                                            <li class=""><a href="#tab-first-geral" role="tab" data-toggle="tab"><span ></span>Emails</a></li>
+                                        </ul>
+                                            <div class="panel-body tab-content">
+                                                <!--EMAILS -->
+                                                <div class="active tab-pane" id="tab-first-geral">
+                                                    <div class="panel-heading">
+                                                        <h3 class="panel-title">Adicionar usuários </h3>
+                                                        <ul class="panel-controls">
+                                                            <li><a href="#" id="btnAdd" class="control-info" data-acao="gra" title="Adicionar Emails"  ><span class="fa fa-plus"></span></a></li>
+                                                            <li><a href="#" id="btnGra_Email" class="control-success" data-acao="gra" title="Salva Emails"  ><span class="fa fa-check"></span></a></li>
+                                                        </ul>
+                                                    </div>
+                                                    <div id="divEmails" class="painel-body">
+
+
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!--REEMBOLSO DE DESPESAS-->
+                                    <div class="tab-pane " id="tab-second">
+                                        <div class="panel panel-default tabs">
+                                            <ul class="nav nav-tabs" role="tablist">
+                                                <li class="active"><a href="#tab-first-secund" role="tab" data-toggle="tab"><span ></span>Geral</a></li>
+                                                <li class=""><a href="#tab-second-secund" role="tab" data-toggle="tab"><span ></span>Diretorios</a></li>
+                                                <li class=""><a href="#tab-third-secund" role="tab" data-toggle="tab"><span ></span>Limites/Naturezas</a></li>
+                                            </ul>
+                                            <div class="panel-body tab-content">
+                                                <!--GERAL -->
+                                                <div class="active tab-pane" id="tab-first-secund">
+                                                    <div class="form-group">
+                                                        <input id="txtId_DataLimite" type="hidden"/>
+                                                        <label>Dia limite para envio da solicitação</label>
+                                                        <input id="txtDataLimite" class="form-control " disabled="disabled">
+                                                        <input id="txtId_PosLimite" type="hidden"/>
+                                                        <label>Dia adicional pós Limite para envio de revisões</label>
+                                                        <input id="txtPosLimite" class="form-control " disabled="disabled">
+                                                        <label>Valor km/percorrido Natureza (Quilometragem-20002)</label>
+                                                        <input id="txtValorKm" class="form-control " disabled="disabled">
+                                                    </div>
+                                                </div>
+
+                                                <!--DIRETORIOS-->
+                                                <div class="tab-pane " id="tab-second-secund">
+                                                    <div class="form-group">
+                                                        <input id="txtId_Dir1" type="hidden"/>
+                                                        <label>Diretório - Imagens do usuário</label>
+                                                        <input id="txtDir1" class="form-control" disabled="disabled">
+                                                        <input id="txtId_Dir2" type="hidden"/>
+                                                        <label>Diretório - Arquivos comprovantes</label>
+                                                        <input id="txtDir2" class="form-control" disabled="disabled">
+                                                        <input id="txtId_Dir3" type="hidden"/>
+                                                        <label>Diretório - Documentos compartilhados</label>
+                                                        <input id="txtDir3" class="form-control" disabled="disabled">
+                                                    </div>
+                                                </div>
+
+                                                <!--LIMITES/NATUREZAS-->
+                                                <div class="tab-pane " id="tab-third-secund">
+                                                    <div id="pnlLimites" class="panel panel-default">
+                                                        <div class="panel-heading">
+                                                            <h3 class="panel-title">Limites de valores por natureza de despesa</h3>
+                                                            <ul class="panel-controls">
+                                                                <li><a href="#" id="btnEdt_limite" class="control-warning" data-acao="edt" title="Editar"><span class="fa fa-pencil"></span></a></li>
+                                                            </ul>
+                                                        </div>
+                                                        <div class="panel-body">
+                                                            <!--TABELA-->
+                                                            <div id="divPadrao_limite" class="row">
+                                                                <div class="col-md-12">
+                                                                    <table id="t_dados" class="table table-striped table-bordered table-condensed">
+
+                                                                    </table>
+                                                                </div>
+                                                            </div>
+                                                            <!--TABELA-->
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!--APROVACAO FINANCEIRA-->
+                                    <div class="tab-pane" id="tab-third"><p>terceiro</p></div>
+
+                                    <!--INTEGRACAO ERP-->
+                                    <div class="tab-pane" id="tab-fourth">
+                                        <div class="form-group">
+                                            <input id="txtId_Emp1" type="hidden"/>
+                                            <label>Diretório - Arquivos - Empresa 01</label>
+                                            <input id="txtDirEmp1" class="form-control" disabled="disabled">
+                                            <input id="txtId_Emp2" type="hidden"/>
+                                            <label>Diretório - Arquivos - Empresa 02</label>
+                                            <input id="txtDirEmp2" class="form-control" disabled="disabled">
+                                            <input id="txtId_Emp3" type="hidden"/>
+                                            <label>Diretório - Arquivos - Empresa 03</label>
+                                            <input id="txtDirEmp3" class="form-control" disabled="disabled">
+                                            <input id="txtId_Emp4" type="hidden"/>
+                                            <label>Diretório - Arquivos - Empresa 04</label>
+                                            <input id="txtDirEmp4" class="form-control" disabled="disabled">
+                                            <input id="txtId_Emp5" type="hidden"/>
+                                            <label>Diretório - Arquivos - Empresa 05</label>
+                                            <input id="txtDirEmp5" class="form-control" disabled="disabled">
+                                            <input id="txtId_Emp6" type="hidden"/>
+                                            <label>Diretório - Arquivos - Empresa 06</label>
+                                            <input id="txtDirEmp6" class="form-control" disabled="disabled">
+                                            <input id="txtId_Emp7" type="hidden"/>
+                                            <label>Diretório - Arquivos - Empresa 07</label>
+                                            <input id="txtDirEmp7" class="form-control" disabled="disabled">
+                                            <input id="txtId_Emp8" type="hidden"/>
+                                            <label>Diretório - Arquivos - Empresa 08</label>
+                                            <input id="txtDirEmp8" class="form-control" disabled="disabled">
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                            <!-- END TABS -->
+                        </div>
+
+                <div class="panel-footer">
+                    <button id="btnEdt" class="btn btn-info pull-right"><span class="fa fa-pencil"></span>Editar</button>
+                    <button id="btnGra" class="btn btn-success pull-right"><span class="fa fa-check"></span>Salvar</button>
+                    <button id="btnCan" class="btn btn-danger pull-right"><span class="fa fa-pencil"></span>Cancelar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--START DIV-MODAL ADD USUARIO -->
+<div id="modal_AddUsuario" class="modal"  tabindex="-1" role="dialog" aria-labelledby="smallModalHead" aria-hidden="true">
+    <div class="modal-dialog  ">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title">Adicionar Usuário</h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="profile">
+                            <div class="profile">
+                                <div id="imgUser_AddUsuario">
+                                    <div class="profile-image"><img src="img/user/no-image.jpg" alt="Usuário"></div>
+                                </div>
+                            </div>
+                            <div class="profile-data">
+                                <input id="txtId_AddUsuario" type="hidden"/>
+                                <div id="divNomeSobrenome_AddUsuario" class="profile-data-name "></div>
+                                <div id="divEmpresa_AddUsuario" class="profile-data-title "></div>
+                                <div id="divDepartamento_AddUsuario" class="profile-data-title"></div>
+                                <div id="divCpf_AddUsuario" class="profile-data-title"></div>
+                                <div id="divEmail_AddUsuario" class="profile-data-title"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <input id="txtIdUsuario" type="hidden">
+                            <label> Usuario</label>
+                            <select id="selUsuario_AddUsuario" class="form-control" data-live-search="true"></select>
+                        </div>
+                    </div>
+                    <div class="col-md-12">
+                        <label>Tipo de envio</label>
+                        <select id="sel_tipo" class="form-control" data-live-search="true"></select>
+                    </div>
+                    <input id="txtTipo" type="hidden"/>
+                    <input id="txtNome" type="hidden"/>
+                    <input id="txtEmail" type="hidden"/>
+                </div>
+            </div>
+            <!--START - FOOTER PAINEL -ITEM -->
+            <div class="modal-footer">
+                <div class="panel-body">
+                    <ul class="panel-controls">
+                        <li><a href="#" id="btnSave_Email" class="control-primary" data-acao="edt" title="Salvar aprovador"><span class="fa fa-save"></span></a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!--END DIV-MODAL ADD USUARIO -->
+
+<div class="modal" id="modal_small_Gra" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="defModalHead">Confirmação</h4>
+            </div>
+            <div class="modal-body">
+                Você confirma a atualização de parâmetros de sistema?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" data-dismiss="modal">Cancelar</button>
+                <button id="btnGraConf" type="button" class="btn btn-primary" data-dismiss="modal">Sim</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--START DIV-MODAL EDIT LIMITE -->
+<div class="modal" id="small_modal_limite" tabindex="-1" role="dialog" aria-labelledby="smallModalHead" aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content ">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="smallModalHead3">Limite</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <input id="txtIdNatureza" type="hidden"/>
+                    <label> Naturezas</label>
+                    <input id="txtNatureza" type="text" class="form-control"  maxlength="50" disabled="disabled">
+
+                    <label>Limites</label>
+                    <input id="txtLimite" onkeyup="validate_tipoEntrada(this,'num');"  type="text" class="form-control"  value="0.0" maxlength="50">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <ul class="panel-controls">
+                    <li><a href="#" id="btnGra_limite" class="control-success" data-acao="gra" title="Salvar" ><span class="fa fa-check"></span></a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+<!--END DIV-MODAL EDIT LIMITE -->
+
+

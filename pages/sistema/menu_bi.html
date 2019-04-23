@@ -1,0 +1,65 @@
+<script type="text/javascript">
+    $(document).ready(function () {
+        desenhaMenu();
+        $('a[href="index.php?page=22a7bea3-c148-470c-9004-e022fe675370"]').attr('href', 'bi.php');
+    });
+
+    function desenhaMenu() {
+        for (var i = 0; i < menu.estruturaMenu.length; i++) {
+            if(menu.estruturaMenu[i].nivel < 4){
+                continue;
+            }
+            if (menu.estruturaMenu[i].acao == 1) {
+                if (menu.estruturaMenu[i].pai == null) {
+                    var icone = menu.estruturaMenu[i].icone != "" && menu.estruturaMenu[i].icone != null ? menu.estruturaMenu[i].icone : "fa-mail-forward";
+                    $("#ul_menu").append('<li title="' + menu.estruturaMenu[i].nome + '"><a href="bi.php?page=' + menu.estruturaMenu[i].permissao + '"><span class="fa ' + icone + '"></span><span class="xn-text">' + menu.estruturaMenu[i].nome + '</span></a></li>');
+                } else {
+                    $('#idMenu-' + menu.estruturaMenu[i].pai).append('<li><a href="bi.php?page=' + menu.estruturaMenu[i].permissao + '"><span></span>' + menu.estruturaMenu[i].nome + '</a></li>');
+                }
+            } else {
+                if (menu.estruturaMenu[i].pai == null) {
+                    var icone = menu.estruturaMenu[i].icone != "" && menu.estruturaMenu[i].icone != null ? menu.estruturaMenu[i].icone : "fa-arrow-right";
+                    $("#ul_menu").append('<li title="' + menu.estruturaMenu[i].nome + '" class="xn-openable"><a><span class="' + icone + '"></span><span class="xn-text">' + menu.estruturaMenu[i].nome + '</span></a><ul id="idMenu-' + menu.estruturaMenu[i].id + '"></ul></li>');
+                } else {
+                    $('#idMenu-' + menu.estruturaMenu[i].pai).append('<li class="xn-openable"><a href="#idMenu-' + menu.estruturaMenu[i].id + '"><span></span>' + menu.estruturaMenu[i].nome + '</a><ul id="idMenu-' + menu.estruturaMenu[i].id + '"></ul></li>');
+                }
+            }
+        }
+    }
+</script>       
+<body>
+    <!-- START PAGE CONTAINER -->
+    <div class="page-container page-navigation-toggled">
+
+        <!-- START PAGE SIDEBAR -->
+        <div class="page-sidebar">
+            <!-- START X-NAVIGATION -->
+            <ul id="ul_menu" class="x-navigation">
+                <li class="xn-logo">
+                    <a href="index.php">HSR</a>
+                    <a href="#" class="x-navigation-control"></a>
+                </li>
+                <li class="xn-profile">
+                    <a href="#" class="profile-mini">
+                        <img src="img\user\no-image.jpg" class="foto_usuario" alt="Usuário"/>
+                    </a>
+                    <div class="profile">
+                        <div class="profile-image">
+                            <img src="img\user\no-image.jpg" class="foto_usuario" alt="Usuário"/>
+                        </div>
+                        <div class="profile-data">
+                            <div class="profile-data-name a_nome">Usuário</div>
+                        </div>
+                        <div class="profile-controls">
+                            <a href="index.php?page=12b165e8-e3e0-42cb-8b83-2b45e8d5177b" class="profile-control-left"><span class="fa fa-info"></span></a>
+                        </div>
+                    </div>                                                                        
+                </li>
+                <li class="xn-title">Menu</li>
+            </ul>
+            <!-- END X-NAVIGATION -->
+        </div>
+        <!-- END PAGE SIDEBAR -->
+
+        <!-- PAGE CONTENT -->
+        <div class="page-content">
